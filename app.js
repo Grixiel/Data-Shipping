@@ -1,4 +1,3 @@
-<script>
 const tooltipEl = document.getElementById('floating-tip');
 
 function showTooltip(e, htmlContentEncoded) {
@@ -291,6 +290,13 @@ function sincronizarComBanco(manual) {
     document.getElementById('global-loader').classList.remove('hidden'); 
     setStatusUi('Sincronizando...', 'bg-blue-500 animate-pulse');
     
+    if (typeof google === 'undefined') {
+        fecharLoader();
+        alert("Atenção: A sincronização com a nuvem só funciona quando o painel é acessado pelo link oficial do Google Apps Script.");
+        setStatusUi('Modo Offline', 'bg-red-500');
+        return;
+    }
+
     google.script.run
         .withSuccessHandler(r => { 
             fecharLoader(); 
@@ -309,6 +315,12 @@ function sincronizarComBanco(manual) {
 
 function salvarNoBanco() {
     setStatusUi('Salvando Nuvem...', 'bg-amber-500 animate-pulse');
+    
+    if (typeof google === 'undefined') {
+        setStatusUi('Modo Offline', 'bg-red-500');
+        return;
+    }
+
     google.script.run
         .withSuccessHandler(t => setStatusUi(`Atualizado: ${getFormattedTime(t)}`, 'bg-emerald-500'))
         .withFailureHandler(e => { setStatusUi('Erro Salvar', 'bg-red-500'); })
@@ -1776,4 +1788,3 @@ if(microS) {
 window.onload = () => { 
     initStorage(); 
 };
-</script>
