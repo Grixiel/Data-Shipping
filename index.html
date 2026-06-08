@@ -12,6 +12,8 @@
         };
     </script>
     
+    <link rel="stylesheet" href="style.css">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
@@ -32,8 +34,6 @@
             }
         }
     </script>
-    
-    <?!= HtmlService.createHtmlOutputFromFile('styles').getContent(); ?>
 </head>
 <body class="flex flex-col h-screen relative">
 
@@ -589,6 +589,6 @@
         </main>
     </div>
 
-    <?!= HtmlService.createHtmlOutputFromFile('app').getContent(); ?>
+    <script src="app.js"></script>
 </body>
 </html>
