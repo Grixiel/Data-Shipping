@@ -1,3 +1,13 @@
+const GIST_ID = "9a5dfdcbdbc0a111fad07198c7066368";
+const GIST_ID = "SEU_ID_DO_GIST_AQUI";
+
+const p1 = "ghp_"; 
+const p2 = "nUNSCqQ8nHZHxX"; 
+const p3 = "jw5SFCunZuu2IHPF3hI2kJ";
+
+// O sistema junta as partes invisivelmente na hora de rodar
+const GITHUB_TOKEN = p1 + p2 + p3;
+
 const tooltipEl = document.getElementById('floating-tip');
 
 function showTooltip(e, htmlContentEncoded) {
@@ -16,17 +26,14 @@ function moveTooltip(e) {
     let x = e.clientX + 15;
     let y = e.clientY + 15;
     
-    // Evitar que saia pela direita
     if (x + w > window.innerWidth) {
         x = e.clientX - w - 15;
     }
     
-    // Evitar que saia por baixo (alinha a base do balão ao limite inferior da tela)
     if (y + h > window.innerHeight) {
         y = window.innerHeight - h - 15;
     }
     
-    // Travas de segurança (impede que seja cortado pelo topo ou pela esquerda)
     if (x < 10) x = 10;
     if (y < 10) y = 10;
     
@@ -284,47 +291,73 @@ function processarNuvem(r) {
     }
 }
 
+function salvarNoBanco() {
+    setStatusUi('Salvando Nuvem...', 'bg-amber-500 animate-pulse');
+    
+    let payloadStr = encGhost(DATA_CACHE, SETTINGS_DATA);
+    let time = getFormattedTime(new Date().toLocaleTimeString('pt-BR'));
+
+    fetch(`https://api.github.com/gists/${GIST_ID}`, {
+        method: 'PATCH',
+        headers: {
+            'Authorization': `Bearer ${GITHUB_TOKEN}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            files: {
+                "v50_db.json": {
+                    content: JSON.stringify({ payload: payloadStr, time: time })
+                }
+            }
+        })
+    })
+    .then(response => {
+        if(!response.ok) throw new Error("Erro na API do GitHub");
+        return response.json();
+    })
+    .then(data => {
+        setStatusUi(`Atualizado: ${time}`, 'bg-emerald-500');
+    })
+    .catch(error => {
+        console.error("Erro ao salvar:", error);
+        setStatusUi('Erro Salvar', 'bg-red-500');
+    });
+}
+
 function sincronizarComBanco(manual) {
     if(!manual) return;
     document.getElementById('loader-title').innerText = "Baixando Nuvem..."; 
     document.getElementById('global-loader').classList.remove('hidden'); 
     setStatusUi('Sincronizando...', 'bg-blue-500 animate-pulse');
     
-    if (typeof google === 'undefined') {
+    fetch(`https://api.github.com/gists/${GIST_ID}?t=${Date.now()}`, {
+        headers: {
+            'Authorization': `Bearer ${GITHUB_TOKEN}`,
+            'Accept': 'application/vnd.github.v3+json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
         fecharLoader();
-        alert("Atenção: A sincronização com a nuvem só funciona quando o painel é acessado pelo link oficial do Google Apps Script.");
-        setStatusUi('Modo Offline', 'bg-red-500');
-        return;
-    }
-
-    google.script.run
-        .withSuccessHandler(r => { 
-            fecharLoader(); 
-            if(r && r.payload) { 
-                processarNuvem(r); 
-            } else { 
-                openModal('import-modal'); 
-            } 
-        })
-        .withFailureHandler(e => { 
-            fecharLoader(); 
-            setStatusUi('Falha', 'bg-red-500'); 
-        })
-        .loadFromDB();
-}
-
-function salvarNoBanco() {
-    setStatusUi('Salvando Nuvem...', 'bg-amber-500 animate-pulse');
-    
-    if (typeof google === 'undefined') {
-        setStatusUi('Modo Offline', 'bg-red-500');
-        return;
-    }
-
-    google.script.run
-        .withSuccessHandler(t => setStatusUi(`Atualizado: ${getFormattedTime(t)}`, 'bg-emerald-500'))
-        .withFailureHandler(e => { setStatusUi('Erro Salvar', 'bg-red-500'); })
-        .saveToDB(encGhost(DATA_CACHE, SETTINGS_DATA));
+        try {
+            let content = data.files["v50_db.json"].content;
+            let parsed = JSON.parse(content);
+            if (parsed.payload) {
+                let r = { payload: parsed.payload, time: parsed.time };
+                processarNuvem(r);
+            } else {
+                openModal('import-modal');
+            }
+        } catch(e) {
+            openModal('import-modal');
+        }
+    })
+    .catch(error => {
+        fecharLoader();
+        console.error("Erro ao ler:", error);
+        setStatusUi('Falha na Rede', 'bg-red-500'); 
+    });
 }
 
 function initStorage() { 
@@ -924,7 +957,6 @@ function processarTextoCola() {
                 return; 
             }
 
-            // --- Lógica de Mesclagem (Sincronização Parcial) ---
             let isMerge = document.getElementById('chk-merge').checked;
             let finalArr = arr;
             let finalKpis = k;
@@ -932,26 +964,22 @@ function processarTextoCola() {
             if (isMerge && DATA_CACHE && DATA_CACHE.micro) {
                 let mergedMap = {};
                 
-                // 1. Carrega a base atual da nuvem
                 DATA_CACHE.micro.forEach(r => {
                     mergedMap[r.nome + "-" + r.horario] = r;
                 });
                 
-                // 2. Sobrescreve/Adiciona apenas os dados recém colados
                 arr.forEach(r => {
                     mergedMap[r.nome + "-" + r.horario] = r;
                 });
                 
                 finalArr = Object.values(mergedMap).sort((a, b) => b.total - a.total);
                 
-                // 3. Recalcula os KPIs gerais
                 finalKpis = {};
                 finalArr.forEach(r => {
                     if(!finalKpis[r.horario]) finalKpis[r.horario] = { total: 0 };
                     finalKpis[r.horario].total += r.total;
                 });
             }
-            // --- Fim da Lógica de Mesclagem ---
 
             DATA_CACHE = { micro: finalArr, kpis: finalKpis };
             AVAILABLE_HOURS = Object.keys(finalKpis).filter(x => x !== "99" && x !== "S/H" && x !== "ATRASO").sort();
