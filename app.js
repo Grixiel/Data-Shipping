@@ -17,9 +17,7 @@ window.onload = () => {
     sincronizarComBanco(true); 
     setInterval(() => sincronizarComBanco(false), 30000);
     setInterval(verificarDefasagem, 60000);
-    
 };
-
 
 function atualizarLinkWMS() {
     let now = new Date();
@@ -49,7 +47,6 @@ function verificarDefasagem() {
         stEl.innerHTML = `<span class="text-emerald-500 font-medium flex items-center justify-center gap-2"><i class="fa-solid fa-cloud-check"></i> Nuvem Sincronizada</span>`;
     }
 }
-
 
 function carregarMapaTobogas() {
     fetch(CSV_PLANILHA_TOBOGAS)
@@ -87,7 +84,6 @@ function carregarMapaTobogas() {
     .catch(e => console.error("Erro ao puxar planilhas do Sheets", e));
 }
 
-
 function sincronizarComBanco(manual) {
     if(manual) {
         document.getElementById('global-loader').classList.remove('hidden');
@@ -102,8 +98,6 @@ function sincronizarComBanco(manual) {
         if(manual) fecharLoader();
         try {
             let content = JSON.parse(data.files["v50_db.json"].content);
-            
-
             if(content.time !== LAST_CLOUD_TIME) {
                 LAST_CLOUD_TIME = content.time;
                 decodificarNuvem(content.payload);
@@ -116,7 +110,7 @@ function sincronizarComBanco(manual) {
 }
 
 function salvarNoBanco() {
-    let payload = codific    arParaNuvem(DATA_CACHE, SETTINGS_DATA);
+    let payload = codificarParaNuvem(DATA_CACHE, SETTINGS_DATA);
     let time = new Date().toLocaleString('pt-BR');
     
     fetch(`https://api.github.com/gists/${GIST_ID}`, {
@@ -128,13 +122,10 @@ function salvarNoBanco() {
         if (!res.ok) throw new Error("Falha na API do GitHub");
         LAST_CLOUD_TIME = time;
         verificarDefasagem();
-        
-        // 1. Fecha a tela de carregamento após o sucesso!
         fecharLoader(); 
         console.log("Dados salvos na nuvem com sucesso!");
     })
     .catch((erro) => {
-        // 2. Se der algum erro (ex: sem internet), fecha o loader também para não travar o usuário
         console.error("Erro ao salvar no banco:", erro);
         fecharLoader();
         alert("Ops! Ocorreu um erro ao tentar salvar na nuvem.");
@@ -142,40 +133,45 @@ function salvarNoBanco() {
 }
 
 function mudarAba(abaId) {
- 
     document.querySelectorAll('[id^="view-"]').forEach(el => {
         el.classList.add('hidden');
         el.classList.remove('view-animate');
     });
     
-
     document.querySelectorAll('.sidebar-link').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('btn-' + abaId).classList.add('active');
+    let activeBtn = document.getElementById('btn-' + abaId);
+    if(activeBtn) activeBtn.classList.add('active');
     
-  
     let view = document.getElementById('view-' + abaId);
-    view.classList.remove('hidden');
-    void view.offsetWidth; 
-    view.classList.add('view-animate');
+    if(view) {
+        view.classList.remove('hidden');
+        void view.offsetWidth; 
+        view.classList.add('view-animate');
+    }
 }
 
 function openModal(id) {
     let modal = document.getElementById(id);
     let content = document.getElementById(id + '-content');
-    modal.classList.remove('hidden-fade');
-    setTimeout(() => { content.classList.remove('scale-95'); content.classList.add('scale-100'); }, 10);
+    if(modal && content) {
+        modal.classList.remove('hidden-fade');
+        setTimeout(() => { content.classList.remove('scale-95'); content.classList.add('scale-100'); }, 10);
+    }
 }
 
 function closeModal(id) {
     let modal = document.getElementById(id);
     let content = document.getElementById(id + '-content');
-    content.classList.remove('scale-100'); content.classList.add('scale-95');
-    setTimeout(() => modal.classList.add('hidden-fade'), 200);
+    if(modal && content) {
+        content.classList.remove('scale-100'); content.classList.add('scale-95');
+        setTimeout(() => modal.classList.add('hidden-fade'), 200);
+    }
 }
 
 function fecharLoader() {
-    document.getElementById('global-loader').style.display = 'none';
-} // <--- Fechei a função aqui!
+    let loader = document.getElementById('global-loader');
+    if(loader) loader.style.display = 'none';
+}
 
 function processarTextoCola() {
     let texto = document.getElementById('input-paste').value;
@@ -187,19 +183,16 @@ function processarTextoCola() {
 
     let mesclar = document.getElementById('chk-merge').checked;
 
-    // LÓGICA DE EXTRAÇÃO DOS DADOS COLADOS
     let linhas = texto.split('\n');
     let novosDados = [];
     
     for(let i=0; i<linhas.length; i++) {
         if(linhas[i].trim() !== '') {
-            // Divide as colunas por tabulação (Tab) ou vários espaços
             let colunas = linhas[i].trim().split(/\t| {2,}/);
             novosDados.push(colunas);
         }
     }
 
-    // Salva na memória do sistema
     if(mesclar && DATA_CACHE) {
         DATA_CACHE = DATA_CACHE.concat(novosDados);
     } else {
@@ -207,19 +200,24 @@ function processarTextoCola() {
     }
 
     console.log("A processar dados...", DATA_CACHE);
-    document.getElementById('global-loader').classList.remove('hidden');
-    document.getElementById('global-loader').style.display = 'flex';
+    
+    let loader = document.getElementById('global-loader');
+    if(loader) {
+        loader.classList.remove('hidden');
+        loader.style.display = 'flex';
+    }
     
     salvarNoBanco();
-    
     closeModal('import-modal');
-    document.getElementById('input-paste').value = '';
-    // Prepara os dados do JavaScript para virarem texto e irem para o GitHub
+    
+    let inputPaste = document.getElementById('input-paste');
+    if(inputPaste) inputPaste.value = '';
+}
+
 function codificarParaNuvem(cache, settings) {
     return JSON.stringify(cache || []);
 }
 
-// Pega no texto do GitHub e transforma de volta em dados para o JavaScript
 function decodificarNuvem(payload) {
     try {
         if (payload) {
@@ -232,8 +230,6 @@ function decodificarNuvem(payload) {
     }
 }
 
-// Função temporária apenas para evitar que o código quebre. 
 function renderMatriz() {
     console.log("A preparar para desenhar a interface com os dados...", DATA_CACHE);
 }
-
