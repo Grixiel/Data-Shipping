@@ -1,7 +1,7 @@
 const GIST_ID = "9a5dfdcbdbc0a111fad07198c7066368";
 const p1 = "ghp_"; 
-const p2 = "nUNSCqQ8nHZHxX"; 
-const p3 = "jw5SFCunZuu2IHPF3hI2kJ";
+const p2 = "lzj6rto7ZAyn79gKk"; 
+const p3 = "fEloMi7xK09lp2go00L";
 const CSV_PLANILHA_TOBOGAS = "https://docs.google.com/spreadsheets/d/1wRtBiDY1U9gOeRE_15mg8iKKVQE2wBnRX9Jb69fMUvE/pub?output=csv"; 
 
 let DATA_CACHE = null; 
