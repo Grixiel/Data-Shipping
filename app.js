@@ -7,8 +7,6 @@ const GITHUB_TOKEN = p1 + p2 + p3;
 const CSV_PLANILHA_TOBOGAS = "https://docs.google.com/spreadsheets/d/1wRtBiDY1U9gOeRE_15mg8iKKVQE2wBnRX9Jb69fMUvE/pub?output=csv"; 
 
 const CURRENT_R_STR = "1:JETSL1,2:JETSL1,3:SSP8,4:SRJ13,5:SRJ8,6:SSP10,7:SBA4,8:SSP11,9:SSP5,10:SSP39,11:SSP4,12:SMG15,13:SSP23,14:SMG12,15:SSP9,16:SSP20,17:SMG2,18:SMG8,19:SMG9,20:SSP38,21:SPR8,22:SSC2,23:SSC2,24:SDF1,25:SDF1,26:SSP13,27:SRJ5,28:SSP14,29:SSP14,30:SMG14|SSP18|SSP9_S,31:SMG14|SSP18|SSP9_S,32:JETHUB1|SMG5|SSP34|SSP38_S,33:JETHUB1|SMG5|SSP34|SSP38_S,34:SES1|SRJ10_CHP|SSP36|SSP37_S|SSP4_CHP,35:SES1|SRJ10_CHP|SSP36|SSP37_S|SSP4_CHP,36:SRS10|SSC3|SSP1_S|SSP5A_S,37:SRS10|SSC3|SSP1_S|SSP5A_S,38:SGO2|SMG1|SRJ3_CHP|SSP28,39:SGO2|SMG1|SRJ3_CHP|SSP28,40:SMS2|SRJ1_CHP|SSP3_S|SSP40_CHP|SSP48,41:SMS2|SRJ1_CHP|SSP3_S|SSP40_CHP|SSP48,42:SAL1_CHP|SSP30_S,43:SAL1_CHP|SSP30_S,44:SES3|SPR4|SRS8|SSP5_S,45:SES3|SPR4|SRS8|SSP5_S,46:SES3_X|SPR2|SRD1|SSP26,47:SES3_X|SPR2|SRD1|SSP26,48:JETGO1|SAL1|SSC7|SSP12|SSP6,49:JETGO1|SAL1|SSC7|SSP12|SSP6,50:MSP1_E|MSP21_E|MSP5_E|MSP7_E,51:JADHUB|JETBA2|JETBA3|LOGHUB|SSP46|XSP9_1|XSP9_2|XSP9_6,52:MSP1_E|MSP21_E|MSP5_E|MSP7_E|SRJ2,53:SPR1|SSP18_S|SSP3,54:SPR1|SSP18_S|SSP3,55:SMG13|SRS1_CHP|SRS4|SSP7,56:SMG13|SRS1_CHP|SRS4|SSP7,57:IMISL1|SRJ12|SRJ6_CHP|SRJ7|SSP1,58:IMISL1|SRJ12|SRJ6_CHP|SRJ7|SSP1,59:SMG3|SRJ10|SSC4|SSP17,60:SMG3|SRJ10|SSC4|SSP17,61:SMG11|SPI1|SRJ9|SSP1_CHP|SSP40,62:SMG11|SPI1|SRJ9|SSP1_CHP|SSP40,63:SBA7|SPR5|SSC5|SSP40_S|SSP7_S,64:SBA7|SPR5|SSC5|SSP40_S|SSP7_S,65:SBA3|SMG10|SPR7|SSP24|SSP39_S,66:SBA3|SMG10|SPR7|SSP24|SSP39_S,67:SRJ1|SRS5|SSP16|SSP45_CHP|SSP5F_S,68:SRS5|SSP16|SSP45_CHP|SSP49|SSP5F_S,69:SMG13_X|SMG1_CHP|SMG4|SMR1|SSP6_S,70:SMG13_X|SMG1_CHP|SMG4|SMR1|SSP6_S,71:SCE1|SMS1|SPR1_CHP|SSP25_S|SSP37,72:SCE1|SMS1|SPR1_CHP|SSP25_S|SSP37,73:SMG8_CHP|SRD2|SSC1|SSP25|XSP9_6_CHP,74:SMG8_CHP|SRD2|SSC1|SSP25|XSP9_6_CHP,75:SBA6|SMG7|SSP22_CHP|SSP29_S,76:SBA6|SMG7|SSP22_CHP|SSP29_S,77:SBA2|SPA1_X|SRS3|SSC8|SSP31,78:SBA2|SPA1_X|SRS3|SSC8|SSP31,79:SES2|SGO1|SRJ4|SSP45|SSP45_S,80:SES2|SGO1|SRJ4|SSP45|SSP45_S,81:SMR2|SRS2|SSP27_S|SSP29|XSP9_1_CHP,82:SMR2|SRS2|SSP27_S|SSP29|XSP9_1_CHP,83:SPR3|SRJ6|SRS7|SSP12_CHP,84:SPR3|SRJ6|SRS7|SSP12_CHP,85:SMN1|SSC9|SSP15|SSP18_CHP|SSP48_S,86:SMN1|SSC9|SSP15|SSP18_CHP|SSP48_S,87:SRS1|SSP17_CHP|SSP27|SSP49_S|STO1,88:SRS1|SSP17_CHP|SSP27|SSP49_S|STO1,89:SBA1|SMG6|SSP21_CHP|SSP49,90:SBA1|SSP21_CHP|SSP49,91:JETRD1|SRJ3|SSP23_S|SSP30|SSP7_CHP,92:JETRD1|SRJ3|SSP23_S|SSP30|SSP7_CHP,93:SSP21_S|SSP22|STO2,94:SSP21_S|SSP22|STO2,95:SDF2|SPA1|SPR6_CHP|SRS9,96:SDF2|SPA1|SPR6_CHP|SRS9,97:SGO1_X|SPE1|SPR6|SSP15_CHP|SSP21,98:SGO1_X|SPE1|SPR6|SSP15_CHP|SSP21,99:SAL1_A|SAL1_B|SAM1_A|SAM1_C|SBA1_A|SBA2_A|SBA6_A|SCE1_A|SDF1_A|SDF2_A|SES1_A|SES1_B|SFN1_C|SGO1X_A|SGO1_A|SGO1_B|SJP1X_A|SJP1_A|SMN1_A|SMR1_A|SMR1_B|SMR2_A|SPA1X_A|SPA1_A|SPA1_B|SPE1_A|SPI1_A|SRN1_A|SRS1_A|SRS8_A|SRS9_A|SSE1_A|SAM1_B|SCE1_B|SJP1_B|SMN1_B|SPI1_B|SRN1_B|SRS1_B|SSE1_B|STO1_B|SAL1_C|SBA1_C|SCE1_C|SJP1_C|SMR1_C|SPA1_C|SRN1_C|SSE1_C,100:SAL1_A|SAL1_B|SAM1_A|SAM1_C|SBA1_A|SBA2_A|SBA6_A|SCE1_A|SDF1_A|SDF2_A|SES1_A|SES1_B|SFN1_C|SGO1X_A|SGO1_A|SGO1_B|SJP1X_A|SJP1_A|SMN1_A|SMR1_A|SMR1_B|SMR2_A|SPA1X_A|SPA1_A|SPA1_B|SPE1_A|SPI1_A|SRN1_A|SRS1_A|SRS8_A|SRS9_A|SSE1_A|SAM1_B|SCE1_B|SJP1_B|SMN1_B|SPI1_B|SRN1_B|SRS1_B|SSE1_B|STO1_B|SAL1_C|SBA1_C|SCE1_C|SJP1_C|SMR1_C|SPA1_C|SRN1_C|SSE1_C";
-
-// --- VARIÁVEIS GLOBAIS ---
 let DATA_CACHE = null; 
 let SETTINGS_DATA = { pickHC: 50, pickM: 120, packHC: 50, packM: 300, atrHC: 30, atrM: 450, stgHC: 4, stgM: 18, manM: 120, gayM: 500 };
 let RAMPA_MAP = {}; let ROUTE_LIST = []; let AVAILABLE_HOURS = []; let SELECTED_HOURS = []; let LAST_CLOUD_TIME = null;
@@ -180,11 +178,12 @@ function showTooltip(e, html) { if(!html) return; tooltipEl.innerHTML = decodeUR
 function moveTooltip(e) { if(tooltipEl.classList.contains('hidden')) return; let x = e.clientX + 15, y = e.clientY + 15; if (x + tooltipEl.offsetWidth > window.innerWidth) x = e.clientX - tooltipEl.offsetWidth - 15; if (y + tooltipEl.offsetHeight > window.innerHeight) y = window.innerHeight - tooltipEl.offsetHeight - 15; tooltipEl.style.left = Math.max(10, x) + 'px'; tooltipEl.style.top = Math.max(10, y) + 'px'; }
 function hideTooltip() { tooltipEl.classList.add('hidden'); }
 
-// --- RENDERIZADORES DE TELA ---
+// --- RENDERIZADORES DE TELA (LÓGICA OPERACIONAL AVANÇADA) ---
 function renderDash(lst) {
     let allValid = lst.filter(i => i.horario !== 'ATRASO');
     let tTot = 0, tC = 0, tPck = 0, tIn = 0, tCls = 0, tShp = 0;
     
+    // VISÃO GLOBAL
     allValid.forEach(i => { tTot += i.total; tC += i.concluido; tPck += i.packed; tIn += i.huIn; tCls += i.huCl; tShp += i.ship; });
     setVal('dash-glb-total', tTot.toLocaleString()); setVal('dash-glb-targetval', tC.toLocaleString());
     setVal('dash-glb-packed', tPck.toLocaleString()); setVal('dash-glb-huin', tIn.toLocaleString()); 
@@ -195,6 +194,12 @@ function renderDash(lst) {
     let pG = tTot > 0 ? ((tC / tTot) * 100).toFixed(2) : '0.00'; 
     setVal('dash-glb-pct', pG + '%'); setStyle('dash-glb-bar', 'width', pG + '%');
 
+    // ATRASO
+    let bT = 0, bP = 0; lst.filter(i => i.horario === 'ATRASO').forEach(i => { bT += i.total; bP += i.concluido; });
+    const bArea = document.getElementById('dash-backlog-area');
+    if(bT > 0) { bArea.classList.remove('hidden'); setVal('bl-total', bT.toLocaleString()); setVal('bl-proc', bP.toLocaleString()); setVal('bl-pend', Math.max(0, bT - bP).toLocaleString()); } else { bArea.classList.add('hidden'); }
+
+    // METAS DE ETD (98% a 99.5%)
     let grps = {};
     allValid.forEach(i => { 
         if(!grps[i.horario]) grps[i.horario] = { t: 0, c: 0 }; 
@@ -206,16 +211,16 @@ function renderDash(lst) {
     Object.keys(grps).sort().forEach(k => {
         let g = grps[k]; let pt = g.t > 0 ? ((g.c / g.t) * 100).toFixed(2) : '0.00';
         let m98 = Math.ceil(g.t * 0.98); let m985 = Math.ceil(g.t * 0.985); let m99 = Math.ceil(g.t * 0.99); let m995 = Math.ceil(g.t * 0.995);
-        let tag = (tgt) => (target => { let f = target - g.c; return f <= 0 ? '<span class="text-emerald-500"><i class="fa-solid fa-check"></i></span>' : `<span class="text-rose-500 font-mono">Falta ${f.toLocaleString()}</span>`; })(tgt);
+        let tag = (tgt) => (target => { let f = target - g.c; return f <= 0 ? '<span class="text-emerald-500"><i class="fa-solid fa-check"></i></span>' : `<span class="text-rose-500 font-mono font-bold">Falta ${f.toLocaleString()}</span>`; })(tgt);
 
         hKpi += `<div class="glass-panel p-4 flex flex-col border-t-4 border-blue-500 shadow-md">
                 <div class="flex justify-between items-center mb-2"><div class="text-xs font-black text-slate-700 bg-slate-100 px-2 py-1 rounded border">ETD ${k}H</div><div class="text-lg font-black text-blue-600">${pt}%</div></div>
                 <div class="w-full bg-slate-100 h-2 rounded-full mb-4"><div class="bg-blue-500 h-full" style="width:${pt}%"></div></div>
                 <div class="text-[10px] font-bold text-slate-500 space-y-1.5 bg-slate-50 p-2 rounded border border-slate-100">
-                    <div class="flex justify-between"><span>98.0%: <span class="font-mono text-slate-800">${fmtK(m98)}</span></span>${tag(m98)}</div>
-                    <div class="flex justify-between"><span>98.5%: <span class="font-mono text-slate-800">${fmtK(m985)}</span></span>${tag(m985)}</div>
-                    <div class="flex justify-between"><span>99.0%: <span class="font-mono text-slate-800">${fmtK(m99)}</span></span>${tag(m99)}</div>
-                    <div class="flex justify-between"><span>99.5%: <span class="font-mono text-slate-800">${fmtK(m995)}</span></span>${tag(m995)}</div>
+                    <div class="flex justify-between items-center"><span>Meta 98.0%: <span class="font-mono text-slate-800">${fmtK(m98)}</span></span>${tag(m98)}</div>
+                    <div class="flex justify-between items-center"><span>Meta 98.5%: <span class="font-mono text-slate-800">${fmtK(m985)}</span></span>${tag(m985)}</div>
+                    <div class="flex justify-between items-center"><span>Meta 99.0%: <span class="font-mono text-slate-800">${fmtK(m99)}</span></span>${tag(m99)}</div>
+                    <div class="flex justify-between items-center"><span>Meta 99.5%: <span class="font-mono text-slate-800">${fmtK(m995)}</span></span>${tag(m995)}</div>
                 </div></div>`;
     });
     document.getElementById('dash-kpi-area').innerHTML = hKpi;
@@ -254,88 +259,100 @@ function renderMicro(lst) {
 
 function renderMatriz(lst) {
     let alertRamps3 = [], alertRamps5 = [];
+    let prodAtrelamento = SETTINGS_DATA.atrM || 450; // Peças por pessoa/hora no fechamento
 
     const ren = (id, s, e, alertsArray) => {
         let h = '<div class="col-span-full grid grid-cols-2 sm:grid-cols-5 xl:grid-cols-10 gap-3">';
         for(let i = s; i <= e; i++) {
             let rr = RAMPA_MAP[i] || []; let st = { p: 0, r: 0, g: 0, pi: 0, w: 0, t: 0 }; let aR = []; 
             rr.forEach(ro => { let d = lst.find(x => x.nome === ro); if(d) { st.p += d.packed; st.r += d.rtp; st.g += d.grp; st.pi += d.pick; st.w += (d.wav + d.rtw); st.t += d.total; aR.push(ro); } });
-            let vol = st.p + st.r + st.g + st.pi + st.w; 
             
-            let hBg = 'bg-white', textC = 'text-slate-500', alertStr = '';
-            if (vol > 0) { 
-                if(vol >= 1500) { hBg = 'bg-rose-600 text-white'; textC = 'text-white'; alertStr = 'Crítico'; alertsArray.push(i); } 
-                else if(vol >= 800) { hBg = 'bg-orange-500 text-white'; textC = 'text-white'; alertStr = 'Alto'; alertsArray.push(i); } 
-                else if(vol >= 300) { hBg = 'bg-amber-400 text-slate-900'; textC = 'text-amber-900'; } 
+            let volAtivo = st.p + st.r + st.g + st.pi; // Waving não pede HC porque está congelado
+            let hBg = 'bg-white', textC = 'text-slate-500';
+            
+            if (volAtivo > 0) { 
+                if(volAtivo >= 1500) { hBg = 'bg-rose-600 text-white'; textC = 'text-white'; alertsArray.push(i); } 
+                else if(volAtivo >= 800) { hBg = 'bg-orange-500 text-white'; textC = 'text-white'; alertsArray.push(i); } 
+                else if(volAtivo >= 300) { hBg = 'bg-amber-400 text-slate-900'; textC = 'text-amber-900'; } 
                 else { hBg = 'bg-emerald-100 border-emerald-300'; textC = 'text-emerald-700'; } 
             }
 
-            let hcReq = Math.ceil(vol / (SETTINGS_DATA.packM || 300));
-            let tooltipHtml = encodeURIComponent(`<div class="font-black text-sm mb-2 border-b pb-1">Relatório Tobogã ${i}</div>
-                <div class="grid grid-cols-2 gap-2 text-xs mb-2">
-                    <div>Pendente Físico:<br><span class="font-mono text-lg">${vol}</span></div>
-                    <div>HC Recomendado:<br><span class="font-mono text-lg text-emerald-400">${hcReq} <i class="fa-solid fa-person"></i></span></div>
+            // Cálculo de HC por Tempo de Chegada
+            let hcAgora = Math.ceil(st.p / prodAtrelamento);
+            let hcBreve = Math.ceil((st.r + st.g) / prodAtrelamento);
+            let hcFuturo = Math.ceil(st.pi / prodAtrelamento);
+
+            let tooltipHtml = encodeURIComponent(`<div class="font-black text-sm mb-2 border-b pb-1">Análise Tática - Tobogã ${i}</div>
+                <div class="space-y-2 text-xs mb-3">
+                    <div class="flex justify-between items-center bg-emerald-500/20 p-1.5 rounded border border-emerald-500/30"><span>AGORA (Packed +5m):</span> <strong class="text-emerald-400 font-mono text-sm">${st.p} pçs <i class="fa-solid fa-arrow-right mx-1"></i> ${hcAgora} HC</strong></div>
+                    <div class="flex justify-between items-center bg-orange-500/20 p-1.5 rounded border border-orange-500/30"><span>EM BREVE (Pck +10m):</span> <strong class="text-orange-400 font-mono text-sm">${st.r + st.g} pçs <i class="fa-solid fa-arrow-right mx-1"></i> ${hcBreve} HC</strong></div>
+                    <div class="flex justify-between items-center bg-rose-500/20 p-1.5 rounded border border-rose-500/30"><span>+1 HORA (Pick):</span> <strong class="text-rose-400 font-mono text-sm">${st.pi} pçs <i class="fa-solid fa-arrow-right mx-1"></i> ${hcFuturo} HC</strong></div>
                 </div>
-                <div class="text-[10px] text-slate-400 border-t pt-1">Meta Produtividade: ${SETTINGS_DATA.packM || 300} pçs/h por pessoa.</div>`);
+                <div class="text-[9px] text-slate-400 border-t pt-2">* HC baseado em ${prodAtrelamento} pçs/h por pessoa.<br>* Volume congelado (WAV) ignorado no HC dinâmico.</div>`);
 
             h += `<div onmouseenter="showTooltip(event, this.dataset.tip)" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()" data-tip="${tooltipHtml}" class="rounded-xl flex flex-col justify-between ${st.t === 0 ? 'opacity-40 grayscale bg-white/50 border border-slate-200' : hBg + ' shadow-md hover:-translate-y-1 cursor-help border'} overflow-hidden h-[90px] transition-all">
-                    <div class="px-3 py-2 flex justify-between items-center border-b border-white/20"><span class="font-black ${textC} text-lg">${i}</span><span class="${textC} text-xs font-bold font-mono">${vol > 0 ? vol : ''}</span></div>
+                    <div class="px-3 py-2 flex justify-between items-center border-b border-white/20"><span class="font-black ${textC} text-lg">${i}</span><span class="${textC} text-xs font-bold font-mono">${volAtivo > 0 ? volAtivo : ''}</span></div>
                     <div class="px-3 py-2 text-[8px] font-bold ${textC} opacity-80 h-full overflow-hidden leading-tight">${aR.length ? aR.join(', ') : 'Vazio'}</div>
                   </div>`;
         } h += `</div>`; document.getElementById(id).innerHTML = h;
     };
+    
     ren('t3-list-container', 1, 50, alertRamps3); ren('t5-list-container', 51, 98, alertRamps5);
     
-    document.getElementById('t3-alerts').innerHTML = alertRamps3.length ? `⚠️ Alerta nas Rampas: ${alertRamps3.join(', ')}` : '✅ Operação Limpa';
-    document.getElementById('t3-alerts').className = alertRamps3.length ? 'text-xs font-bold bg-white px-3 py-1.5 rounded-lg shadow-sm border border-rose-200 text-rose-600 animate-pulse' : 'text-xs font-bold bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 text-emerald-600';
-    document.getElementById('t5-alerts').innerHTML = alertRamps5.length ? `⚠️ Alerta nas Rampas: ${alertRamps5.join(', ')}` : '✅ Operação Limpa';
-    document.getElementById('t5-alerts').className = alertRamps5.length ? 'text-xs font-bold bg-white px-3 py-1.5 rounded-lg shadow-sm border border-rose-200 text-rose-600 animate-pulse' : 'text-xs font-bold bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 text-emerald-600';
+    // Alertas Visuais Bonitos
+    let uiAlerts = (arr) => arr.length ? `<div class="flex items-center gap-2"><i class="fa-solid fa-fire text-rose-500"></i> Foco Imediato nas Rampas: <div class="flex flex-wrap gap-1">` + arr.map(a => `<span class="bg-rose-100 text-rose-700 border border-rose-200 px-1.5 py-0.5 rounded shadow-sm">${a}</span>`).join('') + `</div></div>` : '✅ Operação Controlada';
+    document.getElementById('t3-alerts').innerHTML = uiAlerts(alertRamps3);
+    document.getElementById('t3-alerts').className = alertRamps3.length ? 'text-xs font-bold bg-white px-3 py-2 rounded-lg shadow-sm border border-rose-200' : 'text-xs font-bold bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-200 text-emerald-600';
+    document.getElementById('t5-alerts').innerHTML = uiAlerts(alertRamps5);
+    document.getElementById('t5-alerts').className = alertRamps5.length ? 'text-xs font-bold bg-white px-3 py-2 rounded-lg shadow-sm border border-rose-200' : 'text-xs font-bold bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-200 text-emerald-600';
 }
 
 function renderAereo(lst) {
-    let aer = lst.filter(i => i.isAereo); let aT = 0, aC = 0, aIn = 0, aCl = 0, aSh = 0, aPck = 0;
+    let aer = lst.filter(i => i.isAereo); let aT = 0, aC = 0, aIn = 0, aCl = 0, aSh = 0;
     let grps = {};
     
     aer.forEach(i => { 
-        aT += i.total; aC += i.concluido; aIn += i.huIn; aCl += i.huCl; aSh += i.ship; aPck += i.packed;
+        aT += i.total; aC += i.concluido; aIn += i.huIn; aCl += i.huCl; aSh += i.ship;
         if(!grps[i.horario]) grps[i.horario] = []; grps[i.horario].push(i);
     });
     
-    let pend = aT - (aIn + aCl + aSh + aPck);
-    let pct = aT > 0 ? ((aC / aT) * 100).toFixed(1) : '0.0';
+    let processadoAereo = aIn + aCl + aSh;
+    let vindoAereo = aT - processadoAereo; // A Caminho/Pendente
+    let pct = aT > 0 ? ((processadoAereo / aT) * 100).toFixed(1) : '0.0';
     
     document.getElementById('aereo-dynamic-summary').innerHTML = `
         <div class="bg-gradient-to-r from-cyan-900 to-blue-900 p-6 rounded-2xl text-white shadow-xl flex justify-between items-center relative overflow-hidden border border-cyan-700">
             <i class="fa-solid fa-plane absolute -right-4 text-9xl opacity-10"></i>
             <div>
                 <h3 class="text-cyan-300 font-bold uppercase tracking-widest text-xs mb-1">Relatório Geral - Malha Aérea</h3>
-                <div class="text-5xl font-black font-mono tracking-tighter">${pct}% <span class="text-sm font-bold text-cyan-400 tracking-normal">Atingimento do Dia</span></div>
+                <div class="text-5xl font-black font-mono tracking-tighter">${pct}% <span class="text-sm font-bold text-cyan-400 tracking-normal">Pronto (Docado)</span></div>
             </div>
             <div class="flex gap-6 text-right relative z-10">
                 <div class="flex flex-col"><span class="text-[10px] text-cyan-400 uppercase font-bold">Peças no Dia</span><span class="text-2xl font-black font-mono">${aT.toLocaleString()}</span></div>
-                <div class="flex flex-col"><span class="text-[10px] text-emerald-400 uppercase font-bold">Processadas</span><span class="text-2xl font-black font-mono">${(aIn+aCl+aSh).toLocaleString()}</span></div>
-                <div class="flex flex-col bg-cyan-950 px-3 py-1 rounded border border-cyan-800"><span class="text-[10px] text-amber-400 uppercase font-bold">Pendente Físico</span><span class="text-2xl font-black font-mono text-amber-400">${pend.toLocaleString()}</span></div>
+                <div class="flex flex-col"><span class="text-[10px] text-emerald-400 uppercase font-bold">Pronto (Docado)</span><span class="text-2xl font-black font-mono text-emerald-400">${processadoAereo.toLocaleString()}</span></div>
+                <div class="flex flex-col bg-cyan-950 px-3 py-1 rounded border border-cyan-800"><span class="text-[10px] text-amber-400 uppercase font-bold">A Caminho (Esteiras)</span><span class="text-2xl font-black font-mono text-amber-400">${vindoAereo.toLocaleString()}</span></div>
             </div>
         </div>`;
 
     let htmlETDs = '';
     Object.keys(grps).sort().forEach(h => {
-        let eT = 0, eC = 0, eIn = 0, eCl = 0, eSh = 0, ePck = 0;
-        grps[h].forEach(r => { eT += r.total; eC += r.concluido; eIn += r.huIn; eCl += r.huCl; eSh += r.ship; ePck += r.packed; });
-        let ePend = eT - (eIn + eCl + eSh + ePck);
-        let ePct = eT > 0 ? ((eC / eT) * 100).toFixed(1) : '0.0';
+        let eT = 0, eIn = 0, eCl = 0, eSh = 0;
+        grps[h].forEach(r => { eT += r.total; eIn += r.huIn; eCl += r.huCl; eSh += r.ship; });
+        let eProcessado = eIn + eCl + eSh;
+        let eCaminho = eT - eProcessado;
+        let ePct = eT > 0 ? ((eProcessado / eT) * 100).toFixed(1) : '0.0';
 
         htmlETDs += `
         <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden mb-6">
             <div class="bg-slate-100 p-4 border-b flex justify-between items-center">
                 <h4 class="font-black text-slate-700 text-lg flex items-center gap-2"><i class="fa-solid fa-clock text-cyan-600"></i> ETD ${h}H</h4>
                 <div class="flex gap-4 items-center">
-                    <div class="text-xs font-bold text-slate-500">Pendente Físico: <span class="text-amber-600 font-black text-sm">${ePend.toLocaleString()}</span></div>
-                    <div class="bg-white border px-2 py-1 rounded font-bold text-cyan-700 text-xs">${ePct}% Concluído</div>
+                    <div class="text-xs font-bold text-slate-500">A Caminho (Esteiras): <span class="text-amber-600 font-black text-sm">${eCaminho.toLocaleString()}</span></div>
+                    <div class="bg-white border px-2 py-1 rounded font-bold text-cyan-700 text-xs">${ePct}% Pronto</div>
                 </div>
             </div>
             <table class="w-full text-left text-xs font-mono">
-                <thead class="bg-white text-slate-400 uppercase text-[9px] font-bold border-b"><tr><th class="p-3 pl-6">Rota</th><th class="text-right p-3">IN</th><th class="text-right p-3">CLS</th><th class="text-right p-3">SHP</th><th class="text-right p-3 text-emerald-600">PCK</th><th class="text-right p-3 text-amber-500">Pendente (Rua)</th><th class="text-right p-3">Total</th></tr></thead>
+                <thead class="bg-white text-slate-400 uppercase text-[9px] font-bold border-b"><tr><th class="p-3 pl-6">Rota</th><th class="text-right p-3 text-blue-500">IN</th><th class="text-right p-3 text-indigo-500">CLS</th><th class="text-right p-3 text-purple-600">SHP</th><th class="text-right p-3 text-amber-500 border-l border-slate-100">A Caminho</th><th class="text-right p-3">Total Dia</th></tr></thead>
                 <tbody class="divide-y divide-slate-50">
                     ${grps[h].sort((a,b)=> b.total - a.total).map(r => `
                     <tr class="hover:bg-slate-50">
@@ -343,8 +360,7 @@ function renderAereo(lst) {
                         <td class="text-right p-3 text-blue-500">${r.huIn}</td>
                         <td class="text-right p-3 text-indigo-500">${r.huCl}</td>
                         <td class="text-right p-3 text-purple-600">${r.ship}</td>
-                        <td class="text-right p-3 text-emerald-600 font-bold">${r.packed}</td>
-                        <td class="text-right p-3 text-amber-600 font-bold">${r.total - (r.huIn+r.huCl+r.ship+r.packed)}</td>
+                        <td class="text-right p-3 text-amber-600 font-bold border-l border-slate-100">${r.total - (r.huIn+r.huCl+r.ship)}</td>
                         <td class="text-right p-3 font-black text-slate-800">${r.total}</td>
                     </tr>`).join('')}
                 </tbody>
@@ -363,10 +379,10 @@ function calcProjections() {
     let tPick = capPick > 0 ? vPi / capPick : 0; let tPack = capPack > 0 ? (vPi + vPa) / capPack : 0;
     
     document.getElementById('hc-projections').innerHTML = `
-        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center mb-4"><span class="text-slate-400 text-xs">Pçs Pendentes Malha Ativa</span><span class="text-xl font-bold text-white">${(vPi + vPa).toLocaleString()}</span></div>
-        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 mb-2"><h4 class="font-bold text-blue-400 mb-1">Picking</h4><div class="text-xs text-slate-400">Processando ${vPi.toLocaleString()} pçs. Fila est. ${tPick.toFixed(1)}h</div></div>
-        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700"><h4 class="font-bold text-emerald-400 mb-1">Packing (Esteiras)</h4><div class="text-xs text-slate-400">Processando ${(vPa).toLocaleString()} pçs. Fila est. ${tPack.toFixed(1)}h</div></div>
-        <div class="text-[9px] text-slate-500 mt-2 text-center">* Waving ignorado no tempo ativo (Status: Congelado).</div>
+        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center mb-4"><span class="text-slate-400 text-xs">Pçs Ativas na Esteira/Pick</span><span class="text-xl font-bold text-white">${(vPi + vPa).toLocaleString()}</span></div>
+        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 mb-2"><h4 class="font-bold text-blue-400 mb-1">Picking (Trânsito de ~5m)</h4><div class="text-xs text-slate-400">Processando ${vPi.toLocaleString()} pçs. Fila est. ${tPick.toFixed(1)}h</div></div>
+        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700"><h4 class="font-bold text-emerald-400 mb-1">Packing (Trânsito de ~5m)</h4><div class="text-xs text-slate-400">Processando ${(vPa).toLocaleString()} pçs. Fila est. ${tPack.toFixed(1)}h</div></div>
+        <div class="text-[9px] text-slate-500 mt-2 text-center">* Waving ignorado nos cálculos ativos (Status: Congelado).</div>
     `;
 }
 
