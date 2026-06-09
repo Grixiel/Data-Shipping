@@ -10,10 +10,11 @@ const CURRENT_R_STR = "1:JETSL1,2:JETSL1,3:SSP8,4:SRJ13,5:SRJ8,6:SSP10,7:SBA4,8:
 
 // --- VARIÁVEIS GLOBAIS ---
 let DATA_CACHE = null; 
-let SETTINGS_DATA = { pickHC: 50, pickM: 120, packHC: 50, packM: 300, atrHC: 30, atrM: 450, stgHC: 4, stgM: 18, manM: 120, gayM: 500 };
+// Valores iniciais a zero forçam o preenchimento!
+let SETTINGS_DATA = { pickHC: 0, pickM: 0, packHC: 0, packM: 0, atrHC: 0, atrM: 0, stgHC: 0, stgM: 0, manM: 120, gayM: 500 };
 let RAMPA_MAP = {}; let ROUTE_LIST = []; let AVAILABLE_HOURS = []; let SELECTED_HOURS = []; let LAST_CLOUD_TIME = null;
 
-// --- FUNÇÕES DE SEGURANÇA CONTRA QUEBRAS DE HTML ---
+// --- FUNÇÕES DE SEGURANÇA E INICIALIZAÇÃO ---
 function setVal(id, v) { let el = document.getElementById(id); if(el) el.innerText = v; }
 function setHtml(id, h) { let el = document.getElementById(id); if(el) el.innerHTML = h; }
 function setStyle(id, p, v) { let el = document.getElementById(id); if(el) el.style[p] = v; }
@@ -69,14 +70,8 @@ function decodificarNuvem(payload) {
 }
 
 function processarTextoCola() {
-    let elPaste = document.getElementById('input-paste');
-    let txt = elPaste ? elPaste.value : '';
-    if(!txt) return; 
-    
-    closeModal('import-modal'); 
-    setClass('global-loader', 'remove', 'hidden'); 
-    setVal('loader-title', 'Analisando WMS...');
-
+    let elPaste = document.getElementById('input-paste'); let txt = elPaste ? elPaste.value : ''; if(!txt) return; 
+    closeModal('import-modal'); setClass('global-loader', 'remove', 'hidden'); setVal('loader-title', 'Analisando WMS...');
     setTimeout(() => {
         try {
             let vR = ROUTE_LIST.map(i => i.r).sort((a, b) => b.length - a.length), lines = txt.split(/\r?\n/), hAct = "S/H", mM = {}, k = {};
@@ -145,10 +140,7 @@ function processarTextoCola() {
             let arr = Object.values(mM).sort((a, b) => b.total - a.total);
             if(arr.length === 0) { alert("Nenhum dado encontrado."); fecharLoader(); return; }
 
-            let mergeEl = document.getElementById('chk-merge');
-            let isMerge = mergeEl ? mergeEl.checked : false;
-            let finalArr = arr, finalKpis = k;
-            
+            let mergeEl = document.getElementById('chk-merge'); let isMerge = mergeEl ? mergeEl.checked : false; let finalArr = arr, finalKpis = k;
             if (isMerge && DATA_CACHE && DATA_CACHE.micro) {
                 let mergedMap = {}; DATA_CACHE.micro.forEach(r => { mergedMap[r.nome + "-" + r.horario] = r; }); arr.forEach(r => { mergedMap[r.nome + "-" + r.horario] = r; });
                 finalArr = Object.values(mergedMap).sort((a, b) => b.total - a.total); finalKpis = {}; finalArr.forEach(r => { if(!finalKpis[r.horario]) finalKpis[r.horario] = { total: 0 }; finalKpis[r.horario].total += r.total; });
@@ -167,23 +159,21 @@ function aplicarFiltros() {
 }
 
 function mudarAba(aba) { 
-    document.querySelectorAll('[id^="view-"]').forEach(e => e.classList.add('hidden')); 
-    setClass('view-' + aba, 'remove', 'hidden'); 
-    document.querySelectorAll('.sidebar-link').forEach(e => e.classList.remove('active')); 
-    setClass('btn-' + aba, 'add', 'active'); 
+    document.querySelectorAll('[id^="view-"]').forEach(e => e.classList.add('hidden')); setClass('view-' + aba, 'remove', 'hidden'); 
+    document.querySelectorAll('.sidebar-link').forEach(e => e.classList.remove('active')); setClass('btn-' + aba, 'add', 'active'); 
     if(aba === 'hc') calcProjections(); 
 }
+
 function openModal(id) { setClass(id, 'remove', 'hidden'); }
 function closeModal(id) { setClass(id, 'add', 'hidden'); }
 function fecharLoader() { setClass('global-loader', 'add', 'hidden'); }
-
 function setStatusUi(msg, color) { setHtml('data-status', `<span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${color}"></span> <span class="text-slate-500 font-bold uppercase text-[9px]">${msg}</span></span>`); }
 function parseNum(s) { if(!s || s === '-' || s === '–') return 0; let c = s.replace(/[^\d]/g, ''); return c === '' ? 0 : parseInt(c, 10); }
 function isAereo(c) { return RAMPA_MAP[99]?.includes(c) || RAMPA_MAP[100]?.includes(c) || /_A$|_B$|_C$/.test(c); }
 
 function saveHC() {
-    let g = (id, def) => { let el = document.getElementById(id); let val = el ? parseFloat(el.value) : def; return isNaN(val) || val <= 0 ? def : val; };
-    SETTINGS_DATA = { pickHC: g('inp-hc-pick', 50), pickM: g('inp-med-pick', 120), packHC: g('inp-hc-pack', 50), packM: g('inp-med-pack', 300), atrHC: g('inp-hc-atr', 30), atrM: g('inp-med-atr', 450), stgHC: g('inp-hc-stg', 4), stgM: g('inp-med-stg', 18) };
+    let g = (id) => { let el = document.getElementById(id); let val = el ? parseFloat(el.value) : 0; return isNaN(val) || val < 0 ? 0 : val; };
+    SETTINGS_DATA = { pickHC: g('inp-hc-pick'), pickM: g('inp-med-pick'), packHC: g('inp-hc-pack'), packM: g('inp-med-pack'), atrHC: g('inp-hc-atr'), atrM: g('inp-med-atr'), stgHC: g('inp-hc-stg'), stgM: g('inp-med-stg') };
     calcProjections(); salvarNoBanco();
 }
 
@@ -199,7 +189,7 @@ function showTooltip(e, html) { let t = document.getElementById('floating-tip');
 function moveTooltip(e) { let t = document.getElementById('floating-tip'); if(!t || t.classList.contains('hidden')) return; let x = e.clientX + 15, y = e.clientY + 15; if (x + t.offsetWidth > window.innerWidth) x = e.clientX - t.offsetWidth - 15; if (y + t.offsetHeight > window.innerHeight) y = window.innerHeight - t.offsetHeight - 15; t.style.left = Math.max(10, x) + 'px'; t.style.top = Math.max(10, y) + 'px'; }
 function hideTooltip() { setClass('floating-tip', 'add', 'hidden'); }
 
-// --- RENDERIZADORES DE TELA (LÓGICA OPERACIONAL AVANÇADA) ---
+// --- RENDERIZADORES DE TELA ---
 function renderDash(lst) {
     let allValid = lst.filter(i => i.horario !== 'ATRASO');
     let tTot = 0, tC = 0, tPck = 0, tIn = 0, tCls = 0, tShp = 0;
@@ -208,24 +198,18 @@ function renderDash(lst) {
     setVal('dash-glb-total', tTot.toLocaleString()); setVal('dash-glb-targetval', tC.toLocaleString());
     setVal('dash-glb-packed', tPck.toLocaleString()); setVal('dash-glb-huin', tIn.toLocaleString()); 
     setVal('dash-glb-hucl', tCls.toLocaleString()); setVal('dash-glb-ship', tShp.toLocaleString());
-    
     let pendentesGlobal = tTot - (tIn + tCls + tShp + tPck);
     setVal('dash-glb-pend', pendentesGlobal.toLocaleString());
-    let pG = tTot > 0 ? ((tC / tTot) * 100).toFixed(2) : '0.00'; 
-    setVal('dash-glb-pct', pG + '%'); setStyle('dash-glb-bar', 'width', pG + '%');
+    let pG = tTot > 0 ? ((tC / tTot) * 100).toFixed(2) : '0.00'; setVal('dash-glb-pct', pG + '%'); setStyle('dash-glb-bar', 'width', pG + '%');
 
     let bT = 0, bP = 0; lst.filter(i => i.horario === 'ATRASO').forEach(i => { bT += i.total; bP += i.concluido; });
     let bArea = document.getElementById('dash-backlog-area');
     if(bArea) { if(bT > 0) { bArea.classList.remove('hidden'); setVal('bl-total', bT.toLocaleString()); setVal('bl-proc', bP.toLocaleString()); setVal('bl-pend', Math.max(0, bT - bP).toLocaleString()); } else { bArea.classList.add('hidden'); } }
 
     let grps = {};
-    allValid.forEach(i => { 
-        if(!grps[i.horario]) grps[i.horario] = { t: 0, c: 0 }; 
-        grps[i.horario].t += i.total; grps[i.horario].c += i.concluido; 
-    });
+    allValid.forEach(i => { if(!grps[i.horario]) grps[i.horario] = { t: 0, c: 0 }; grps[i.horario].t += i.total; grps[i.horario].c += i.concluido; });
     
-    let hKpi = ''; 
-    let fmtK = (v) => v >= 10000 ? (v / 1000).toFixed(1).replace('.0', '') + 'k' : v.toLocaleString();
+    let hKpi = ''; let fmtK = (v) => v >= 10000 ? (v / 1000).toFixed(1).replace('.0', '') + 'k' : v.toLocaleString();
     Object.keys(grps).sort().forEach(k => {
         let g = grps[k]; let pt = g.t > 0 ? ((g.c / g.t) * 100).toFixed(2) : '0.00';
         let m98 = Math.ceil(g.t * 0.98); let m985 = Math.ceil(g.t * 0.985); let m99 = Math.ceil(g.t * 0.99); let m995 = Math.ceil(g.t * 0.995);
@@ -248,8 +232,7 @@ function renderDash(lst) {
 }
 
 function renderMicro(lst) {
-    let riskEl = document.getElementById('micro-risk-filter');
-    let riskMode = riskEl ? riskEl.value : 'padrao';
+    let riskEl = document.getElementById('micro-risk-filter'); let riskMode = riskEl ? riskEl.value : 'padrao';
     let filtered = lst.filter(i => !i.isAereo);
     
     filtered.sort((a, b) => {
@@ -278,7 +261,10 @@ function renderMicro(lst) {
 
 function renderMatriz(lst) {
     let alertRamps3 = [], alertRamps5 = [];
-    let prodAtrelamento = SETTINGS_DATA.atrM || 450; 
+    
+    // Verificador de Segurança para a Produtividade do Atrelamento (Evita erros se estiver a 0)
+    let prodAtrelamento = (SETTINGS_DATA.atrM && SETTINGS_DATA.atrM > 0) ? SETTINGS_DATA.atrM : null; 
+    let hcIsMissing = !prodAtrelamento;
 
     const ren = (id, s, e, alertsArray) => {
         let h = '<div class="col-span-full grid grid-cols-2 sm:grid-cols-5 xl:grid-cols-10 gap-3">';
@@ -296,21 +282,27 @@ function renderMatriz(lst) {
                 else { hBg = 'bg-emerald-100 border-emerald-300'; textC = 'text-emerald-700'; } 
             }
 
-            // Matemática Corrigida do Tempo (Lógica Logística Tática)
-            // O que está no Packed precisa ser escoado numa janela de 15 minutos (0.25h)
-            let hcAgora = Math.ceil(st.p / (prodAtrelamento * 0.25)) || 0;
-            // O que está no Packing chega aos poucos numa janela de 45 minutos (0.75h)
-            let hcBreve = Math.ceil((st.r + st.g) / (prodAtrelamento * 0.75)) || 0;
-            // O que está no Picking vai chegar numa janela de 1 hora inteira (1h)
-            let hcFuturo = Math.ceil(st.pi / (prodAtrelamento * 1)) || 0;
+            // Cálculos Seguros de Tempo e Escoamento de Pessoas (HC)
+            let calcHtml = "";
+            if (hcIsMissing) {
+                calcHtml = `<div class="bg-rose-500/20 p-2 rounded border border-rose-500/30 text-rose-400 text-center font-bold">⚠️ Preencha os HCs na Aba Gestão para calcular tempo de escoamento.</div>`;
+            } else {
+                let tempoAgora = st.p / prodAtrelamento; 
+                let tempoBreve = (st.r + st.g) / prodAtrelamento; 
+                let tempoFuturo = st.pi / prodAtrelamento; 
+                
+                let formatTempo = (t) => { if(t === 0) return '0 min'; return t < 1 ? Math.round(t * 60) + ' min' : t.toFixed(1) + 'h'; };
 
-            let tooltipHtml = encodeURIComponent(`<div class="font-black text-sm mb-2 border-b pb-1">Análise Tática - Tobogã ${i}</div>
-                <div class="space-y-2 text-xs mb-3">
-                    <div class="flex justify-between items-center bg-emerald-500/20 p-1.5 rounded border border-emerald-500/30"><span>AGORA (Packed +5m):</span> <strong class="text-emerald-400 font-mono text-sm">${st.p} pçs <i class="fa-solid fa-arrow-right mx-1"></i> ${hcAgora} HC</strong></div>
-                    <div class="flex justify-between items-center bg-orange-500/20 p-1.5 rounded border border-orange-500/30"><span>EM BREVE (Pck +10m):</span> <strong class="text-orange-400 font-mono text-sm">${st.r + st.g} pçs <i class="fa-solid fa-arrow-right mx-1"></i> ${hcBreve} HC</strong></div>
-                    <div class="flex justify-between items-center bg-rose-500/20 p-1.5 rounded border border-rose-500/30"><span>+1 HORA (Pick):</span> <strong class="text-rose-400 font-mono text-sm">${st.pi} pçs <i class="fa-solid fa-arrow-right mx-1"></i> ${hcFuturo} HC</strong></div>
-                </div>
-                <div class="text-[9px] text-slate-400 border-t pt-2">* HC dinâmico calculado por janela de chegada à rampa.<br>* Base de cálculo: ${prodAtrelamento} pçs/h por pessoa.</div>`);
+                calcHtml = `
+                    <div class="flex justify-between items-center bg-emerald-500/20 p-1.5 rounded border border-emerald-500/30"><span>AGORA (Packed):</span> <strong class="text-emerald-400 font-mono text-sm">${st.p} pçs <i class="fa-solid fa-arrow-right mx-1"></i> ${formatTempo(tempoAgora)}</strong></div>
+                    <div class="flex justify-between items-center bg-orange-500/20 p-1.5 rounded border border-orange-500/30"><span>EM BREVE (Pck):</span> <strong class="text-orange-400 font-mono text-sm">${st.r + st.g} pçs <i class="fa-solid fa-arrow-right mx-1"></i> ${formatTempo(tempoBreve)}</strong></div>
+                    <div class="flex justify-between items-center bg-rose-500/20 p-1.5 rounded border border-rose-500/30"><span>FUTURO (Pick):</span> <strong class="text-rose-400 font-mono text-sm">${st.pi} pçs <i class="fa-solid fa-arrow-right mx-1"></i> ${formatTempo(tempoFuturo)}</strong></div>
+                `;
+            }
+
+            let tooltipHtml = encodeURIComponent(`<div class="font-black text-sm mb-2 border-b pb-1">Análise de Tempo - Tobogã ${i}</div>
+                <div class="space-y-2 text-xs mb-3">${calcHtml}</div>
+                <div class="text-[9px] text-slate-400 border-t pt-2">* Tempo estimado para 1 pessoa escoar o volume.<br>* Base de cálculo: ${prodAtrelamento || 0} pçs/h. Waving ignorado.</div>`);
 
             h += `<div onmouseenter="showTooltip(event, this.dataset.tip)" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()" data-tip="${tooltipHtml}" class="rounded-xl flex flex-col justify-between ${st.t === 0 ? 'opacity-40 grayscale bg-white/50 border border-slate-200' : hBg + ' shadow-md hover:-translate-y-1 cursor-help border'} overflow-hidden h-[90px] transition-all">
                     <div class="px-3 py-2 flex justify-between items-center border-b border-white/20"><span class="font-black ${textC} text-lg">${i}</span><span class="${textC} text-xs font-bold font-mono">${volAtivo > 0 ? volAtivo : ''}</span></div>
