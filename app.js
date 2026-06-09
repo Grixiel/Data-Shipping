@@ -7,6 +7,8 @@ const GITHUB_TOKEN = p1 + p2 + p3;
 const CSV_PLANILHA_TOBOGAS = "https://docs.google.com/spreadsheets/d/1wRtBiDY1U9gOeRE_15mg8iKKVQE2wBnRX9Jb69fMUvE/pub?output=csv"; 
 
 const CURRENT_R_STR = "1:JETSL1,2:JETSL1,3:SSP8,4:SRJ13,5:SRJ8,6:SSP10,7:SBA4,8:SSP11,9:SSP5,10:SSP39,11:SSP4,12:SMG15,13:SSP23,14:SMG12,15:SSP9,16:SSP20,17:SMG2,18:SMG8,19:SMG9,20:SSP38,21:SPR8,22:SSC2,23:SSC2,24:SDF1,25:SDF1,26:SSP13,27:SRJ5,28:SSP14,29:SSP14,30:SMG14|SSP18|SSP9_S,31:SMG14|SSP18|SSP9_S,32:JETHUB1|SMG5|SSP34|SSP38_S,33:JETHUB1|SMG5|SSP34|SSP38_S,34:SES1|SRJ10_CHP|SSP36|SSP37_S|SSP4_CHP,35:SES1|SRJ10_CHP|SSP36|SSP37_S|SSP4_CHP,36:SRS10|SSC3|SSP1_S|SSP5A_S,37:SRS10|SSC3|SSP1_S|SSP5A_S,38:SGO2|SMG1|SRJ3_CHP|SSP28,39:SGO2|SMG1|SRJ3_CHP|SSP28,40:SMS2|SRJ1_CHP|SSP3_S|SSP40_CHP|SSP48,41:SMS2|SRJ1_CHP|SSP3_S|SSP40_CHP|SSP48,42:SAL1_CHP|SSP30_S,43:SAL1_CHP|SSP30_S,44:SES3|SPR4|SRS8|SSP5_S,45:SES3|SPR4|SRS8|SSP5_S,46:SES3_X|SPR2|SRD1|SSP26,47:SES3_X|SPR2|SRD1|SSP26,48:JETGO1|SAL1|SSC7|SSP12|SSP6,49:JETGO1|SAL1|SSC7|SSP12|SSP6,50:MSP1_E|MSP21_E|MSP5_E|MSP7_E,51:JADHUB|JETBA2|JETBA3|LOGHUB|SSP46|XSP9_1|XSP9_2|XSP9_6,52:MSP1_E|MSP21_E|MSP5_E|MSP7_E|SRJ2,53:SPR1|SSP18_S|SSP3,54:SPR1|SSP18_S|SSP3,55:SMG13|SRS1_CHP|SRS4|SSP7,56:SMG13|SRS1_CHP|SRS4|SSP7,57:IMISL1|SRJ12|SRJ6_CHP|SRJ7|SSP1,58:IMISL1|SRJ12|SRJ6_CHP|SRJ7|SSP1,59:SMG3|SRJ10|SSC4|SSP17,60:SMG3|SRJ10|SSC4|SSP17,61:SMG11|SPI1|SRJ9|SSP1_CHP|SSP40,62:SMG11|SPI1|SRJ9|SSP1_CHP|SSP40,63:SBA7|SPR5|SSC5|SSP40_S|SSP7_S,64:SBA7|SPR5|SSC5|SSP40_S|SSP7_S,65:SBA3|SMG10|SPR7|SSP24|SSP39_S,66:SBA3|SMG10|SPR7|SSP24|SSP39_S,67:SRJ1|SRS5|SSP16|SSP45_CHP|SSP5F_S,68:SRS5|SSP16|SSP45_CHP|SSP49|SSP5F_S,69:SMG13_X|SMG1_CHP|SMG4|SMR1|SSP6_S,70:SMG13_X|SMG1_CHP|SMG4|SMR1|SSP6_S,71:SCE1|SMS1|SPR1_CHP|SSP25_S|SSP37,72:SCE1|SMS1|SPR1_CHP|SSP25_S|SSP37,73:SMG8_CHP|SRD2|SSC1|SSP25|XSP9_6_CHP,74:SMG8_CHP|SRD2|SSC1|SSP25|XSP9_6_CHP,75:SBA6|SMG7|SSP22_CHP|SSP29_S,76:SBA6|SMG7|SSP22_CHP|SSP29_S,77:SBA2|SPA1_X|SRS3|SSC8|SSP31,78:SBA2|SPA1_X|SRS3|SSC8|SSP31,79:SES2|SGO1|SRJ4|SSP45|SSP45_S,80:SES2|SGO1|SRJ4|SSP45|SSP45_S,81:SMR2|SRS2|SSP27_S|SSP29|XSP9_1_CHP,82:SMR2|SRS2|SSP27_S|SSP29|XSP9_1_CHP,83:SPR3|SRJ6|SRS7|SSP12_CHP,84:SPR3|SRJ6|SRS7|SSP12_CHP,85:SMN1|SSC9|SSP15|SSP18_CHP|SSP48_S,86:SMN1|SSC9|SSP15|SSP18_CHP|SSP48_S,87:SRS1|SSP17_CHP|SSP27|SSP49_S|STO1,88:SRS1|SSP17_CHP|SSP27|SSP49_S|STO1,89:SBA1|SMG6|SSP21_CHP|SSP49,90:SBA1|SSP21_CHP|SSP49,91:JETRD1|SRJ3|SSP23_S|SSP30|SSP7_CHP,92:JETRD1|SRJ3|SSP23_S|SSP30|SSP7_CHP,93:SSP21_S|SSP22|STO2,94:SSP21_S|SSP22|STO2,95:SDF2|SPA1|SPR6_CHP|SRS9,96:SDF2|SPA1|SPR6_CHP|SRS9,97:SGO1_X|SPE1|SPR6|SSP15_CHP|SSP21,98:SGO1_X|SPE1|SPR6|SSP15_CHP|SSP21,99:SAL1_A|SAL1_B|SAM1_A|SAM1_C|SBA1_A|SBA2_A|SBA6_A|SCE1_A|SDF1_A|SDF2_A|SES1_A|SES1_B|SFN1_C|SGO1X_A|SGO1_A|SGO1_B|SJP1X_A|SJP1_A|SMN1_A|SMR1_A|SMR1_B|SMR2_A|SPA1X_A|SPA1_A|SPA1_B|SPE1_A|SPI1_A|SRN1_A|SRS1_A|SRS8_A|SRS9_A|SSE1_A|SAM1_B|SCE1_B|SJP1_B|SMN1_B|SPI1_B|SRN1_B|SRS1_B|SSE1_B|STO1_B|SAL1_C|SBA1_C|SCE1_C|SJP1_C|SMR1_C|SPA1_C|SRN1_C|SSE1_C,100:SAL1_A|SAL1_B|SAM1_A|SAM1_C|SBA1_A|SBA2_A|SBA6_A|SCE1_A|SDF1_A|SDF2_A|SES1_A|SES1_B|SFN1_C|SGO1X_A|SGO1_A|SGO1_B|SJP1X_A|SJP1_A|SMN1_A|SMR1_A|SMR1_B|SMR2_A|SPA1X_A|SPA1_A|SPA1_B|SPE1_A|SPI1_A|SRN1_A|SRS1_A|SRS8_A|SRS9_A|SSE1_A|SAM1_B|SCE1_B|SJP1_B|SMN1_B|SPI1_B|SRN1_B|SRS1_B|SSE1_B|STO1_B|SAL1_C|SBA1_C|SCE1_C|SJP1_C|SMR1_C|SPA1_C|SRN1_C|SSE1_C";
+
+// --- VARIÁVEIS GLOBAIS ---
 let DATA_CACHE = null; 
 let SETTINGS_DATA = { pickHC: 50, pickM: 120, packHC: 50, packM: 300, atrHC: 30, atrM: 450, stgHC: 4, stgM: 18, manM: 120, gayM: 500 };
 let RAMPA_MAP = {}; let ROUTE_LIST = []; let AVAILABLE_HOURS = []; let SELECTED_HOURS = []; let LAST_CLOUD_TIME = null;
@@ -202,7 +204,6 @@ function renderDash(lst) {
     let allValid = lst.filter(i => i.horario !== 'ATRASO');
     let tTot = 0, tC = 0, tPck = 0, tIn = 0, tCls = 0, tShp = 0;
     
-    // VISÃO GLOBAL
     allValid.forEach(i => { tTot += i.total; tC += i.concluido; tPck += i.packed; tIn += i.huIn; tCls += i.huCl; tShp += i.ship; });
     setVal('dash-glb-total', tTot.toLocaleString()); setVal('dash-glb-targetval', tC.toLocaleString());
     setVal('dash-glb-packed', tPck.toLocaleString()); setVal('dash-glb-huin', tIn.toLocaleString()); 
@@ -213,12 +214,10 @@ function renderDash(lst) {
     let pG = tTot > 0 ? ((tC / tTot) * 100).toFixed(2) : '0.00'; 
     setVal('dash-glb-pct', pG + '%'); setStyle('dash-glb-bar', 'width', pG + '%');
 
-    // ATRASO
     let bT = 0, bP = 0; lst.filter(i => i.horario === 'ATRASO').forEach(i => { bT += i.total; bP += i.concluido; });
     let bArea = document.getElementById('dash-backlog-area');
     if(bArea) { if(bT > 0) { bArea.classList.remove('hidden'); setVal('bl-total', bT.toLocaleString()); setVal('bl-proc', bP.toLocaleString()); setVal('bl-pend', Math.max(0, bT - bP).toLocaleString()); } else { bArea.classList.add('hidden'); } }
 
-    // METAS DE ETD (98% a 99.5%)
     let grps = {};
     allValid.forEach(i => { 
         if(!grps[i.horario]) grps[i.horario] = { t: 0, c: 0 }; 
@@ -297,9 +296,13 @@ function renderMatriz(lst) {
                 else { hBg = 'bg-emerald-100 border-emerald-300'; textC = 'text-emerald-700'; } 
             }
 
-            let hcAgora = Math.ceil(st.p / prodAtrelamento);
-            let hcBreve = Math.ceil((st.r + st.g) / prodAtrelamento);
-            let hcFuturo = Math.ceil(st.pi / prodAtrelamento);
+            // Matemática Corrigida do Tempo (Lógica Logística Tática)
+            // O que está no Packed precisa ser escoado numa janela de 15 minutos (0.25h)
+            let hcAgora = Math.ceil(st.p / (prodAtrelamento * 0.25)) || 0;
+            // O que está no Packing chega aos poucos numa janela de 45 minutos (0.75h)
+            let hcBreve = Math.ceil((st.r + st.g) / (prodAtrelamento * 0.75)) || 0;
+            // O que está no Picking vai chegar numa janela de 1 hora inteira (1h)
+            let hcFuturo = Math.ceil(st.pi / (prodAtrelamento * 1)) || 0;
 
             let tooltipHtml = encodeURIComponent(`<div class="font-black text-sm mb-2 border-b pb-1">Análise Tática - Tobogã ${i}</div>
                 <div class="space-y-2 text-xs mb-3">
@@ -307,7 +310,7 @@ function renderMatriz(lst) {
                     <div class="flex justify-between items-center bg-orange-500/20 p-1.5 rounded border border-orange-500/30"><span>EM BREVE (Pck +10m):</span> <strong class="text-orange-400 font-mono text-sm">${st.r + st.g} pçs <i class="fa-solid fa-arrow-right mx-1"></i> ${hcBreve} HC</strong></div>
                     <div class="flex justify-between items-center bg-rose-500/20 p-1.5 rounded border border-rose-500/30"><span>+1 HORA (Pick):</span> <strong class="text-rose-400 font-mono text-sm">${st.pi} pçs <i class="fa-solid fa-arrow-right mx-1"></i> ${hcFuturo} HC</strong></div>
                 </div>
-                <div class="text-[9px] text-slate-400 border-t pt-2">* HC baseado em ${prodAtrelamento} pçs/h por pessoa.<br>* Volume congelado (WAV) ignorado no HC dinâmico.</div>`);
+                <div class="text-[9px] text-slate-400 border-t pt-2">* HC dinâmico calculado por janela de chegada à rampa.<br>* Base de cálculo: ${prodAtrelamento} pçs/h por pessoa.</div>`);
 
             h += `<div onmouseenter="showTooltip(event, this.dataset.tip)" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()" data-tip="${tooltipHtml}" class="rounded-xl flex flex-col justify-between ${st.t === 0 ? 'opacity-40 grayscale bg-white/50 border border-slate-200' : hBg + ' shadow-md hover:-translate-y-1 cursor-help border'} overflow-hidden h-[90px] transition-all">
                     <div class="px-3 py-2 flex justify-between items-center border-b border-white/20"><span class="font-black ${textC} text-lg">${i}</span><span class="${textC} text-xs font-bold font-mono">${volAtivo > 0 ? volAtivo : ''}</span></div>
@@ -391,16 +394,37 @@ function renderAereo(lst) {
 
 function calcProjections() {
     if(!DATA_CACHE) return;
-    let s = SETTINGS_DATA; let capPick = (s.pickHC || 50) * (s.pickM || 120); let capPack = (s.packHC || 50) * (s.packM || 300);
-    let list = DATA_CACHE.micro.filter(i => !i.isAereo && i.horario !== "ATRASO");
-    let vPi = 0, vPa = 0; list.forEach(i => { vPi += (i.pick); vPa += (i.rtp + i.grp); }); 
-    let tPick = capPick > 0 ? vPi / capPick : 0; let tPack = capPack > 0 ? (vPi + vPa) / capPack : 0;
+    let s = SETTINGS_DATA; 
+    let capPick = (s.pickHC || 0) * (s.pickM || 0); 
+    let capPack = (s.packHC || 0) * (s.packM || 0);
     
+    let list = DATA_CACHE.micro.filter(i => !i.isAereo && i.horario !== "ATRASO");
+    let vPi = 0, vPa = 0; 
+    list.forEach(i => { vPi += i.pick; vPa += (i.rtp + i.grp); }); 
+    
+    let tPick = capPick > 0 ? (vPi / capPick) : Infinity; 
+    let tPack = capPack > 0 ? (vPa / capPack) : Infinity;
+    
+    let fT = (h) => {
+        if(h === Infinity) return '<span class="text-rose-500">Parado (HC 0)</span>';
+        if(h === 0) return '0 min';
+        return h < 1 ? Math.round(h * 60) + " min" : h.toFixed(1) + "h";
+    };
+
     setHtml('hc-projections', `
-        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center mb-4"><span class="text-slate-400 text-xs">Pçs Ativas na Esteira/Pick</span><span class="text-xl font-bold text-white">${(vPi + vPa).toLocaleString()}</span></div>
-        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 mb-2"><h4 class="font-bold text-blue-400 mb-1">Picking (Trânsito de ~5m)</h4><div class="text-xs text-slate-400">Processando ${vPi.toLocaleString()} pçs. Fila est. ${tPick.toFixed(1)}h</div></div>
-        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700"><h4 class="font-bold text-emerald-400 mb-1">Packing (Esteiras)</h4><div class="text-xs text-slate-400">Processando ${(vPa).toLocaleString()} pçs. Fila est. ${tPack.toFixed(1)}h</div></div>
-        <div class="text-[9px] text-slate-500 mt-2 text-center">* Waving ignorado nos cálculos ativos (Status: Congelado).</div>
+        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center mb-4">
+            <span class="text-slate-400 text-xs uppercase font-bold">Pçs Ativas (Sem Waving)</span>
+            <span class="text-2xl font-black text-white">${(vPi + vPa).toLocaleString()}</span>
+        </div>
+        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 mb-3">
+            <div class="flex justify-between items-center mb-1"><h4 class="font-bold text-blue-400">Picking</h4><span class="text-xs bg-slate-900 px-2 py-1 rounded text-slate-300 border border-slate-700">Capacidade: ${capPick.toLocaleString()} pçs/h</span></div>
+            <div class="text-xs text-slate-400">Pendente: <strong class="text-white">${vPi.toLocaleString()} pçs</strong> <i class="fa-solid fa-arrow-right mx-1"></i> Tempo estimado de fila: <strong class="text-blue-400 text-sm ml-1">${fT(tPick)}</strong></div>
+        </div>
+        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 mb-2">
+            <div class="flex justify-between items-center mb-1"><h4 class="font-bold text-orange-400">Packing (Esteiras)</h4><span class="text-xs bg-slate-900 px-2 py-1 rounded text-slate-300 border border-slate-700">Capacidade: ${capPack.toLocaleString()} pçs/h</span></div>
+            <div class="text-xs text-slate-400">Pendente: <strong class="text-white">${vPa.toLocaleString()} pçs</strong> <i class="fa-solid fa-arrow-right mx-1"></i> Tempo estimado de fila: <strong class="text-orange-400 text-sm ml-1">${fT(tPack)}</strong></div>
+        </div>
+        <div class="text-[9px] text-slate-500 mt-3 text-center uppercase tracking-widest"><i class="fa-solid fa-snowflake text-cyan-500 mr-1"></i> Status Waving (Congelado) - Ignorado no cálculo ativo.</div>
     `);
 }
 
