@@ -11,6 +11,12 @@ let DATA_CACHE = null;
 let SETTINGS_DATA = { pickHC: 50, pickM: 120, packHC: 50, packM: 300, atrHC: 30, atrM: 450, stgHC: 4, stgM: 18, manM: 120, gayM: 500 };
 let RAMPA_MAP = {}; let ROUTE_LIST = []; let AVAILABLE_HOURS = []; let SELECTED_HOURS = []; let LAST_CLOUD_TIME = null;
 
+// --- FUNÇÕES DE SEGURANÇA CONTRA QUEBRAS DE HTML ---
+function setVal(id, v) { let el = document.getElementById(id); if(el) el.innerText = v; }
+function setHtml(id, h) { let el = document.getElementById(id); if(el) el.innerHTML = h; }
+function setStyle(id, p, v) { let el = document.getElementById(id); if(el) el.style[p] = v; }
+function setClass(id, action, cls) { let el = document.getElementById(id); if(el) el.classList[action](cls); }
+
 function carregarMapaImediato() {
     ROUTE_LIST = []; for(let i=1; i<=100; i++) RAMPA_MAP[i] = [];
     CURRENT_R_STR.split(',').forEach(g => { let [t, r] = g.split(':'); if(r) { r.split('|').forEach(x => { ROUTE_LIST.push({ t: parseInt(t), r: x }); RAMPA_MAP[parseInt(t)].push(x); }); } });
@@ -33,7 +39,7 @@ function carregarMapaTobogas() {
 }
 
 function sincronizarComBanco(manual) {
-    if(manual) document.getElementById('global-loader').classList.remove('hidden');
+    if(manual) setClass('global-loader', 'remove', 'hidden');
     setStatusUi('Conectando...', 'bg-blue-500 animate-pulse');
     fetch(`https://api.github.com/gists/${GIST_ID}?t=${Date.now()}`, { headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}` } })
     .then(res => { if (!res.ok) throw new Error("Erro API"); return res.json(); })
@@ -61,8 +67,14 @@ function decodificarNuvem(payload) {
 }
 
 function processarTextoCola() {
-    let txt = document.getElementById('input-paste').value; if(!txt) return; 
-    closeModal('import-modal'); document.getElementById('global-loader').classList.remove('hidden'); document.getElementById('loader-title').innerText = "Analisando WMS...";
+    let elPaste = document.getElementById('input-paste');
+    let txt = elPaste ? elPaste.value : '';
+    if(!txt) return; 
+    
+    closeModal('import-modal'); 
+    setClass('global-loader', 'remove', 'hidden'); 
+    setVal('loader-title', 'Analisando WMS...');
+
     setTimeout(() => {
         try {
             let vR = ROUTE_LIST.map(i => i.r).sort((a, b) => b.length - a.length), lines = txt.split(/\r?\n/), hAct = "S/H", mM = {}, k = {};
@@ -131,7 +143,10 @@ function processarTextoCola() {
             let arr = Object.values(mM).sort((a, b) => b.total - a.total);
             if(arr.length === 0) { alert("Nenhum dado encontrado."); fecharLoader(); return; }
 
-            let isMerge = document.getElementById('chk-merge').checked, finalArr = arr, finalKpis = k;
+            let mergeEl = document.getElementById('chk-merge');
+            let isMerge = mergeEl ? mergeEl.checked : false;
+            let finalArr = arr, finalKpis = k;
+            
             if (isMerge && DATA_CACHE && DATA_CACHE.micro) {
                 let mergedMap = {}; DATA_CACHE.micro.forEach(r => { mergedMap[r.nome + "-" + r.horario] = r; }); arr.forEach(r => { mergedMap[r.nome + "-" + r.horario] = r; });
                 finalArr = Object.values(mergedMap).sort((a, b) => b.total - a.total); finalKpis = {}; finalArr.forEach(r => { if(!finalKpis[r.horario]) finalKpis[r.horario] = { total: 0 }; finalKpis[r.horario].total += r.total; });
@@ -149,18 +164,23 @@ function aplicarFiltros() {
     renderDash(lst); renderAereo(DATA_CACHE.micro); renderMatriz(lst); renderMicro(lst); calcProjections(); updateLiveClock();
 }
 
-function mudarAba(aba) { document.querySelectorAll('[id^="view-"]').forEach(e => e.classList.add('hidden')); document.getElementById('view-' + aba).classList.remove('hidden'); document.querySelectorAll('.sidebar-link').forEach(e => e.classList.remove('active')); document.getElementById('btn-' + aba).classList.add('active'); if(aba === 'hc') calcProjections(); }
-function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-function fecharLoader() { document.getElementById('global-loader').classList.add('hidden'); }
-function setVal(id, v) { const el = document.getElementById(id); if(el) el.innerText = v; }
-function setStyle(id, p, v) { const el = document.getElementById(id); if(el) el.style[p] = v; }
-function setStatusUi(msg, color) { document.getElementById('data-status').innerHTML = `<span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${color}"></span> <span class="text-slate-500 font-bold uppercase text-[9px]">${msg}</span></span>`; }
+function mudarAba(aba) { 
+    document.querySelectorAll('[id^="view-"]').forEach(e => e.classList.add('hidden')); 
+    setClass('view-' + aba, 'remove', 'hidden'); 
+    document.querySelectorAll('.sidebar-link').forEach(e => e.classList.remove('active')); 
+    setClass('btn-' + aba, 'add', 'active'); 
+    if(aba === 'hc') calcProjections(); 
+}
+function openModal(id) { setClass(id, 'remove', 'hidden'); }
+function closeModal(id) { setClass(id, 'add', 'hidden'); }
+function fecharLoader() { setClass('global-loader', 'add', 'hidden'); }
+
+function setStatusUi(msg, color) { setHtml('data-status', `<span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${color}"></span> <span class="text-slate-500 font-bold uppercase text-[9px]">${msg}</span></span>`); }
 function parseNum(s) { if(!s || s === '-' || s === '–') return 0; let c = s.replace(/[^\d]/g, ''); return c === '' ? 0 : parseInt(c, 10); }
 function isAereo(c) { return RAMPA_MAP[99]?.includes(c) || RAMPA_MAP[100]?.includes(c) || /_A$|_B$|_C$/.test(c); }
 
 function saveHC() {
-    let g = (id, def) => { let val = parseFloat(document.getElementById(id).value); return isNaN(val) || val <= 0 ? def : val; };
+    let g = (id, def) => { let el = document.getElementById(id); let val = el ? parseFloat(el.value) : def; return isNaN(val) || val <= 0 ? def : val; };
     SETTINGS_DATA = { pickHC: g('inp-hc-pick', 50), pickM: g('inp-med-pick', 120), packHC: g('inp-hc-pack', 50), packM: g('inp-med-pack', 300), atrHC: g('inp-hc-atr', 30), atrM: g('inp-med-atr', 450), stgHC: g('inp-hc-stg', 4), stgM: g('inp-med-stg', 18) };
     calcProjections(); salvarNoBanco();
 }
@@ -168,15 +188,14 @@ function saveHC() {
 function renderEtdCheckboxes() {
     let h = `<label class="flex gap-2 p-2 text-xs font-bold hover:bg-slate-50 cursor-pointer"><input type="checkbox" onchange="toggleAllEtds()" ${SELECTED_HOURS.length === 0 ? 'checked' : ''} class="w-4 h-4 rounded"> TODOS</label><hr>`;
     AVAILABLE_HOURS.forEach(hr => { h += `<label class="flex gap-2 p-2 text-xs hover:bg-slate-50 cursor-pointer"><input type="checkbox" value="${hr}" onchange="toggleSingleEtd(this)" ${SELECTED_HOURS.includes(hr) ? 'checked' : ''} class="w-4 h-4 rounded"> ${hr}H</label>`; });
-    document.getElementById('etd-dropdown-panel').innerHTML = h; document.getElementById('etd-btn-text').innerText = SELECTED_HOURS.length === 0 ? "TODOS" : SELECTED_HOURS.length + " SELEC";
+    setHtml('etd-dropdown-panel', h); setVal('etd-btn-text', SELECTED_HOURS.length === 0 ? "TODOS" : SELECTED_HOURS.length + " SELEC");
 }
 function toggleAllEtds() { SELECTED_HOURS = []; renderEtdCheckboxes(); aplicarFiltros(); }
 function toggleSingleEtd(e) { if(e.checked) SELECTED_HOURS.push(e.value); else SELECTED_HOURS = SELECTED_HOURS.filter(x => x !== e.value); if(SELECTED_HOURS.length >= AVAILABLE_HOURS.length) SELECTED_HOURS = []; renderEtdCheckboxes(); aplicarFiltros(); }
 
-const tooltipEl = document.getElementById('floating-tip');
-function showTooltip(e, html) { if(!html) return; tooltipEl.innerHTML = decodeURIComponent(html); tooltipEl.classList.remove('hidden'); moveTooltip(e); }
-function moveTooltip(e) { if(tooltipEl.classList.contains('hidden')) return; let x = e.clientX + 15, y = e.clientY + 15; if (x + tooltipEl.offsetWidth > window.innerWidth) x = e.clientX - tooltipEl.offsetWidth - 15; if (y + tooltipEl.offsetHeight > window.innerHeight) y = window.innerHeight - tooltipEl.offsetHeight - 15; tooltipEl.style.left = Math.max(10, x) + 'px'; tooltipEl.style.top = Math.max(10, y) + 'px'; }
-function hideTooltip() { tooltipEl.classList.add('hidden'); }
+function showTooltip(e, html) { let t = document.getElementById('floating-tip'); if(!html || !t) return; t.innerHTML = decodeURIComponent(html); t.classList.remove('hidden'); moveTooltip(e); }
+function moveTooltip(e) { let t = document.getElementById('floating-tip'); if(!t || t.classList.contains('hidden')) return; let x = e.clientX + 15, y = e.clientY + 15; if (x + t.offsetWidth > window.innerWidth) x = e.clientX - t.offsetWidth - 15; if (y + t.offsetHeight > window.innerHeight) y = window.innerHeight - t.offsetHeight - 15; t.style.left = Math.max(10, x) + 'px'; t.style.top = Math.max(10, y) + 'px'; }
+function hideTooltip() { setClass('floating-tip', 'add', 'hidden'); }
 
 // --- RENDERIZADORES DE TELA (LÓGICA OPERACIONAL AVANÇADA) ---
 function renderDash(lst) {
@@ -196,8 +215,8 @@ function renderDash(lst) {
 
     // ATRASO
     let bT = 0, bP = 0; lst.filter(i => i.horario === 'ATRASO').forEach(i => { bT += i.total; bP += i.concluido; });
-    const bArea = document.getElementById('dash-backlog-area');
-    if(bT > 0) { bArea.classList.remove('hidden'); setVal('bl-total', bT.toLocaleString()); setVal('bl-proc', bP.toLocaleString()); setVal('bl-pend', Math.max(0, bT - bP).toLocaleString()); } else { bArea.classList.add('hidden'); }
+    let bArea = document.getElementById('dash-backlog-area');
+    if(bArea) { if(bT > 0) { bArea.classList.remove('hidden'); setVal('bl-total', bT.toLocaleString()); setVal('bl-proc', bP.toLocaleString()); setVal('bl-pend', Math.max(0, bT - bP).toLocaleString()); } else { bArea.classList.add('hidden'); } }
 
     // METAS DE ETD (98% a 99.5%)
     let grps = {};
@@ -223,14 +242,15 @@ function renderDash(lst) {
                     <div class="flex justify-between items-center"><span>Meta 99.5%: <span class="font-mono text-slate-800">${fmtK(m995)}</span></span>${tag(m995)}</div>
                 </div></div>`;
     });
-    document.getElementById('dash-kpi-area').innerHTML = hKpi;
+    setHtml('dash-kpi-area', hKpi);
 
     let off = allValid.filter(i => (i.rtp > 0 || i.grp > 0)).sort((a, b) => (b.rtp + b.grp) - (a.rtp + a.grp)).slice(0, 10);
-    document.getElementById('dash-offenders-body').innerHTML = off.length ? off.map(r => `<tr><td class="p-3 pl-6 font-bold text-slate-800">${r.nome}</td><td class="p-3 text-center"><span class="bg-slate-100 px-2 py-1 rounded text-[10px] font-bold">${r.horario}h</span></td><td class="p-3 text-right text-orange-600 font-bold">${r.rtp + r.grp}</td><td class="p-3 text-right font-bold text-slate-600">${r.total}</td><td class="p-3 pr-6 text-right">${r.total > 0 ? ((r.concluido/r.total)*100).toFixed(1) : 0}%</td></tr>`).join('') : '<tr><td colspan="5" class="p-8 text-center text-emerald-600 font-bold">Sem gargalos nas esteiras.</td></tr>';
+    setHtml('dash-offenders-body', off.length ? off.map(r => `<tr><td class="p-3 pl-6 font-bold text-slate-800">${r.nome}</td><td class="p-3 text-center"><span class="bg-slate-100 px-2 py-1 rounded text-[10px] font-bold">${r.horario}h</span></td><td class="p-3 text-right text-orange-600 font-bold">${r.rtp + r.grp}</td><td class="p-3 text-right font-bold text-slate-600">${r.total}</td><td class="p-3 pr-6 text-right">${r.total > 0 ? ((r.concluido/r.total)*100).toFixed(1) : 0}%</td></tr>`).join('') : '<tr><td colspan="5" class="p-8 text-center text-emerald-600 font-bold">Sem gargalos nas esteiras.</td></tr>');
 }
 
 function renderMicro(lst) {
-    let riskMode = document.getElementById('micro-risk-filter').value;
+    let riskEl = document.getElementById('micro-risk-filter');
+    let riskMode = riskEl ? riskEl.value : 'padrao';
     let filtered = lst.filter(i => !i.isAereo);
     
     filtered.sort((a, b) => {
@@ -241,7 +261,7 @@ function renderMicro(lst) {
         return (b.total - (b.huIn + b.huCl + b.ship)) - (a.total - (a.huIn + a.huCl + a.ship)); 
     });
 
-    document.getElementById('micro-body').innerHTML = filtered.map(r => `
+    setHtml('micro-body', filtered.map(r => `
         <tr class="hover:bg-slate-50 transition-colors">
             <td class="p-3 pl-6 font-bold text-slate-800">${r.nome}</td>
             <td class="p-3 text-center"><span class="bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold">${r.horario}h</span></td>
@@ -254,12 +274,12 @@ function renderMicro(lst) {
             <td class="text-right p-3 text-slate-400 font-bold border-r border-slate-100 bg-slate-50">${r.wav + r.rtw}</td>
             <td class="text-right p-3 font-extrabold text-slate-900">${r.total}</td>
             <td class="p-3 pr-6 text-right font-black text-brand-600">${r.total > 0 ? ((r.concluido/r.total)*100).toFixed(1) : 0}%</td>
-        </tr>`).join('');
+        </tr>`).join(''));
 }
 
 function renderMatriz(lst) {
     let alertRamps3 = [], alertRamps5 = [];
-    let prodAtrelamento = SETTINGS_DATA.atrM || 450; // Peças por pessoa/hora no fechamento
+    let prodAtrelamento = SETTINGS_DATA.atrM || 450; 
 
     const ren = (id, s, e, alertsArray) => {
         let h = '<div class="col-span-full grid grid-cols-2 sm:grid-cols-5 xl:grid-cols-10 gap-3">';
@@ -267,7 +287,7 @@ function renderMatriz(lst) {
             let rr = RAMPA_MAP[i] || []; let st = { p: 0, r: 0, g: 0, pi: 0, w: 0, t: 0 }; let aR = []; 
             rr.forEach(ro => { let d = lst.find(x => x.nome === ro); if(d) { st.p += d.packed; st.r += d.rtp; st.g += d.grp; st.pi += d.pick; st.w += (d.wav + d.rtw); st.t += d.total; aR.push(ro); } });
             
-            let volAtivo = st.p + st.r + st.g + st.pi; // Waving não pede HC porque está congelado
+            let volAtivo = st.p + st.r + st.g + st.pi; 
             let hBg = 'bg-white', textC = 'text-slate-500';
             
             if (volAtivo > 0) { 
@@ -277,7 +297,6 @@ function renderMatriz(lst) {
                 else { hBg = 'bg-emerald-100 border-emerald-300'; textC = 'text-emerald-700'; } 
             }
 
-            // Cálculo de HC por Tempo de Chegada
             let hcAgora = Math.ceil(st.p / prodAtrelamento);
             let hcBreve = Math.ceil((st.r + st.g) / prodAtrelamento);
             let hcFuturo = Math.ceil(st.pi / prodAtrelamento);
@@ -294,17 +313,16 @@ function renderMatriz(lst) {
                     <div class="px-3 py-2 flex justify-between items-center border-b border-white/20"><span class="font-black ${textC} text-lg">${i}</span><span class="${textC} text-xs font-bold font-mono">${volAtivo > 0 ? volAtivo : ''}</span></div>
                     <div class="px-3 py-2 text-[8px] font-bold ${textC} opacity-80 h-full overflow-hidden leading-tight">${aR.length ? aR.join(', ') : 'Vazio'}</div>
                   </div>`;
-        } h += `</div>`; document.getElementById(id).innerHTML = h;
+        } h += `</div>`; setHtml(id, h);
     };
     
     ren('t3-list-container', 1, 50, alertRamps3); ren('t5-list-container', 51, 98, alertRamps5);
     
-    // Alertas Visuais Bonitos
     let uiAlerts = (arr) => arr.length ? `<div class="flex items-center gap-2"><i class="fa-solid fa-fire text-rose-500"></i> Foco Imediato nas Rampas: <div class="flex flex-wrap gap-1">` + arr.map(a => `<span class="bg-rose-100 text-rose-700 border border-rose-200 px-1.5 py-0.5 rounded shadow-sm">${a}</span>`).join('') + `</div></div>` : '✅ Operação Controlada';
-    document.getElementById('t3-alerts').innerHTML = uiAlerts(alertRamps3);
-    document.getElementById('t3-alerts').className = alertRamps3.length ? 'text-xs font-bold bg-white px-3 py-2 rounded-lg shadow-sm border border-rose-200' : 'text-xs font-bold bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-200 text-emerald-600';
-    document.getElementById('t5-alerts').innerHTML = uiAlerts(alertRamps5);
-    document.getElementById('t5-alerts').className = alertRamps5.length ? 'text-xs font-bold bg-white px-3 py-2 rounded-lg shadow-sm border border-rose-200' : 'text-xs font-bold bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-200 text-emerald-600';
+    setHtml('t3-alerts', uiAlerts(alertRamps3));
+    let t3El = document.getElementById('t3-alerts'); if(t3El) t3El.className = alertRamps3.length ? 'text-xs font-bold bg-white px-3 py-2 rounded-lg shadow-sm border border-rose-200' : 'text-xs font-bold bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-200 text-emerald-600';
+    setHtml('t5-alerts', uiAlerts(alertRamps5));
+    let t5El = document.getElementById('t5-alerts'); if(t5El) t5El.className = alertRamps5.length ? 'text-xs font-bold bg-white px-3 py-2 rounded-lg shadow-sm border border-rose-200' : 'text-xs font-bold bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-200 text-emerald-600';
 }
 
 function renderAereo(lst) {
@@ -317,10 +335,10 @@ function renderAereo(lst) {
     });
     
     let processadoAereo = aIn + aCl + aSh;
-    let vindoAereo = aT - processadoAereo; // A Caminho/Pendente
+    let vindoAereo = aT - processadoAereo; 
     let pct = aT > 0 ? ((processadoAereo / aT) * 100).toFixed(1) : '0.0';
     
-    document.getElementById('aereo-dynamic-summary').innerHTML = `
+    setHtml('aereo-dynamic-summary', `
         <div class="bg-gradient-to-r from-cyan-900 to-blue-900 p-6 rounded-2xl text-white shadow-xl flex justify-between items-center relative overflow-hidden border border-cyan-700">
             <i class="fa-solid fa-plane absolute -right-4 text-9xl opacity-10"></i>
             <div>
@@ -332,7 +350,7 @@ function renderAereo(lst) {
                 <div class="flex flex-col"><span class="text-[10px] text-emerald-400 uppercase font-bold">Pronto (Docado)</span><span class="text-2xl font-black font-mono text-emerald-400">${processadoAereo.toLocaleString()}</span></div>
                 <div class="flex flex-col bg-cyan-950 px-3 py-1 rounded border border-cyan-800"><span class="text-[10px] text-amber-400 uppercase font-bold">A Caminho (Esteiras)</span><span class="text-2xl font-black font-mono text-amber-400">${vindoAereo.toLocaleString()}</span></div>
             </div>
-        </div>`;
+        </div>`);
 
     let htmlETDs = '';
     Object.keys(grps).sort().forEach(h => {
@@ -368,7 +386,7 @@ function renderAereo(lst) {
         </div>`;
     });
 
-    document.getElementById('aereo-container').innerHTML = htmlETDs || '<div class="p-8 text-center bg-white rounded-xl border">Sem dados de malha aérea.</div>';
+    setHtml('aereo-container', htmlETDs || '<div class="p-8 text-center bg-white rounded-xl border">Sem dados de malha aérea.</div>');
 }
 
 function calcProjections() {
@@ -378,24 +396,28 @@ function calcProjections() {
     let vPi = 0, vPa = 0; list.forEach(i => { vPi += (i.pick); vPa += (i.rtp + i.grp); }); 
     let tPick = capPick > 0 ? vPi / capPick : 0; let tPack = capPack > 0 ? (vPi + vPa) / capPack : 0;
     
-    document.getElementById('hc-projections').innerHTML = `
+    setHtml('hc-projections', `
         <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center mb-4"><span class="text-slate-400 text-xs">Pçs Ativas na Esteira/Pick</span><span class="text-xl font-bold text-white">${(vPi + vPa).toLocaleString()}</span></div>
         <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 mb-2"><h4 class="font-bold text-blue-400 mb-1">Picking (Trânsito de ~5m)</h4><div class="text-xs text-slate-400">Processando ${vPi.toLocaleString()} pçs. Fila est. ${tPick.toFixed(1)}h</div></div>
-        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700"><h4 class="font-bold text-emerald-400 mb-1">Packing (Trânsito de ~5m)</h4><div class="text-xs text-slate-400">Processando ${(vPa).toLocaleString()} pçs. Fila est. ${tPack.toFixed(1)}h</div></div>
+        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700"><h4 class="font-bold text-emerald-400 mb-1">Packing (Esteiras)</h4><div class="text-xs text-slate-400">Processando ${(vPa).toLocaleString()} pçs. Fila est. ${tPack.toFixed(1)}h</div></div>
         <div class="text-[9px] text-slate-500 mt-2 text-center">* Waving ignorado nos cálculos ativos (Status: Congelado).</div>
-    `;
+    `);
 }
 
 function updateLiveClock() {
-    let clockEl = document.getElementById('live-clock'); if(clockEl) clockEl.innerText = new Date().toLocaleTimeString('pt-BR');
-    if(!DATA_CACHE || !AVAILABLE_HOURS.length || document.getElementById('view-live').classList.contains('hidden')) return;
+    setVal('live-clock', new Date().toLocaleTimeString('pt-BR'));
+    let vl = document.getElementById('view-live');
+    if(!DATA_CACHE || !AVAILABLE_HOURS.length || (vl && vl.classList.contains('hidden'))) return;
+    
     let ch = parseInt(new Date().getHours()); let hNum = AVAILABLE_HOURS.map(h => parseInt(h)).sort((a,b)=>a-b);
     let f = hNum.find(h => h > ch) || hNum[0]; let etd = f.toString().padStart(2, '0');
-    if(document.getElementById('live-etd-lbl').innerText !== "ETD " + etd + "H") {
-        document.getElementById('live-etd-lbl').innerText = "ETD " + etd + "H";
+    
+    let lbl = document.getElementById('live-etd-lbl');
+    if(lbl && lbl.innerText !== "ETD " + etd + "H") {
+        setVal('live-etd-lbl', "ETD " + etd + "H");
         let lst = DATA_CACHE.micro.filter(r => r.horario === etd).sort((a, b) => b.total - a.total);
         
-        document.getElementById('live-offenders-body').innerHTML = lst.map(r => {
+        setHtml('live-offenders-body', lst.map(r => {
             let pct = r.total > 0 ? ((r.concluido / r.total) * 100) : 0;
             return `<tr>
             <td class="p-3 pl-4 font-bold text-slate-800">${r.nome}</td>
@@ -405,7 +427,7 @@ function updateLiveClock() {
             <td class="p-3 text-right text-slate-400 font-bold opacity-50">${r.wav+r.rtw}</td>
             <td class="p-3 pr-4"><div class="flex items-center gap-2 justify-end"><span class="text-[9px] font-bold w-6 text-right">${pct.toFixed(0)}%</span><div class="w-16 h-1.5 bg-slate-200 rounded-full"><div class="bg-brand-500 h-full rounded-full" style="width:${pct}%"></div></div></div></td>
             </tr>`;
-        }).join('');
+        }).join(''));
 
         let rampsWithPacked = {};
         lst.forEach(route => {
@@ -419,7 +441,7 @@ function updateLiveClock() {
             }
         });
         let rKeys = Object.keys(rampsWithPacked).sort((a, b) => rampsWithPacked[b].pck - rampsWithPacked[a].pck);
-        document.getElementById('live-fullhacks-area').innerHTML = rKeys.length === 0 
+        setHtml('live-fullhacks-area', rKeys.length === 0 
             ? `<div class="text-center text-slate-400 text-xs py-4 font-bold">Nenhum packed preso nos tobogãs para este ETD.</div>` 
             : rKeys.map(k => `
                 <div class="bg-white border border-emerald-200 p-3 rounded-xl shadow-sm flex justify-between items-center">
@@ -429,6 +451,6 @@ function updateLiveClock() {
                     </div>
                     <div class="text-right flex flex-col items-end"><span class="text-2xl font-black text-emerald-600 font-mono leading-none">${rampsWithPacked[k].pck}</span><span class="text-[8px] text-emerald-700 font-bold uppercase tracking-widest mt-1">Peças em Packed</span></div>
                 </div>
-            `).join('');
+            `).join(''));
     }
 }
