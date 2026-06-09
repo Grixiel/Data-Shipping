@@ -1,6 +1,4 @@
 const GIST_ID = "9a5dfdcbdbc0a111fad07198c7066368";
-const GIST_ID = "SEU_ID_DO_GIST_AQUI";
-
 const p1 = "ghp_"; 
 const p2 = "nUNSCqQ8nHZHxX"; 
 const p3 = "jw5SFCunZuu2IHPF3hI2kJ";
