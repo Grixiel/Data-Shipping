@@ -112,4 +112,307 @@ function processarTextoCola() {
                 });
 
                 let vTot = 0, vProc = 0, mArr = [];
-                if (slaIdx !== -1) { vTot = parseNum(numsB[nums
+                if (slaIdx !== -1) { vTot = parseNum(numsB[numsB.length - 2] || "0"); vProc = parseNum(numsB[numsB.length - 1] || numsB[0] || "0"); mArr = numsA.map(parseNum);
+                } else { let valN = numsB.slice(), mStart = Math.max(0, valN.length - N); mArr = valN.slice(mStart).map(parseNum); while (mArr.length < N) mArr.unshift(0); let bef = valN.slice(0, mStart); vTot = parseNum(bef[bef.length - 2] || "0"); vProc = parseNum(bef[bef.length - 1] || bef[0] || "0"); }
+
+                let m = { rtw: 0, wav: 0, pi: 0, rtg: 0, g: 0, r: 0, p: 0, huIn: 0, huCl: 0, ship: 0 };
+                for(let kl = 0; kl < N; kl++) { if (kl < mArr.length) m[colMap[kl]] = mArr[kl]; }
+                let tot = (vTot < vProc && vTot > 0) ? vTot + vProc : ((vTot === 0 && vProc > 0) ? vProc : vTot);
+                let cReal = m.huIn + m.huCl + m.ship; if (cReal === 0 && vProc > 0) cReal = vProc;
+                let sMet = m.p + m.r + m.rtg + m.g + m.pi + m.wav + m.rtw + cReal; if (tot === 0 || tot < sMet) tot = sMet;
+                if (tot === 0) continue; 
+
+                if(tot >= 0) {
+                    if(hAct === "S/H") hAct = "99"; let kId = c + "-" + hAct;
+                    if(!mM[kId]) { mM[kId] = { nome: c, horario: hAct, concluido: 0, packed: 0, rtp: 0, grp: 0, pick: 0, wav: 0, rtw: 0, total: 0, huIn: 0, huCl: 0, ship: 0, isAereo: isAereo(c) }; }
+                    mM[kId].concluido += cReal; mM[kId].packed += m.p; mM[kId].rtp += m.r; mM[kId].grp += (m.rtg + m.g); mM[kId].pick += m.pi; mM[kId].wav += m.wav; mM[kId].rtw += m.rtw; mM[kId].huIn += m.huIn; mM[kId].huCl += m.huCl; mM[kId].ship += m.ship; mM[kId].total += tot;
+                    if(!k[hAct]) k[hAct] = { total: 0 }; k[hAct].total += tot;
+                }
+            }
+
+            let arr = Object.values(mM).sort((a, b) => b.total - a.total);
+            if(arr.length === 0) { alert("Nenhum dado encontrado."); fecharLoader(); return; }
+
+            let isMerge = document.getElementById('chk-merge').checked, finalArr = arr, finalKpis = k;
+            if (isMerge && DATA_CACHE && DATA_CACHE.micro) {
+                let mergedMap = {}; DATA_CACHE.micro.forEach(r => { mergedMap[r.nome + "-" + r.horario] = r; }); arr.forEach(r => { mergedMap[r.nome + "-" + r.horario] = r; });
+                finalArr = Object.values(mergedMap).sort((a, b) => b.total - a.total); finalKpis = {}; finalArr.forEach(r => { if(!finalKpis[r.horario]) finalKpis[r.horario] = { total: 0 }; finalKpis[r.horario].total += r.total; });
+            }
+            DATA_CACHE = { micro: finalArr, kpis: finalKpis }; AVAILABLE_HOURS = Object.keys(finalKpis).filter(x => x !== "99" && x !== "S/H" && x !== "ATRASO").sort(); SELECTED_HOURS = []; renderEtdCheckboxes();
+            fecharLoader(); salvarNoBanco(); aplicarFiltros(); mudarAba('dashboard');
+        } catch(e) { alert("Erro ao ler dados: " + e.message); console.error(e); fecharLoader(); }
+    }, 500);
+}
+
+function aplicarFiltros() {
+    if(!DATA_CACHE) return;
+    let lst = DATA_CACHE.micro;
+    if(SELECTED_HOURS.length > 0) lst = lst.filter(x => SELECTED_HOURS.includes(x.horario) || x.horario === 'ATRASO');
+    renderDash(lst); renderAereo(DATA_CACHE.micro); renderMatriz(lst); renderMicro(lst); calcProjections(); updateLiveClock();
+}
+
+function mudarAba(aba) { document.querySelectorAll('[id^="view-"]').forEach(e => e.classList.add('hidden')); document.getElementById('view-' + aba).classList.remove('hidden'); document.querySelectorAll('.sidebar-link').forEach(e => e.classList.remove('active')); document.getElementById('btn-' + aba).classList.add('active'); if(aba === 'hc') calcProjections(); }
+function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+function fecharLoader() { document.getElementById('global-loader').classList.add('hidden'); }
+function setVal(id, v) { const el = document.getElementById(id); if(el) el.innerText = v; }
+function setStyle(id, p, v) { const el = document.getElementById(id); if(el) el.style[p] = v; }
+function setStatusUi(msg, color) { document.getElementById('data-status').innerHTML = `<span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${color}"></span> <span class="text-slate-500 font-bold uppercase text-[9px]">${msg}</span></span>`; }
+function parseNum(s) { if(!s || s === '-' || s === '–') return 0; let c = s.replace(/[^\d]/g, ''); return c === '' ? 0 : parseInt(c, 10); }
+function isAereo(c) { return RAMPA_MAP[99]?.includes(c) || RAMPA_MAP[100]?.includes(c) || /_A$|_B$|_C$/.test(c); }
+
+function saveHC() {
+    let g = (id, def) => { let val = parseFloat(document.getElementById(id).value); return isNaN(val) || val <= 0 ? def : val; };
+    SETTINGS_DATA = { pickHC: g('inp-hc-pick', 50), pickM: g('inp-med-pick', 120), packHC: g('inp-hc-pack', 50), packM: g('inp-med-pack', 300), atrHC: g('inp-hc-atr', 30), atrM: g('inp-med-atr', 450), stgHC: g('inp-hc-stg', 4), stgM: g('inp-med-stg', 18) };
+    calcProjections(); salvarNoBanco();
+}
+
+function renderEtdCheckboxes() {
+    let h = `<label class="flex gap-2 p-2 text-xs font-bold hover:bg-slate-50 cursor-pointer"><input type="checkbox" onchange="toggleAllEtds()" ${SELECTED_HOURS.length === 0 ? 'checked' : ''} class="w-4 h-4 rounded"> TODOS</label><hr>`;
+    AVAILABLE_HOURS.forEach(hr => { h += `<label class="flex gap-2 p-2 text-xs hover:bg-slate-50 cursor-pointer"><input type="checkbox" value="${hr}" onchange="toggleSingleEtd(this)" ${SELECTED_HOURS.includes(hr) ? 'checked' : ''} class="w-4 h-4 rounded"> ${hr}H</label>`; });
+    document.getElementById('etd-dropdown-panel').innerHTML = h; document.getElementById('etd-btn-text').innerText = SELECTED_HOURS.length === 0 ? "TODOS" : SELECTED_HOURS.length + " SELEC";
+}
+function toggleAllEtds() { SELECTED_HOURS = []; renderEtdCheckboxes(); aplicarFiltros(); }
+function toggleSingleEtd(e) { if(e.checked) SELECTED_HOURS.push(e.value); else SELECTED_HOURS = SELECTED_HOURS.filter(x => x !== e.value); if(SELECTED_HOURS.length >= AVAILABLE_HOURS.length) SELECTED_HOURS = []; renderEtdCheckboxes(); aplicarFiltros(); }
+
+const tooltipEl = document.getElementById('floating-tip');
+function showTooltip(e, html) { if(!html) return; tooltipEl.innerHTML = decodeURIComponent(html); tooltipEl.classList.remove('hidden'); moveTooltip(e); }
+function moveTooltip(e) { if(tooltipEl.classList.contains('hidden')) return; let x = e.clientX + 15, y = e.clientY + 15; if (x + tooltipEl.offsetWidth > window.innerWidth) x = e.clientX - tooltipEl.offsetWidth - 15; if (y + tooltipEl.offsetHeight > window.innerHeight) y = window.innerHeight - tooltipEl.offsetHeight - 15; tooltipEl.style.left = Math.max(10, x) + 'px'; tooltipEl.style.top = Math.max(10, y) + 'px'; }
+function hideTooltip() { tooltipEl.classList.add('hidden'); }
+
+// --- RENDERIZADORES DE TELA ---
+function renderDash(lst) {
+    let allValid = lst.filter(i => i.horario !== 'ATRASO');
+    let tTot = 0, tC = 0, tPck = 0, tIn = 0, tCls = 0, tShp = 0;
+    
+    allValid.forEach(i => { tTot += i.total; tC += i.concluido; tPck += i.packed; tIn += i.huIn; tCls += i.huCl; tShp += i.ship; });
+    setVal('dash-glb-total', tTot.toLocaleString()); setVal('dash-glb-targetval', tC.toLocaleString());
+    setVal('dash-glb-packed', tPck.toLocaleString()); setVal('dash-glb-huin', tIn.toLocaleString()); 
+    setVal('dash-glb-hucl', tCls.toLocaleString()); setVal('dash-glb-ship', tShp.toLocaleString());
+    
+    let pendentesGlobal = tTot - (tIn + tCls + tShp + tPck);
+    setVal('dash-glb-pend', pendentesGlobal.toLocaleString());
+    let pG = tTot > 0 ? ((tC / tTot) * 100).toFixed(2) : '0.00'; 
+    setVal('dash-glb-pct', pG + '%'); setStyle('dash-glb-bar', 'width', pG + '%');
+
+    let grps = {};
+    allValid.forEach(i => { 
+        if(!grps[i.horario]) grps[i.horario] = { t: 0, c: 0 }; 
+        grps[i.horario].t += i.total; grps[i.horario].c += i.concluido; 
+    });
+    
+    let hKpi = ''; 
+    let fmtK = (v) => v >= 10000 ? (v / 1000).toFixed(1).replace('.0', '') + 'k' : v.toLocaleString();
+    Object.keys(grps).sort().forEach(k => {
+        let g = grps[k]; let pt = g.t > 0 ? ((g.c / g.t) * 100).toFixed(2) : '0.00';
+        let m98 = Math.ceil(g.t * 0.98); let m985 = Math.ceil(g.t * 0.985); let m99 = Math.ceil(g.t * 0.99); let m995 = Math.ceil(g.t * 0.995);
+        let tag = (tgt) => (target => { let f = target - g.c; return f <= 0 ? '<span class="text-emerald-500"><i class="fa-solid fa-check"></i></span>' : `<span class="text-rose-500 font-mono">Falta ${f.toLocaleString()}</span>`; })(tgt);
+
+        hKpi += `<div class="glass-panel p-4 flex flex-col border-t-4 border-blue-500 shadow-md">
+                <div class="flex justify-between items-center mb-2"><div class="text-xs font-black text-slate-700 bg-slate-100 px-2 py-1 rounded border">ETD ${k}H</div><div class="text-lg font-black text-blue-600">${pt}%</div></div>
+                <div class="w-full bg-slate-100 h-2 rounded-full mb-4"><div class="bg-blue-500 h-full" style="width:${pt}%"></div></div>
+                <div class="text-[10px] font-bold text-slate-500 space-y-1.5 bg-slate-50 p-2 rounded border border-slate-100">
+                    <div class="flex justify-between"><span>98.0%: <span class="font-mono text-slate-800">${fmtK(m98)}</span></span>${tag(m98)}</div>
+                    <div class="flex justify-between"><span>98.5%: <span class="font-mono text-slate-800">${fmtK(m985)}</span></span>${tag(m985)}</div>
+                    <div class="flex justify-between"><span>99.0%: <span class="font-mono text-slate-800">${fmtK(m99)}</span></span>${tag(m99)}</div>
+                    <div class="flex justify-between"><span>99.5%: <span class="font-mono text-slate-800">${fmtK(m995)}</span></span>${tag(m995)}</div>
+                </div></div>`;
+    });
+    document.getElementById('dash-kpi-area').innerHTML = hKpi;
+
+    let off = allValid.filter(i => (i.rtp > 0 || i.grp > 0)).sort((a, b) => (b.rtp + b.grp) - (a.rtp + a.grp)).slice(0, 10);
+    document.getElementById('dash-offenders-body').innerHTML = off.length ? off.map(r => `<tr><td class="p-3 pl-6 font-bold text-slate-800">${r.nome}</td><td class="p-3 text-center"><span class="bg-slate-100 px-2 py-1 rounded text-[10px] font-bold">${r.horario}h</span></td><td class="p-3 text-right text-orange-600 font-bold">${r.rtp + r.grp}</td><td class="p-3 text-right font-bold text-slate-600">${r.total}</td><td class="p-3 pr-6 text-right">${r.total > 0 ? ((r.concluido/r.total)*100).toFixed(1) : 0}%</td></tr>`).join('') : '<tr><td colspan="5" class="p-8 text-center text-emerald-600 font-bold">Sem gargalos nas esteiras.</td></tr>';
+}
+
+function renderMicro(lst) {
+    let riskMode = document.getElementById('micro-risk-filter').value;
+    let filtered = lst.filter(i => !i.isAereo);
+    
+    filtered.sort((a, b) => {
+        if (riskMode === 'packed') return b.packed - a.packed;
+        if (riskMode === 'imediato') return (b.rtp + b.grp) - (a.rtp + a.grp);
+        if (riskMode === 'futuro') return (b.pick) - (a.pick);
+        if (riskMode === 'congelado') return (b.wav + b.rtw) - (a.wav + a.rtw);
+        return (b.total - (b.huIn + b.huCl + b.ship)) - (a.total - (a.huIn + a.huCl + a.ship)); 
+    });
+
+    document.getElementById('micro-body').innerHTML = filtered.map(r => `
+        <tr class="hover:bg-slate-50 transition-colors">
+            <td class="p-3 pl-6 font-bold text-slate-800">${r.nome}</td>
+            <td class="p-3 text-center"><span class="bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold">${r.horario}h</span></td>
+            <td class="text-right p-3 text-blue-500 font-bold">${r.huIn}</td>
+            <td class="text-right p-3 text-indigo-500 font-bold">${r.huCl}</td>
+            <td class="text-right p-3 text-purple-600 font-bold">${r.ship}</td>
+            <td class="text-right p-3 text-emerald-600 font-bold border-l border-slate-100 bg-emerald-50/30">${r.packed}</td>
+            <td class="text-right p-3 text-orange-500 font-bold bg-orange-50/30">${r.rtp + r.grp}</td>
+            <td class="text-right p-3 text-rose-500 font-bold bg-rose-50/30">${r.pick}</td>
+            <td class="text-right p-3 text-slate-400 font-bold border-r border-slate-100 bg-slate-50">${r.wav + r.rtw}</td>
+            <td class="text-right p-3 font-extrabold text-slate-900">${r.total}</td>
+            <td class="p-3 pr-6 text-right font-black text-brand-600">${r.total > 0 ? ((r.concluido/r.total)*100).toFixed(1) : 0}%</td>
+        </tr>`).join('');
+}
+
+function renderMatriz(lst) {
+    let alertRamps3 = [], alertRamps5 = [];
+
+    const ren = (id, s, e, alertsArray) => {
+        let h = '<div class="col-span-full grid grid-cols-2 sm:grid-cols-5 xl:grid-cols-10 gap-3">';
+        for(let i = s; i <= e; i++) {
+            let rr = RAMPA_MAP[i] || []; let st = { p: 0, r: 0, g: 0, pi: 0, w: 0, t: 0 }; let aR = []; 
+            rr.forEach(ro => { let d = lst.find(x => x.nome === ro); if(d) { st.p += d.packed; st.r += d.rtp; st.g += d.grp; st.pi += d.pick; st.w += (d.wav + d.rtw); st.t += d.total; aR.push(ro); } });
+            let vol = st.p + st.r + st.g + st.pi + st.w; 
+            
+            let hBg = 'bg-white', textC = 'text-slate-500', alertStr = '';
+            if (vol > 0) { 
+                if(vol >= 1500) { hBg = 'bg-rose-600 text-white'; textC = 'text-white'; alertStr = 'Crítico'; alertsArray.push(i); } 
+                else if(vol >= 800) { hBg = 'bg-orange-500 text-white'; textC = 'text-white'; alertStr = 'Alto'; alertsArray.push(i); } 
+                else if(vol >= 300) { hBg = 'bg-amber-400 text-slate-900'; textC = 'text-amber-900'; } 
+                else { hBg = 'bg-emerald-100 border-emerald-300'; textC = 'text-emerald-700'; } 
+            }
+
+            let hcReq = Math.ceil(vol / (SETTINGS_DATA.packM || 300));
+            let tooltipHtml = encodeURIComponent(`<div class="font-black text-sm mb-2 border-b pb-1">Relatório Tobogã ${i}</div>
+                <div class="grid grid-cols-2 gap-2 text-xs mb-2">
+                    <div>Pendente Físico:<br><span class="font-mono text-lg">${vol}</span></div>
+                    <div>HC Recomendado:<br><span class="font-mono text-lg text-emerald-400">${hcReq} <i class="fa-solid fa-person"></i></span></div>
+                </div>
+                <div class="text-[10px] text-slate-400 border-t pt-1">Meta Produtividade: ${SETTINGS_DATA.packM || 300} pçs/h por pessoa.</div>`);
+
+            h += `<div onmouseenter="showTooltip(event, this.dataset.tip)" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()" data-tip="${tooltipHtml}" class="rounded-xl flex flex-col justify-between ${st.t === 0 ? 'opacity-40 grayscale bg-white/50 border border-slate-200' : hBg + ' shadow-md hover:-translate-y-1 cursor-help border'} overflow-hidden h-[90px] transition-all">
+                    <div class="px-3 py-2 flex justify-between items-center border-b border-white/20"><span class="font-black ${textC} text-lg">${i}</span><span class="${textC} text-xs font-bold font-mono">${vol > 0 ? vol : ''}</span></div>
+                    <div class="px-3 py-2 text-[8px] font-bold ${textC} opacity-80 h-full overflow-hidden leading-tight">${aR.length ? aR.join(', ') : 'Vazio'}</div>
+                  </div>`;
+        } h += `</div>`; document.getElementById(id).innerHTML = h;
+    };
+    ren('t3-list-container', 1, 50, alertRamps3); ren('t5-list-container', 51, 98, alertRamps5);
+    
+    document.getElementById('t3-alerts').innerHTML = alertRamps3.length ? `⚠️ Alerta nas Rampas: ${alertRamps3.join(', ')}` : '✅ Operação Limpa';
+    document.getElementById('t3-alerts').className = alertRamps3.length ? 'text-xs font-bold bg-white px-3 py-1.5 rounded-lg shadow-sm border border-rose-200 text-rose-600 animate-pulse' : 'text-xs font-bold bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 text-emerald-600';
+    document.getElementById('t5-alerts').innerHTML = alertRamps5.length ? `⚠️ Alerta nas Rampas: ${alertRamps5.join(', ')}` : '✅ Operação Limpa';
+    document.getElementById('t5-alerts').className = alertRamps5.length ? 'text-xs font-bold bg-white px-3 py-1.5 rounded-lg shadow-sm border border-rose-200 text-rose-600 animate-pulse' : 'text-xs font-bold bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 text-emerald-600';
+}
+
+function renderAereo(lst) {
+    let aer = lst.filter(i => i.isAereo); let aT = 0, aC = 0, aIn = 0, aCl = 0, aSh = 0, aPck = 0;
+    let grps = {};
+    
+    aer.forEach(i => { 
+        aT += i.total; aC += i.concluido; aIn += i.huIn; aCl += i.huCl; aSh += i.ship; aPck += i.packed;
+        if(!grps[i.horario]) grps[i.horario] = []; grps[i.horario].push(i);
+    });
+    
+    let pend = aT - (aIn + aCl + aSh + aPck);
+    let pct = aT > 0 ? ((aC / aT) * 100).toFixed(1) : '0.0';
+    
+    document.getElementById('aereo-dynamic-summary').innerHTML = `
+        <div class="bg-gradient-to-r from-cyan-900 to-blue-900 p-6 rounded-2xl text-white shadow-xl flex justify-between items-center relative overflow-hidden border border-cyan-700">
+            <i class="fa-solid fa-plane absolute -right-4 text-9xl opacity-10"></i>
+            <div>
+                <h3 class="text-cyan-300 font-bold uppercase tracking-widest text-xs mb-1">Relatório Geral - Malha Aérea</h3>
+                <div class="text-5xl font-black font-mono tracking-tighter">${pct}% <span class="text-sm font-bold text-cyan-400 tracking-normal">Atingimento do Dia</span></div>
+            </div>
+            <div class="flex gap-6 text-right relative z-10">
+                <div class="flex flex-col"><span class="text-[10px] text-cyan-400 uppercase font-bold">Peças no Dia</span><span class="text-2xl font-black font-mono">${aT.toLocaleString()}</span></div>
+                <div class="flex flex-col"><span class="text-[10px] text-emerald-400 uppercase font-bold">Processadas</span><span class="text-2xl font-black font-mono">${(aIn+aCl+aSh).toLocaleString()}</span></div>
+                <div class="flex flex-col bg-cyan-950 px-3 py-1 rounded border border-cyan-800"><span class="text-[10px] text-amber-400 uppercase font-bold">Pendente Físico</span><span class="text-2xl font-black font-mono text-amber-400">${pend.toLocaleString()}</span></div>
+            </div>
+        </div>`;
+
+    let htmlETDs = '';
+    Object.keys(grps).sort().forEach(h => {
+        let eT = 0, eC = 0, eIn = 0, eCl = 0, eSh = 0, ePck = 0;
+        grps[h].forEach(r => { eT += r.total; eC += r.concluido; eIn += r.huIn; eCl += r.huCl; eSh += r.ship; ePck += r.packed; });
+        let ePend = eT - (eIn + eCl + eSh + ePck);
+        let ePct = eT > 0 ? ((eC / eT) * 100).toFixed(1) : '0.0';
+
+        htmlETDs += `
+        <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden mb-6">
+            <div class="bg-slate-100 p-4 border-b flex justify-between items-center">
+                <h4 class="font-black text-slate-700 text-lg flex items-center gap-2"><i class="fa-solid fa-clock text-cyan-600"></i> ETD ${h}H</h4>
+                <div class="flex gap-4 items-center">
+                    <div class="text-xs font-bold text-slate-500">Pendente Físico: <span class="text-amber-600 font-black text-sm">${ePend.toLocaleString()}</span></div>
+                    <div class="bg-white border px-2 py-1 rounded font-bold text-cyan-700 text-xs">${ePct}% Concluído</div>
+                </div>
+            </div>
+            <table class="w-full text-left text-xs font-mono">
+                <thead class="bg-white text-slate-400 uppercase text-[9px] font-bold border-b"><tr><th class="p-3 pl-6">Rota</th><th class="text-right p-3">IN</th><th class="text-right p-3">CLS</th><th class="text-right p-3">SHP</th><th class="text-right p-3 text-emerald-600">PCK</th><th class="text-right p-3 text-amber-500">Pendente (Rua)</th><th class="text-right p-3">Total</th></tr></thead>
+                <tbody class="divide-y divide-slate-50">
+                    ${grps[h].sort((a,b)=> b.total - a.total).map(r => `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3 pl-6 font-bold text-slate-800">${r.nome}</td>
+                        <td class="text-right p-3 text-blue-500">${r.huIn}</td>
+                        <td class="text-right p-3 text-indigo-500">${r.huCl}</td>
+                        <td class="text-right p-3 text-purple-600">${r.ship}</td>
+                        <td class="text-right p-3 text-emerald-600 font-bold">${r.packed}</td>
+                        <td class="text-right p-3 text-amber-600 font-bold">${r.total - (r.huIn+r.huCl+r.ship+r.packed)}</td>
+                        <td class="text-right p-3 font-black text-slate-800">${r.total}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+        </div>`;
+    });
+
+    document.getElementById('aereo-container').innerHTML = htmlETDs || '<div class="p-8 text-center bg-white rounded-xl border">Sem dados de malha aérea.</div>';
+}
+
+function calcProjections() {
+    if(!DATA_CACHE) return;
+    let s = SETTINGS_DATA; let capPick = (s.pickHC || 50) * (s.pickM || 120); let capPack = (s.packHC || 50) * (s.packM || 300);
+    let list = DATA_CACHE.micro.filter(i => !i.isAereo && i.horario !== "ATRASO");
+    let vPi = 0, vPa = 0; list.forEach(i => { vPi += (i.pick); vPa += (i.rtp + i.grp); }); 
+    let tPick = capPick > 0 ? vPi / capPick : 0; let tPack = capPack > 0 ? (vPi + vPa) / capPack : 0;
+    
+    document.getElementById('hc-projections').innerHTML = `
+        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center mb-4"><span class="text-slate-400 text-xs">Pçs Pendentes Malha Ativa</span><span class="text-xl font-bold text-white">${(vPi + vPa).toLocaleString()}</span></div>
+        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 mb-2"><h4 class="font-bold text-blue-400 mb-1">Picking</h4><div class="text-xs text-slate-400">Processando ${vPi.toLocaleString()} pçs. Fila est. ${tPick.toFixed(1)}h</div></div>
+        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700"><h4 class="font-bold text-emerald-400 mb-1">Packing (Esteiras)</h4><div class="text-xs text-slate-400">Processando ${(vPa).toLocaleString()} pçs. Fila est. ${tPack.toFixed(1)}h</div></div>
+        <div class="text-[9px] text-slate-500 mt-2 text-center">* Waving ignorado no tempo ativo (Status: Congelado).</div>
+    `;
+}
+
+function updateLiveClock() {
+    let clockEl = document.getElementById('live-clock'); if(clockEl) clockEl.innerText = new Date().toLocaleTimeString('pt-BR');
+    if(!DATA_CACHE || !AVAILABLE_HOURS.length || document.getElementById('view-live').classList.contains('hidden')) return;
+    let ch = parseInt(new Date().getHours()); let hNum = AVAILABLE_HOURS.map(h => parseInt(h)).sort((a,b)=>a-b);
+    let f = hNum.find(h => h > ch) || hNum[0]; let etd = f.toString().padStart(2, '0');
+    if(document.getElementById('live-etd-lbl').innerText !== "ETD " + etd + "H") {
+        document.getElementById('live-etd-lbl').innerText = "ETD " + etd + "H";
+        let lst = DATA_CACHE.micro.filter(r => r.horario === etd).sort((a, b) => b.total - a.total);
+        
+        document.getElementById('live-offenders-body').innerHTML = lst.map(r => {
+            let pct = r.total > 0 ? ((r.concluido / r.total) * 100) : 0;
+            return `<tr>
+            <td class="p-3 pl-4 font-bold text-slate-800">${r.nome}</td>
+            <td class="p-3 text-right text-emerald-600 font-bold">${r.packed}</td>
+            <td class="p-3 text-right text-orange-500 font-bold bg-orange-50/50">${r.rtp+r.grp}</td>
+            <td class="p-3 text-right text-rose-500 font-bold bg-rose-50/50">${r.pick}</td>
+            <td class="p-3 text-right text-slate-400 font-bold opacity-50">${r.wav+r.rtw}</td>
+            <td class="p-3 pr-4"><div class="flex items-center gap-2 justify-end"><span class="text-[9px] font-bold w-6 text-right">${pct.toFixed(0)}%</span><div class="w-16 h-1.5 bg-slate-200 rounded-full"><div class="bg-brand-500 h-full rounded-full" style="width:${pct}%"></div></div></div></td>
+            </tr>`;
+        }).join('');
+
+        let rampsWithPacked = {};
+        lst.forEach(route => {
+            if(route.packed > 0) {
+                let rNum = Object.keys(RAMPA_MAP).find(k => RAMPA_MAP[k].includes(route.nome));
+                if(rNum) {
+                    if(!rampsWithPacked[rNum]) rampsWithPacked[rNum] = { pck: 0, routes: [] };
+                    rampsWithPacked[rNum].pck += route.packed;
+                    if(!rampsWithPacked[rNum].routes.includes(route.nome)) rampsWithPacked[rNum].routes.push(route.nome);
+                }
+            }
+        });
+        let rKeys = Object.keys(rampsWithPacked).sort((a, b) => rampsWithPacked[b].pck - rampsWithPacked[a].pck);
+        document.getElementById('live-fullhacks-area').innerHTML = rKeys.length === 0 
+            ? `<div class="text-center text-slate-400 text-xs py-4 font-bold">Nenhum packed preso nos tobogãs para este ETD.</div>` 
+            : rKeys.map(k => `
+                <div class="bg-white border border-emerald-200 p-3 rounded-xl shadow-sm flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-emerald-500 text-white font-black text-sm w-10 h-10 flex items-center justify-center rounded-lg shadow-inner">T${k}</div>
+                        <div class="flex flex-col"><span class="text-[9px] text-slate-400 uppercase font-bold">Rotas nesta rampa:</span><span class="text-xs font-bold text-slate-700 w-32 truncate" title="${rampsWithPacked[k].routes.join(', ')}">${rampsWithPacked[k].routes.join(', ')}</span></div>
+                    </div>
+                    <div class="text-right flex flex-col items-end"><span class="text-2xl font-black text-emerald-600 font-mono leading-none">${rampsWithPacked[k].pck}</span><span class="text-[8px] text-emerald-700 font-bold uppercase tracking-widest mt-1">Peças em Packed</span></div>
+                </div>
+            `).join('');
+    }
+}
