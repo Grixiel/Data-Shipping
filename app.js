@@ -123,12 +123,23 @@ function salvarNoBanco() {
         method: 'PATCH',
         headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
         body: JSON.stringify({ files: { "v50_db.json": { content: JSON.stringify({ payload, time }) } } })
-    }).then(() => {
+    })
+    .then((res) => {
+        if (!res.ok) throw new Error("Falha na API do GitHub");
         LAST_CLOUD_TIME = time;
         verificarDefasagem();
+        
+        // 1. Fecha a tela de carregamento após o sucesso!
+        fecharLoader(); 
+        console.log("Dados salvos na nuvem com sucesso!");
+    })
+    .catch((erro) => {
+        // 2. Se der algum erro (ex: sem internet), fecha o loader também para não travar o usuário
+        console.error("Erro ao salvar no banco:", erro);
+        fecharLoader();
+        alert("Ops! Ocorreu um erro ao tentar salvar na nuvem.");
     });
 }
-
 
 function mudarAba(abaId) {
  
