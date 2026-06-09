@@ -121,6 +121,7 @@ function decodificarNuvem(payload) {
 }
 
 // --- LÓGICA DE PROCESSAMENTO DO WMS (COLA) ---
+// --- LÓGICA DE PROCESSAMENTO DO WMS (COLA) ---
 function processarTextoCola() {
     let txt = document.getElementById('input-paste').value;
     if(!txt) return; 
@@ -136,29 +137,31 @@ function processarTextoCola() {
             let hAct = "S/H";
             let mM = {};
             let k = {};
-            let hText = txt.substring(0, 3000).toUpperCase(); 
-            let expectedCols = [];
             
-            if (hText.includes("WAVING")) { 
-                expectedCols.push('wav'); 
-                if (hText.includes("READY TO WAVE")) {
-                    expectedCols.push('rtw'); 
-                }
+            // 1. Procurar os cabeçalhos para mapear as colunas
+            let colMap = [];
+            for (let i = 0; i < Math.min(20, lines.length); i++) {
+                let u = lines[i].toUpperCase();
+                if (u.includes("READY TO WAVE") || u.includes("BACKLOG")) colMap.push('rtw');
+                if (u.includes("WAVING") || u.includes("POR ASIGNAR")) colMap.push('wav');
+                if (u.includes("PICKING")) colMap.push('pi');
+                if (u.includes("READY TO GROUP")) colMap.push('rtg');
+                if (u.includes("GROUPING")) colMap.push('g');
+                if (u.includes("READY TO PACK")) colMap.push('r');
+                if (u.includes("PACKED")) colMap.push('p');
+                if (u.includes("HU IN")) colMap.push('huIn');
+                if (u.includes("HU CLOSED")) colMap.push('huCl');
+                if (u.includes("SHIPPED")) colMap.push('ship');
+                
+                if (colMap.length > 5) break; 
             }
             
-            expectedCols.push('pi', 'rtg', 'g', 'r', 'p');
-            
-            if (hText.includes("SHIPPED") || hText.includes("HU CLOSED")) {
-                expectedCols.push('huIn', 'huCl', 'ship');
-            } else if (hText.includes("HU IN")) {
-                expectedCols.push('huIn');
+            // Fallback se não encontrar o cabeçalho perfeito
+            if (colMap.length === 0) {
+                colMap = ['rtw', 'wav', 'pi', 'rtg', 'g', 'r', 'p', 'huIn', 'huCl', 'ship'];
             }
             
-            if(expectedCols.length === 0) {
-                expectedCols = ['wav','rtw','pi','rtg','g','r','p','huIn','huCl','ship'];
-            }
-            
-            let N = expectedCols.length;
+            let N = colMap.length;
 
             for(let i = 0; i < lines.length; i++) {
                 let l = lines[i].trim(); 
@@ -172,80 +175,50 @@ function processarTextoCola() {
                 }
 
                 let u = l.toUpperCase();
-                
-                if (u.match(/TOTAL|SUBTOTAL|PERFORMANCE|PROCESSADOS|FECHADOS|CARREGADOS|EXPEDIDOS|ENVIADOS|RECEBIDOS|HUS ABERTAS|RESUMO/i)) {
-                    continue;
-                }
+                if (u.match(/TOTAL|SUBTOTAL|PERFORMANCE|PROCESSADOS|FECHADOS|CARREGADOS|EXPEDIDOS|ENVIADOS|RECEBIDOS|HUS ABERTAS|RESUMO/i)) continue;
 
                 let c = vR.find(x => new RegExp(`(?:^|\\s)${x}(?:\\s|$)`).test(u));
-                
                 if(!c) {
                     let dynMatch = u.match(/^(?:[A-Z]{3,4}\d{1,2}(?:_[A-Z0-9]+)?|JET[A-Z]{2,3}\d+|[A-Z]+HUB\d*)(?=\s|$)/);
-                    if (dynMatch && !["TOTAL","SUBTOTAL","SLA","TEMPO","PERFORMANCE"].includes(dynMatch[0])) {
-                        c = dynMatch[0];
-                    }
+                    if (dynMatch && !["TOTAL","SUBTOTAL","SLA","TEMPO","PERFORMANCE"].includes(dynMatch[0])) c = dynMatch[0];
                 }
                 
                 if(!c) continue;
 
                 let str = l;
                 for(let j = i + 1; j < i + 20 && j < lines.length; j++) {
-                    let n = lines[j].trim(); 
-                    let uN = n.toUpperCase();
-                    
+                    let n = lines[j].trim(); let uN = n.toUpperCase();
                     if(n === "") continue;
-                    
-                    if(uN.match(/(?:^|\b)(\d{2}):00\s*(?:HR|H)?\b/i) || uN.match(/\b(\d{2})00\s*HR/i) || uN.match(/ATRASO/i)) {
-                        break;
-                    }
-                    if(uN.match(/TOTAL|SUBTOTAL|PROCESSADOS|FECHADOS|CARREGADOS|EXPEDIDOS|ENVIADOS|RECEBIDOS|HUS ABERTAS|RESUMO/i)) {
-                        break; 
-                    }
-                    if(vR.find(x => new RegExp(`(?:^|\\s)${x}(?:\\s|$)`).test(uN))) {
-                        break;
-                    }
+                    if(uN.match(/(?:^|\b)(\d{2}):00\s*(?:HR|H)?\b/i) || uN.match(/\b(\d{2})00\s*HR/i) || uN.match(/ATRASO/i)) break;
+                    if(uN.match(/TOTAL|SUBTOTAL|PROCESSADOS|FECHADOS|CARREGADOS|EXPEDIDOS|ENVIADOS|RECEBIDOS|HUS ABERTAS|RESUMO/i)) break; 
+                    if(vR.find(x => new RegExp(`(?:^|\\s)${x}(?:\\s|$)`).test(uN))) break;
                     str += " " + n;
                 }
 
                 let tokens = str.split(/[\s\t]+/).filter(x => x !== "");
                 let slaIdx = tokens.findIndex(t => t.includes('%')); 
-                
-                let numsB = [];
-                let numsA = [];
+                let numsB = [], numsA = [];
                 
                 tokens.forEach((tk, idx) => {
-                    if (/^-?\d{2}:\d{2}(hr|h)?$/i.test(tk)) return; 
-                    if (ROUTE_LIST.some(r => r.r === tk.toUpperCase())) return;
-                    
+                    if (/^-?\d{2}:\d{2}(hr|h)?$/i.test(tk) || ROUTE_LIST.some(r => r.r === tk.toUpperCase())) return;
                     let clean = tk.replace(/[\.,]/g, '');
                     if (/^-?\d+$/.test(clean) || tk === '-' || tk === '–') {
-                        if(slaIdx !== -1 && idx > slaIdx) {
-                            numsA.push(clean);
-                        } else if (idx < slaIdx || slaIdx === -1) {
-                            numsB.push(clean);
-                        }
+                        if(slaIdx !== -1 && idx > slaIdx) numsA.push(clean);
+                        else if (idx < slaIdx || slaIdx === -1) numsB.push(clean);
                     }
                 });
 
-                let vTot = 0, vProc = 0;
-                let mArr = [];
+                let vTot = 0, vProc = 0, mArr = [];
 
                 if (slaIdx !== -1) {
                     vTot = parseNum(numsB[numsB.length - 2] || "0");
                     vProc = parseNum(numsB[numsB.length - 1] || numsB[0] || "0");
                     mArr = numsA.map(parseNum);
                 } else {
-                    let drop = hText.includes("TEMPO") ? 1 : 0;
                     let valN = numsB.slice();
-                    if (drop && valN.length > N + 1) valN.pop();
-                    
                     let mStart = Math.max(0, valN.length - N);
                     mArr = valN.slice(mStart).map(parseNum);
-                    
-                    while (mArr.length < N) {
-                        mArr.unshift(0);
-                    }
-                    
+                    while (mArr.length < N) mArr.unshift(0);
                     let bef = valN.slice(0, mStart);
                     vTot = parseNum(bef[bef.length - 2] || "0");
                     vProc = parseNum(bef[bef.length - 1] || bef[0] || "0");
@@ -253,27 +226,14 @@ function processarTextoCola() {
 
                 let m = { rtw: 0, wav: 0, pi: 0, rtg: 0, g: 0, r: 0, p: 0, huIn: 0, huCl: 0, ship: 0 };
                 for(let kl = 0; kl < N; kl++) {
-                    if (kl < mArr.length) {
-                        m[expectedCols[kl]] = mArr[kl];
-                    }
+                    if (kl < mArr.length) m[colMap[kl]] = mArr[kl];
                 }
 
-                let tot = vTot;
-                if (vTot < vProc && vTot > 0) {
-                    tot = vTot + vProc;
-                } else if (vTot === 0 && vProc > 0) {
-                    tot = vProc;
-                }
-
+                let tot = (vTot < vProc && vTot > 0) ? vTot + vProc : ((vTot === 0 && vProc > 0) ? vProc : vTot);
                 let cReal = m.huIn + m.huCl + m.ship;
-                if (cReal === 0 && vProc > 0) {
-                    cReal = vProc;
-                }
-
+                if (cReal === 0 && vProc > 0) cReal = vProc;
                 let sMet = m.p + m.r + m.rtg + m.g + m.pi + m.wav + m.rtw + cReal;
-                if (tot === 0 || tot < sMet) {
-                    tot = sMet;
-                }
+                if (tot === 0 || tot < sMet) tot = sMet;
 
                 if (tot === 0) continue; 
 
@@ -282,22 +242,12 @@ function processarTextoCola() {
                     let kId = c + "-" + hAct;
                     
                     if(!mM[kId]) {
-                        mM[kId] = { 
-                            nome: c, horario: hAct, concluido: 0, packed: 0, rtp: 0, grp: 0, pick: 0, wav: 0, rtw: 0, total: 0, huIn: 0, huCl: 0, ship: 0, isAereo: isAereo(c) 
-                        };
+                        mM[kId] = { nome: c, horario: hAct, concluido: 0, packed: 0, rtp: 0, grp: 0, pick: 0, wav: 0, rtw: 0, total: 0, huIn: 0, huCl: 0, ship: 0, isAereo: isAereo(c) };
                     }
                     
-                    mM[kId].concluido += cReal; 
-                    mM[kId].packed += m.p; 
-                    mM[kId].rtp += m.r; 
-                    mM[kId].grp += (m.rtg + m.g); 
-                    mM[kId].pick += m.pi; 
-                    mM[kId].wav += m.wav; 
-                    mM[kId].rtw += m.rtw; 
-                    mM[kId].huIn += m.huIn; 
-                    mM[kId].huCl += m.huCl; 
-                    mM[kId].ship += m.ship; 
-                    mM[kId].total += tot;
+                    mM[kId].concluido += cReal; mM[kId].packed += m.p; mM[kId].rtp += m.r; mM[kId].grp += (m.rtg + m.g); 
+                    mM[kId].pick += m.pi; mM[kId].wav += m.wav; mM[kId].rtw += m.rtw; 
+                    mM[kId].huIn += m.huIn; mM[kId].huCl += m.huCl; mM[kId].ship += m.ship; mM[kId].total += tot;
                     
                     if(!k[hAct]) k[hAct] = { total: 0 }; 
                     k[hAct].total += tot;
@@ -307,7 +257,7 @@ function processarTextoCola() {
             let arr = Object.values(mM).sort((a, b) => b.total - a.total);
             
             if(arr.length === 0) { 
-                alert("Aviso: O sistema não encontrou rotas no texto colado. Copie desde o cabeçalho até ao fim do relatório."); 
+                alert("Aviso: O sistema não encontrou rotas no texto colado. Certifique-se de que copiou o relatório com os cabeçalhos das colunas incluídos."); 
                 fecharLoader(); 
                 return; 
             }
@@ -344,7 +294,6 @@ function processarTextoCola() {
         }
     }, 500);
 }
-
 // --- FUNÇÕES DE INTERFACE E UTILITÁRIOS ---
 function aplicarFiltros() {
     if(!DATA_CACHE) return;
