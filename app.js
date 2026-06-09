@@ -116,7 +116,7 @@ function sincronizarComBanco(manual) {
 }
 
 function salvarNoBanco() {
-    let payload = codificarParaNuvem(DATA_CACHE, SETTINGS_DATA);
+    let payload = codific    arParaNuvem(DATA_CACHE, SETTINGS_DATA);
     let time = new Date().toLocaleString('pt-BR');
     
     fetch(`https://api.github.com/gists/${GIST_ID}`, {
