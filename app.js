@@ -262,9 +262,11 @@ function renderMicro(lst) {
 function renderMatriz(lst) {
     let alertRamps3 = [], alertRamps5 = [];
     
-    // Verificador de Segurança para a Produtividade do Atrelamento (Evita erros se estiver a 0)
-    let prodAtrelamento = (SETTINGS_DATA.atrM && SETTINGS_DATA.atrM > 0) ? SETTINGS_DATA.atrM : null; 
-    let hcIsMissing = !prodAtrelamento;
+    // Puxa as capacidades globais preenchidas na aba de Gestão
+    let capPick = (SETTINGS_DATA.pickHC || 0) * (SETTINGS_DATA.pickM || 0); 
+    let capPack = (SETTINGS_DATA.packHC || 0) * (SETTINGS_DATA.packM || 0);
+    let prodAtrelamento = (SETTINGS_DATA.atrM && SETTINGS_DATA.atrM > 0) ? SETTINGS_DATA.atrM : 0; 
+    let hcIsMissing = (capPick === 0 || capPack === 0 || prodAtrelamento === 0);
 
     const ren = (id, s, e, alertsArray) => {
         let h = '<div class="col-span-full grid grid-cols-2 sm:grid-cols-5 xl:grid-cols-10 gap-3">';
@@ -282,27 +284,30 @@ function renderMatriz(lst) {
                 else { hBg = 'bg-emerald-100 border-emerald-300'; textC = 'text-emerald-700'; } 
             }
 
-            // Cálculos Seguros de Tempo e Escoamento de Pessoas (HC)
             let calcHtml = "";
             if (hcIsMissing) {
-                calcHtml = `<div class="bg-rose-500/20 p-2 rounded border border-rose-500/30 text-rose-400 text-center font-bold">⚠️ Preencha os HCs na Aba Gestão para calcular tempo de escoamento.</div>`;
+                calcHtml = `<div class="bg-rose-500/20 p-2 rounded border border-rose-500/30 text-rose-400 text-center font-bold">⚠️ Preencha os HCs (Pick/Pack) e a média do Atrelamento na Aba Gestão para ativar o cálculo de tempo.</div>`;
             } else {
-                let tempoAgora = st.p / prodAtrelamento; 
-                let tempoBreve = (st.r + st.g) / prodAtrelamento; 
-                let tempoFuturo = st.pi / prodAtrelamento; 
+                // MATEMÁTICA OPERACIONAL DE FLUXO CONTÍNUO (LEAD TIME)
+                // 1. Packed: Tempo de Atrelamento + 5 min trânsito
+                let tAgora = (st.p / prodAtrelamento) * 60 + 5; 
+                // 2. Packing: Tempo fila Packing + 5 min + Tempo de Atrelamento
+                let tBreve = ((st.r + st.g) / capPack) * 60 + 5 + ((st.r + st.g) / prodAtrelamento) * 60; 
+                // 3. Picking: Tempo fila Picking + Tempo fila Packing + 10 min trânsito + Tempo de Atrelamento
+                let tFuturo = (st.pi / capPick) * 60 + (st.pi / capPack) * 60 + 10 + (st.pi / prodAtrelamento) * 60; 
                 
-                let formatTempo = (t) => { if(t === 0) return '0 min'; return t < 1 ? Math.round(t * 60) + ' min' : t.toFixed(1) + 'h'; };
+                let fT = (m) => m === 0 ? '0 min' : (m < 60 ? Math.round(m) + ' min' : (m/60).toFixed(1) + 'h');
 
                 calcHtml = `
-                    <div class="flex justify-between items-center bg-emerald-500/20 p-1.5 rounded border border-emerald-500/30"><span>AGORA (Packed):</span> <strong class="text-emerald-400 font-mono text-sm">${st.p} pçs <i class="fa-solid fa-arrow-right mx-1"></i> ${formatTempo(tempoAgora)}</strong></div>
-                    <div class="flex justify-between items-center bg-orange-500/20 p-1.5 rounded border border-orange-500/30"><span>EM BREVE (Pck):</span> <strong class="text-orange-400 font-mono text-sm">${st.r + st.g} pçs <i class="fa-solid fa-arrow-right mx-1"></i> ${formatTempo(tempoBreve)}</strong></div>
-                    <div class="flex justify-between items-center bg-rose-500/20 p-1.5 rounded border border-rose-500/30"><span>FUTURO (Pick):</span> <strong class="text-rose-400 font-mono text-sm">${st.pi} pçs <i class="fa-solid fa-arrow-right mx-1"></i> ${formatTempo(tempoFuturo)}</strong></div>
+                    <div class="flex justify-between items-center bg-emerald-500/20 p-1.5 rounded border border-emerald-500/30"><span>AGORA (Packed):</span> <strong class="text-emerald-400 font-mono text-sm">${st.p} pçs <i class="fa-solid fa-arrow-right mx-1"></i> ${fT(tAgora)}</strong></div>
+                    <div class="flex justify-between items-center bg-orange-500/20 p-1.5 rounded border border-orange-500/30"><span>EM BREVE (Pck):</span> <strong class="text-orange-400 font-mono text-sm">${st.r + st.g} pçs <i class="fa-solid fa-arrow-right mx-1"></i> ${fT(tBreve)}</strong></div>
+                    <div class="flex justify-between items-center bg-rose-500/20 p-1.5 rounded border border-rose-500/30"><span>FUTURO (Pick):</span> <strong class="text-rose-400 font-mono text-sm">${st.pi} pçs <i class="fa-solid fa-arrow-right mx-1"></i> ${fT(tFuturo)}</strong></div>
                 `;
             }
 
-            let tooltipHtml = encodeURIComponent(`<div class="font-black text-sm mb-2 border-b pb-1">Análise de Tempo - Tobogã ${i}</div>
+            let tooltipHtml = encodeURIComponent(`<div class="font-black text-sm mb-2 border-b pb-1">Ciclo Operacional - Tobogã ${i}</div>
                 <div class="space-y-2 text-xs mb-3">${calcHtml}</div>
-                <div class="text-[9px] text-slate-400 border-t pt-2">* Tempo estimado para 1 pessoa escoar o volume.<br>* Base de cálculo: ${prodAtrelamento || 0} pçs/h. Waving ignorado.</div>`);
+                <div class="text-[9px] text-slate-400 border-t pt-2">* O tempo é cumulativo: Pick + Pack + Trânsito + Atrelamento.<br>* Exige preenchimento do HC. Volume congelado ignorado.</div>`);
 
             h += `<div onmouseenter="showTooltip(event, this.dataset.tip)" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()" data-tip="${tooltipHtml}" class="rounded-xl flex flex-col justify-between ${st.t === 0 ? 'opacity-40 grayscale bg-white/50 border border-slate-200' : hBg + ' shadow-md hover:-translate-y-1 cursor-help border'} overflow-hidden h-[90px] transition-all">
                     <div class="px-3 py-2 flex justify-between items-center border-b border-white/20"><span class="font-black ${textC} text-lg">${i}</span><span class="${textC} text-xs font-bold font-mono">${volAtivo > 0 ? volAtivo : ''}</span></div>
@@ -313,13 +318,19 @@ function renderMatriz(lst) {
     
     ren('t3-list-container', 1, 50, alertRamps3); ren('t5-list-container', 51, 98, alertRamps5);
     
-    let uiAlerts = (arr) => arr.length ? `<div class="flex items-center gap-2"><i class="fa-solid fa-fire text-rose-500"></i> Foco Imediato nas Rampas: <div class="flex flex-wrap gap-1">` + arr.map(a => `<span class="bg-rose-100 text-rose-700 border border-rose-200 px-1.5 py-0.5 rounded shadow-sm">${a}</span>`).join('') + `</div></div>` : '✅ Operação Controlada';
-    setHtml('t3-alerts', uiAlerts(alertRamps3));
-    let t3El = document.getElementById('t3-alerts'); if(t3El) t3El.className = alertRamps3.length ? 'text-xs font-bold bg-white px-3 py-2 rounded-lg shadow-sm border border-rose-200' : 'text-xs font-bold bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-200 text-emerald-600';
-    setHtml('t5-alerts', uiAlerts(alertRamps5));
-    let t5El = document.getElementById('t5-alerts'); if(t5El) t5El.className = alertRamps5.length ? 'text-xs font-bold bg-white px-3 py-2 rounded-lg shadow-sm border border-rose-200' : 'text-xs font-bold bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-200 text-emerald-600';
-}
+    // NOVO VISUAL DOS ALERTAS DE TOBOGÃ
+    let uiAlerts = (arr) => {
+        if(!arr.length) return `<span class="text-emerald-600"><i class="fa-solid fa-check-circle mr-1"></i> Fluxo Estável</span>`;
+        let show = arr.slice(0, 6);
+        let extra = arr.length > 6 ? ` e mais ${arr.length - 6}` : '';
+        return `<div class="flex items-center gap-2"><i class="fa-solid fa-fire text-rose-500 animate-pulse"></i> <span class="text-rose-600 font-bold">Sobrecarga:</span> <div class="flex gap-1">` + show.map(a => `<span class="bg-rose-500 text-white px-1.5 py-0.5 rounded text-[10px] shadow-sm">T-${a}</span>`).join('') + (extra ? `<span class="text-[10px] text-rose-500 font-bold ml-1">${extra}</span>` : '') + `</div></div>`;
+    };
 
+    setHtml('t3-alerts', uiAlerts(alertRamps3));
+    let t3El = document.getElementById('t3-alerts'); if(t3El) t3El.className = alertRamps3.length ? 'text-xs font-bold bg-white px-3 py-1.5 rounded-lg shadow-sm border border-rose-200' : 'text-xs font-bold bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 text-emerald-600';
+    setHtml('t5-alerts', uiAlerts(alertRamps5));
+    let t5El = document.getElementById('t5-alerts'); if(t5El) t5El.className = alertRamps5.length ? 'text-xs font-bold bg-white px-3 py-1.5 rounded-lg shadow-sm border border-rose-200' : 'text-xs font-bold bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 text-emerald-600';
+}
 function renderAereo(lst) {
     let aer = lst.filter(i => i.isAereo); let aT = 0, aC = 0, aIn = 0, aCl = 0, aSh = 0;
     let grps = {};
