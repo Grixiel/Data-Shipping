@@ -92,7 +92,201 @@
 // @run-at       document-idle
 // ==/UserScript==
 
-// O código completo estará inserido no seu App. Copie o script que forneceu e cole aqui.
+(function() {
+    'use strict';
+
+    var teste = document.createElement("div");
+    teste.innerText = "✅ SCRIPT CONECTADO";
+    teste.style = "position:fixed; bottom:10px; right:10px; background:#27ae60; color:white; padding:10px 15px; font-size:14px; font-weight:bold; z-index:9999999; border-radius:5px; box-shadow:0 0 10px rgba(0,0,0,0.5); font-family:sans-serif;";
+    document.body.appendChild(teste);
+    setTimeout(() => teste.remove(), 4000);
+    document.addEventListener('keydown', function(e) {
+        if (e.altKey && (e.code === 'KeyZ' || e.key === 'z' || e.key === 'Z')) {
+            e.preventDefault();
+            executarProcessoCompleto();
+        }
+    }, true);
+
+    GM_registerMenuCommand(" Extrair Dados Agora", executarProcessoCompleto);
+    async function executarProcessoCompleto() {
+        var d = document;
+
+        var aviso = d.createElement("div");
+        aviso.style = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:rgba(0,0,0,0.85); color:#f1c40f; padding:25px 45px; border-radius:12px; font-size:24px; font-weight:bold; z-index:9999999; pointer-events:none; box-shadow:0 0 25px rgba(0,0,0,0.6); font-family:sans-serif; text-align:center;";
+        aviso.innerText = " Pegando gavetas...";
+        d.body.appendChild(aviso);
+
+        // PASSO 1: Abrir as setas (O código que funcionou!)
+        let setasAbertas = abrirSetasModoHacker();
+
+        if (setasAbertas > 0) {
+            aviso.innerText = `⏳ ${setasAbertas} abertas! Esperando dados carregarem...`;
+            // PASSO 2: Esperar 1.5 segundos para o React renderizar os dados na tela
+            await new Promise(r => setTimeout(r, 1500));
+        } else {
+            aviso.innerText = " Nenhuma seta fechada. Extraindo...";
+            await new Promise(r => setTimeout(r, 500));
+        }
+
+        // PASSO 3: Extrair os dados (O seu código original)
+        try {
+            processarCopia(d);
+            aviso.style.background = "#27ae60";
+            aviso.style.color = "white";
+            aviso.innerText = " Tudo Aberto e Copiado!";
+        } catch (e) {
+            aviso.style.background = "#c0392b";
+            aviso.style.color = "white";
+            aviso.innerText = " Erro: " + e;
+        }
+
+
+        setTimeout(() => aviso.remove(), 2500);
+    }
+
+    function hackearCliqueReact(elemento) {
+        if (!elemento) return;
+        try { elemento.click(); } catch(e){}
+        for (let chave in elemento) {
+            if (chave.startsWith('__reactProps$') || chave.startsWith('__reactEventHandlers$')) {
+                let propriedades = elemento[chave];
+                if (propriedades && typeof propriedades.onClick === 'function') {
+                    propriedades.onClick({
+                        bubbles: true, cancelable: true, preventDefault: () => {},
+                        stopPropagation: () => {}, target: elemento, currentTarget: elemento, isTrusted: true
+                    });
+                }
+            }
+        }
+    }
+
+    function abrirSetasModoHacker() {
+        let botoesHackeados = 0;
+        const svgs = document.querySelectorAll('svg');
+
+        svgs.forEach(svg => {
+            const rect = svg.getBoundingClientRect();
+            // A matemática que valida a posição da seta
+            if (rect.width > 0 && rect.height > 0 && rect.width < 50 && rect.top > 180 && rect.left < 150) {
+                let atual = svg;
+                for(let i = 0; i < 3; i++) {
+                    if(atual) {
+                        hackearCliqueReact(atual);
+                        atual = atual.parentElement;
+                    }
+                }
+                botoesHackeados++;
+            }
+        });
+        return botoesHackeados;
+    }
+
+
+    function processarCopia(d) {
+        var items=[];
+        var walker=d.createTreeWalker(d.body, NodeFilter.SHOW_TEXT, {
+            acceptNode: function(n){
+                if(!n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+                var tag = n.parentNode.tagName;
+                if(["SCRIPT","STYLE","NOSCRIPT","TEXTAREA"].includes(tag)) return NodeFilter.FILTER_REJECT;
+                if(!n.parentNode.offsetParent) return NodeFilter.FILTER_REJECT;
+                return NodeFilter.FILTER_ACCEPT;
+            }
+        });
+
+        var corteY = 0;
+        var achouReferencia = false;
+        var tempItems = [];
+        var ySeguro = 180;
+
+        while(walker.nextNode()){
+            var node=walker.currentNode;
+            var rect=node.parentNode.getBoundingClientRect();
+            var txt=node.nodeValue.trim();
+            if(txt==="-" || txt==="–") txt="0";
+
+            var item = {
+                t: txt,
+                y: rect.top + window.scrollY + (rect.height/2),
+                l: rect.left + window.scrollX,
+                cx: rect.left + window.scrollX + (rect.width/2),
+                isData: (txt.match(/[0-9]/) || txt.includes("Mercado") || txt.includes("hr"))
+            };
+
+            if(rect.width > 0 && item.y > ySeguro) tempItems.push(item);
+
+            if(!achouReferencia && (txt.includes("Horário de expedição") || txt === "Performance" || txt === "Planning")){
+                corteY = item.y - 60;
+                achouReferencia = true;
+            }
+        }
+
+        if(!achouReferencia) corteY = 0;
+
+        items = tempItems.filter(function(i){ return i.y > corteY; });
+        if(items.length === 0) throw "Sem dados visíveis";
+
+        items.sort((a,b) => a.y - b.y);
+
+        var linhas=[];
+        var linhaAtual=null;
+        items.forEach(k => {
+            if(linhaAtual && Math.abs(k.y - linhaAtual.y) < 15){
+                linhaAtual.cols.push(k);
+                if(k.isData) linhaAtual.hasData = true;
+            } else {
+                if(linhaAtual) linhas.push(linhaAtual);
+                linhaAtual = { y: k.y, cols: [k], hasData: k.isData };
+            }
+        });
+        if(linhaAtual) linhas.push(linhaAtual);
+
+        var posicoesX = [];
+        linhas.forEach(l => {
+            if(l.hasData && (l.cols.length > 2 || l.cols.some(c => c.t.includes("Mercado")))){
+                l.cols.forEach(c => posicoesX.push(c.l));
+            }
+        });
+        posicoesX.sort((a,b) => a - b);
+
+        var colunasMestras = [];
+        posicoesX.forEach(x => {
+            var existente = colunasMestras.find(m => Math.abs(m - x) < 40);
+            if(!existente) colunasMestras.push(x);
+        });
+        colunasMestras.sort((a,b) => a - b);
+
+        var resultado = "";
+        linhas.forEach(l => {
+            var linhaExcel = new Array(colunasMestras.length).fill("");
+            l.cols.forEach(item => {
+                var melhorCol = -1;
+                var menorDist = 9999;
+                colunasMestras.forEach((mx, idx) => {
+                    var dist = Math.abs(item.l - mx);
+                    if(!item.isData){
+                        var distCentro = Math.abs(item.cx - mx);
+                        if(distCentro < dist) dist = distCentro;
+                    }
+                    if(dist < menorDist){ menorDist = dist; melhorCol = idx; }
+                });
+                var tolerancia = item.isData ? 60 : 150;
+                if(melhorCol !== -1 && menorDist < tolerancia){
+                    if(linhaExcel[melhorCol] !== "") linhaExcel[melhorCol] += " " + item.t;
+                    else linhaExcel[melhorCol] = item.t;
+                }
+            });
+            if(linhaExcel.join("").trim().length > 0) resultado += linhaExcel.join("\t") + "\n";
+        });
+
+        var textarea = d.createElement("textarea");
+        textarea.value = resultado;
+        d.body.appendChild(textarea);
+        textarea.select();
+        d.execCommand("copy");
+        d.body.removeChild(textarea);
+    }
+})();
                     </textarea>
                 </div>
 
