@@ -164,7 +164,9 @@ function closeModal(id) {
 
 function fecharLoader() {
     document.getElementById('global-loader').style.display = 'none';
-    function processarTextoCola() {
+} // <--- Fechei a função aqui!
+
+function processarTextoCola() {
     let texto = document.getElementById('input-paste').value;
 
     if (!texto.trim()) {
@@ -174,12 +176,31 @@ function fecharLoader() {
 
     let mesclar = document.getElementById('chk-merge').checked;
 
+    // LÓGICA DE EXTRAÇÃO DOS DADOS COLADOS
+    let linhas = texto.split('\n');
+    let novosDados = [];
+    
+    for(let i=0; i<linhas.length; i++) {
+        if(linhas[i].trim() !== '') {
+            // Divide as colunas por tabulação (Tab) ou vários espaços
+            let colunas = linhas[i].trim().split(/\t| {2,}/);
+            novosDados.push(colunas);
+        }
+    }
 
-    console.log("A processar dados...", { texto, mesclar });
+    // Salva na memória do sistema
+    if(mesclar && DATA_CACHE) {
+        DATA_CACHE = DATA_CACHE.concat(novosDados);
+    } else {
+        DATA_CACHE = novosDados;
+    }
+
+    console.log("A processar dados...", DATA_CACHE);
     document.getElementById('global-loader').classList.remove('hidden');
     document.getElementById('global-loader').style.display = 'flex';
+    
     salvarNoBanco();
+    
     closeModal('import-modal');
     document.getElementById('input-paste').value = '';
-}
 }
