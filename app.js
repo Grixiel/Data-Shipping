@@ -61,87 +61,156 @@ function decodificarNuvem(payload) {
 }
 
 function processarTextoCola() {
-    let txt = document.getElementById('input-paste').value; if(!txt) return; 
-    closeModal('import-modal'); document.getElementById('global-loader').classList.remove('hidden'); document.getElementById('loader-title').innerText = "Analisando WMS...";
+    let txt = document.getElementById('input-paste').value;
+    if(!txt) return; 
+    
+    closeModal('import-modal');
+    document.getElementById('global-loader').classList.remove('hidden');
+    document.getElementById('loader-title').innerText = "Analisando WMS...";
+    
     setTimeout(() => {
         try {
-            let vR = ROUTE_LIST.map(i => i.r).sort((a, b) => b.length - a.length), lines = txt.split(/\r?\n/), hAct = "S/H", mM = {}, k = {};
-            let colMap = [];
-            for (let i = 0; i < Math.min(20, lines.length); i++) {
-                let u = lines[i].toUpperCase();
-                if (u.includes("READY TO WAVE") || u.includes("BACKLOG")) colMap.push('rtw');
-                if (u.includes("WAVING") || u.includes("POR ASIGNAR")) colMap.push('wav');
-                if (u.includes("PICKING")) colMap.push('pi');
-                if (u.includes("READY TO GROUP")) colMap.push('rtg');
-                if (u.includes("GROUPING")) colMap.push('g');
-                if (u.includes("READY TO PACK")) colMap.push('r');
-                if (u.includes("PACKED")) colMap.push('p');
-                if (u.includes("HU IN")) colMap.push('huIn');
-                if (u.includes("HU CLOSED")) colMap.push('huCl');
-                if (u.includes("SHIPPED")) colMap.push('ship');
-                if (colMap.length > 5) break; 
-            }
-            if (colMap.length === 0) colMap = ['rtw', 'wav', 'pi', 'rtg', 'g', 'r', 'p', 'huIn', 'huCl', 'ship'];
-            let N = colMap.length;
+            let vR = ROUTE_LIST.map(i => i.r).sort((a, b) => b.length - a.length);
+            let lines = txt.split(/\r?\n/); 
+            let hAct = "S/H";
+            let mM = {};
+            let k = {};
+            let hText = txt.substring(0, 3000).toUpperCase(); 
+            
+            // Ordem das colunas corrigida conforme o seu relatório:
+            let expectedCols = ['rtw','wav','pi','rtg','g','r','p','huIn','huCl','ship'];
+            let N = expectedCols.length;
 
             for(let i = 0; i < lines.length; i++) {
-                let l = lines[i].trim(); if(l.length < 4) continue;
+                let l = lines[i].trim(); 
+                if(l.length < 4) continue;
+                
                 let hm = l.match(/(?:^|\b)(\d{2}):00\s*(?:HR|H)?\b/i) || l.match(/\b(\d{2})00\s*HR/i) || l.match(/Analisar\s+atraso/i);
-                if(hm && !l.toUpperCase().includes("TEMPO")) { hAct = l.match(/atraso/i) ? "ATRASO" : hm[1] || hm[0]; continue; }
-                let u = l.toUpperCase(); if (u.match(/TOTAL|SUBTOTAL|PERFORMANCE|PROCESSADOS|FECHADOS|CARREGADOS|EXPEDIDOS|ENVIADOS|RECEBIDOS|HUS ABERTAS|RESUMO/i)) continue;
+                if(hm && !l.toUpperCase().includes("TEMPO")) { 
+                    hAct = l.match(/atraso/i) ? "ATRASO" : hm[1] || hm[0]; 
+                    continue; 
+                }
+
+                let u = l.toUpperCase();
+                if (u.match(/TOTAL|SUBTOTAL|PERFORMANCE|PROCESSADOS|FECHADOS|CARREGADOS|EXPEDIDOS|ENVIADOS|RECEBIDOS|HUS ABERTAS|RESUMO/i)) continue;
 
                 let c = vR.find(x => new RegExp(`(?:^|\\s)${x}(?:\\s|$)`).test(u));
-                if(!c) { let dynMatch = u.match(/(?:^|\s)([A-Z]{3,4}\d{1,2}(?:_[A-Z0-9]+)?|JET[A-Z]{2,3}\d+|[A-Z]+HUB\d*)(?=\s|$)/); if (dynMatch && !["TOTAL","SUBTOTAL","SLA","TEMPO","PERFORMANCE"].includes(dynMatch[1])) c = dynMatch[1]; }
+                if(!c) {
+                    let dynMatch = u.match(/(?:^|\s)([A-Z]{3,4}\d{1,2}(?:_[A-Z0-9]+)?|JET[A-Z]{2,3}\d+|[A-Z]+HUB\d*)(?=\s|$)/);
+                    if (dynMatch && !["TOTAL","SUBTOTAL","SLA","TEMPO","PERFORMANCE"].includes(dynMatch[1])) c = dynMatch[1];
+                }
                 if(!c) continue;
 
                 let str = l;
                 for(let j = i + 1; j < i + 20 && j < lines.length; j++) {
-                    let n = lines[j].trim(); let uN = n.toUpperCase(); if(n === "") continue;
+                    let n = lines[j].trim(); let uN = n.toUpperCase();
+                    if(n === "") continue;
                     if(uN.match(/(?:^|\b)(\d{2}):00\s*(?:HR|H)?\b/i) || uN.match(/\b(\d{2})00\s*HR/i) || uN.match(/ATRASO/i)) break;
                     if(uN.match(/TOTAL|SUBTOTAL|PROCESSADOS|FECHADOS|CARREGADOS|EXPEDIDOS|ENVIADOS|RECEBIDOS|HUS ABERTAS|RESUMO/i)) break; 
                     if(vR.find(x => new RegExp(`(?:^|\\s)${x}(?:\\s|$)`).test(uN))) break;
                     str += " " + n;
                 }
-                let tokens = str.split(/[\s\t]+/).filter(x => x !== ""), slaIdx = tokens.findIndex(t => t.includes('%')), numsB = [], numsA = [];
+
+                let tokens = str.split(/[\s\t]+/).filter(x => x !== "");
+                let slaIdx = tokens.findIndex(t => t.includes('%')); 
+                let numsB = [], numsA = [];
+                
                 tokens.forEach((tk, idx) => {
                     if (/^-?\d{2}:\d{2}(hr|h)?$/i.test(tk) || ROUTE_LIST.some(r => r.r === tk.toUpperCase())) return;
                     let clean = tk.replace(/[\.,]/g, '');
-                    if (/^-?\d+$/.test(clean) || tk === '-' || tk === '–') { if(slaIdx !== -1 && idx > slaIdx) numsA.push(clean); else if (idx < slaIdx || slaIdx === -1) numsB.push(clean); }
+                    if (/^-?\d+$/.test(clean) || tk === '-' || tk === '–') {
+                        if(slaIdx !== -1 && idx > slaIdx) numsA.push(clean);
+                        else if (idx < slaIdx || slaIdx === -1) numsB.push(clean);
+                    }
                 });
 
                 let vTot = 0, vProc = 0, mArr = [];
-                if (slaIdx !== -1) { vTot = parseNum(numsB[numsB.length - 2] || "0"); vProc = parseNum(numsB[numsB.length - 1] || numsB[0] || "0"); mArr = numsA.map(parseNum);
-                } else { let valN = numsB.slice(), mStart = Math.max(0, valN.length - N); mArr = valN.slice(mStart).map(parseNum); while (mArr.length < N) mArr.unshift(0); let bef = valN.slice(0, mStart); vTot = parseNum(bef[bef.length - 2] || "0"); vProc = parseNum(bef[bef.length - 1] || bef[0] || "0"); }
+
+                if (slaIdx !== -1) {
+                    vTot = parseNum(numsB[numsB.length - 2] || "0");
+                    vProc = parseNum(numsB[numsB.length - 1] || numsB[0] || "0");
+                    mArr = numsA.map(parseNum);
+                } else {
+                    let valN = numsB.slice();
+                    let mStart = Math.max(0, valN.length - N);
+                    mArr = valN.slice(mStart).map(parseNum);
+                    while (mArr.length < N) mArr.unshift(0);
+                    let bef = valN.slice(0, mStart);
+                    vTot = parseNum(bef[bef.length - 2] || "0");
+                    vProc = parseNum(bef[bef.length - 1] || bef[0] || "0");
+                }
 
                 let m = { rtw: 0, wav: 0, pi: 0, rtg: 0, g: 0, r: 0, p: 0, huIn: 0, huCl: 0, ship: 0 };
-                for(let kl = 0; kl < N; kl++) { if (kl < mArr.length) m[colMap[kl]] = mArr[kl]; }
+                for(let kl = 0; kl < N; kl++) {
+                    if (kl < mArr.length) m[expectedCols[kl]] = mArr[kl];
+                }
+
                 let tot = (vTot < vProc && vTot > 0) ? vTot + vProc : ((vTot === 0 && vProc > 0) ? vProc : vTot);
-                let cReal = m.huIn + m.huCl + m.ship; if (cReal === 0 && vProc > 0) cReal = vProc;
-                let sMet = m.p + m.r + m.rtg + m.g + m.pi + m.wav + m.rtw + cReal; if (tot === 0 || tot < sMet) tot = sMet;
+                let cReal = m.huIn + m.huCl + m.ship;
+                if (cReal === 0 && vProc > 0) cReal = vProc;
+                let sMet = m.p + m.r + m.rtg + m.g + m.pi + m.wav + m.rtw + cReal;
+                if (tot === 0 || tot < sMet) tot = sMet;
+
                 if (tot === 0) continue; 
 
                 if(tot >= 0) {
-                    if(hAct === "S/H") hAct = "99"; let kId = c + "-" + hAct;
-                    if(!mM[kId]) { mM[kId] = { nome: c, horario: hAct, concluido: 0, packed: 0, rtp: 0, grp: 0, pick: 0, wav: 0, rtw: 0, total: 0, huIn: 0, huCl: 0, ship: 0, isAereo: isAereo(c) }; }
-                    mM[kId].concluido += cReal; mM[kId].packed += m.p; mM[kId].rtp += m.r; mM[kId].grp += (m.rtg + m.g); mM[kId].pick += m.pi; mM[kId].wav += m.wav; mM[kId].rtw += m.rtw; mM[kId].huIn += m.huIn; mM[kId].huCl += m.huCl; mM[kId].ship += m.ship; mM[kId].total += tot;
-                    if(!k[hAct]) k[hAct] = { total: 0 }; k[hAct].total += tot;
+                    if(hAct === "S/H") hAct = "99";
+                    let kId = c + "-" + hAct;
+                    
+                    if(!mM[kId]) {
+                        mM[kId] = { nome: c, horario: hAct, concluido: 0, packed: 0, rtp: 0, grp: 0, pick: 0, wav: 0, rtw: 0, total: 0, huIn: 0, huCl: 0, ship: 0, isAereo: isAereo(c) };
+                    }
+                    
+                    mM[kId].concluido += cReal; mM[kId].packed += m.p; mM[kId].rtp += m.r; mM[kId].grp += (m.rtg + m.g); 
+                    mM[kId].pick += m.pi; mM[kId].wav += m.wav; mM[kId].rtw += m.rtw; 
+                    mM[kId].huIn += m.huIn; mM[kId].huCl += m.huCl; mM[kId].ship += m.ship; mM[kId].total += tot;
+                    
+                    if(!k[hAct]) k[hAct] = { total: 0 }; 
+                    k[hAct].total += tot;
                 }
             }
 
             let arr = Object.values(mM).sort((a, b) => b.total - a.total);
-            if(arr.length === 0) { alert("Nenhum dado encontrado."); fecharLoader(); return; }
-
-            let isMerge = document.getElementById('chk-merge').checked, finalArr = arr, finalKpis = k;
-            if (isMerge && DATA_CACHE && DATA_CACHE.micro) {
-                let mergedMap = {}; DATA_CACHE.micro.forEach(r => { mergedMap[r.nome + "-" + r.horario] = r; }); arr.forEach(r => { mergedMap[r.nome + "-" + r.horario] = r; });
-                finalArr = Object.values(mergedMap).sort((a, b) => b.total - a.total); finalKpis = {}; finalArr.forEach(r => { if(!finalKpis[r.horario]) finalKpis[r.horario] = { total: 0 }; finalKpis[r.horario].total += r.total; });
+            
+            if(arr.length === 0) { 
+                alert("O sistema não encontrou dados no texto colado. Copie do cabeçalho até o final."); 
+                fecharLoader(); 
+                return; 
             }
-            DATA_CACHE = { micro: finalArr, kpis: finalKpis }; AVAILABLE_HOURS = Object.keys(finalKpis).filter(x => x !== "99" && x !== "S/H" && x !== "ATRASO").sort(); SELECTED_HOURS = []; renderEtdCheckboxes();
-            fecharLoader(); salvarNoBanco(); aplicarFiltros(); mudarAba('dashboard');
-        } catch(e) { alert("Erro ao ler dados."); fecharLoader(); }
+
+            let isMerge = document.getElementById('chk-merge').checked;
+            let finalArr = arr;
+            let finalKpis = k;
+
+            if (isMerge && DATA_CACHE && DATA_CACHE.micro) {
+                let mergedMap = {};
+                DATA_CACHE.micro.forEach(r => { mergedMap[r.nome + "-" + r.horario] = r; });
+                arr.forEach(r => { mergedMap[r.nome + "-" + r.horario] = r; });
+                finalArr = Object.values(mergedMap).sort((a, b) => b.total - a.total);
+                finalKpis = {};
+                finalArr.forEach(r => {
+                    if(!finalKpis[r.horario]) finalKpis[r.horario] = { total: 0 };
+                    finalKpis[r.horario].total += r.total;
+                });
+            }
+
+            DATA_CACHE = { micro: finalArr, kpis: finalKpis };
+            AVAILABLE_HOURS = Object.keys(finalKpis).filter(x => x !== "99" && x !== "S/H" && x !== "ATRASO").sort();
+            SELECTED_HOURS = []; 
+            renderEtdCheckboxes();
+            
+            fecharLoader(); 
+            salvarNoBanco(); 
+            aplicarFiltros(); 
+            mudarAba('dashboard');
+            
+        } catch(e) { 
+            alert("Erro ao ler os dados: " + e.message); 
+            console.error(e); // Para ajudar no debug!
+            fecharLoader(); 
+        }
     }, 500);
 }
-
 function aplicarFiltros() {
     if(!DATA_CACHE) return;
     let lst = DATA_CACHE.micro;
