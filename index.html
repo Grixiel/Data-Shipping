@@ -4,83 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Shipping - Cloud</title>
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    
     <script>
         tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
-                    colors: { brand: { 50: '#f0f9ff', 500: '#0ea5e9', 600: '#0284c7', 900: '#0c4a6e' } }
-                }
-            }
+            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] }, colors: { brand: { 50: '#f0f9ff', 500: '#0ea5e9', 600: '#0284c7', 900: '#0c4a6e' } } } }
         }
     </script>
 </head>
 <body class="flex flex-col h-screen relative">
-
     <div id="floating-tip" class="fixed z-[9999] hidden bg-slate-900/95 text-white p-5 rounded-xl shadow-2xl border border-slate-700 max-w-sm font-sans text-xs"></div>
-
-    <div id="global-loader" class="loader-overlay hidden z-[9999]">
-        <div class="spinner mb-4"></div>
-        <h2 class="text-xl font-bold text-slate-800" id="loader-title">Processando...</h2>
-        <button onclick="fecharLoader()" class="px-4 py-2 border text-slate-500 text-xs font-bold rounded-lg hover:bg-slate-100 mt-6">Forçar Fechamento</button>
-    </div>
+    <div id="global-loader" class="loader-overlay hidden z-[9999]"><div class="spinner mb-4"></div><h2 class="text-xl font-bold text-slate-800" id="loader-title">Processando...</h2><button onclick="fecharLoader()" class="px-4 py-2 border text-slate-500 text-xs font-bold rounded-lg hover:bg-slate-100 mt-6">Forçar Fechamento</button></div>
 
     <div id="import-modal" class="fixed inset-0 z-[80] hidden flex items-center justify-center modal-overlay">
         <div class="bg-white w-full max-w-4xl h-[85vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl">
-            <div class="bg-slate-900 p-6 flex justify-between items-center shrink-0">
-                <h2 class="text-2xl font-bold text-white"><i class="fa-solid fa-bolt text-blue-500"></i> Atualizar Base do WMS</h2>
-                <button onclick="closeModal('import-modal')" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
-            </div>
-            <div class="flex-1 p-6 bg-slate-50">
-                <textarea id="input-paste" class="w-full h-full border border-slate-300 rounded-xl p-4 font-mono text-xs outline-none shadow-inner" placeholder="Cole os dados do WMS aqui..."></textarea>
-            </div>
+            <div class="bg-slate-900 p-6 flex justify-between items-center shrink-0"><h2 class="text-2xl font-bold text-white"><i class="fa-solid fa-bolt text-blue-500"></i> Atualizar Base do WMS</h2><button onclick="closeModal('import-modal')" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-2xl"></i></button></div>
+            <div class="flex-1 p-6 bg-slate-50"><textarea id="input-paste" class="w-full h-full border border-slate-300 rounded-xl p-4 font-mono text-xs outline-none shadow-inner" placeholder="Cole os dados do WMS aqui..."></textarea></div>
             <div class="p-5 bg-white border-t flex justify-between items-center shrink-0">
-                <label class="flex items-center gap-2 text-[11px] font-bold text-slate-600 cursor-pointer bg-slate-50 border border-slate-200 px-3 py-2 rounded-lg hover:bg-slate-100 transition shadow-sm">
-                    <input type="checkbox" id="chk-merge" checked class="w-4 h-4 text-blue-600 rounded cursor-pointer"> Mesclar com Nuvem (Parcial)
-                </label>
-                <div class="flex gap-3">
-                    <button onclick="closeModal('import-modal')" class="px-6 py-2.5 text-slate-600 font-bold hover:bg-slate-100 rounded-lg">Cancelar</button>
-                    <button onclick="processarTextoCola()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-8 rounded-lg shadow-md"><i class="fa-solid fa-cloud-arrow-up mr-2"></i> SALVAR NA NUVEM</button>
-                </div>
+                <label class="flex items-center gap-2 text-[11px] font-bold text-slate-600 cursor-pointer bg-slate-50 border border-slate-200 px-3 py-2 rounded-lg hover:bg-slate-100 transition shadow-sm"><input type="checkbox" id="chk-merge" checked class="w-4 h-4 text-blue-600 rounded cursor-pointer"> Mesclar com Nuvem (Parcial)</label>
+                <div class="flex gap-3"><button onclick="closeModal('import-modal')" class="px-6 py-2.5 text-slate-600 font-bold hover:bg-slate-100 rounded-lg">Cancelar</button><button onclick="processarTextoCola()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-8 rounded-lg shadow-md"><i class="fa-solid fa-cloud-arrow-up mr-2"></i> SALVAR NA NUVEM</button></div>
             </div>
         </div>
     </div>
 
     <div class="flex h-full overflow-hidden">
         <nav class="w-64 bg-slate-900 border-r border-slate-800 flex-shrink-0 flex flex-col z-20 shadow-2xl">
-            <div class="h-16 flex items-center px-6 border-b border-slate-800">
-                <div class="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white mr-3 shadow-lg"><i class="fa-solid fa-layer-group"></i></div>
-                <div><span class="font-bold text-lg text-white leading-none block">Data Shipping</span><span class="text-[9px] text-blue-400 font-bold uppercase">Cloud Shipping</span></div>
-            </div>
-            
+            <div class="h-16 flex items-center px-6 border-b border-slate-800"><div class="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white mr-3 shadow-lg"><i class="fa-solid fa-layer-group"></i></div><div><span class="font-bold text-lg text-white leading-none block">Data Shipping</span><span class="text-[9px] text-blue-400 font-bold uppercase">Cloud Shipping</span></div></div>
             <div class="flex-1 overflow-y-auto py-6 px-3 space-y-1">
                 <button onclick="sincronizarComBanco(true)" class="w-full bg-emerald-500/20 text-emerald-400 font-bold py-3 px-4 rounded-xl mb-2 hover:bg-emerald-500/30 transition shadow-lg"><i class="fa-solid fa-rotate"></i> SINCRONIZAR NUVEM</button>
                 <button onclick="openModal('import-modal')" class="w-full bg-blue-500/10 text-blue-400 font-bold py-2 px-4 rounded-xl mb-6 hover:bg-blue-500/20 transition text-xs"><i class="fa-solid fa-arrow-up-from-bracket"></i> SUBIR DADOS WMS</button>
                 
-                <div class="px-3 mt-2 text-[10px] font-bold text-slate-500 uppercase mb-2">Visões Estratégicas</div>
+                <div class="px-3 mt-2 text-[10px] font-bold text-slate-500 uppercase mb-2">Estratégia</div>
                 <button onclick="mudarAba('dashboard')" id="btn-dashboard" class="sidebar-link w-full active"><i class="fa-solid fa-chart-line mr-3 w-5 text-center"></i> Visão Geral</button>
-                <button onclick="mudarAba('hc')" id="btn-hc" class="sidebar-link w-full"><i class="fa-solid fa-users-gear mr-3 w-5 text-center text-emerald-400"></i> Gestão de HC & SPP</button>
                 <button onclick="mudarAba('live')" id="btn-live" class="sidebar-link w-full text-rose-300 bg-rose-900/10 border border-rose-900/30"><i class="fa-solid fa-satellite-dish mr-3 w-5 text-center text-rose-500 animate-pulse"></i> Radar ETD</button>
                 <button onclick="mudarAba('micro')" id="btn-micro" class="sidebar-link w-full mt-1"><i class="fa-solid fa-list-ol mr-3 w-5 text-center"></i> Detalhe (Micro)</button>
-                <button onclick="mudarAba('macro')" id="btn-macro" class="sidebar-link w-full"><i class="fa-solid fa-cubes mr-3 w-5 text-center"></i> Visão Macro</button>
+                <button onclick="mudarAba('hc')" id="btn-hc" class="sidebar-link w-full"><i class="fa-solid fa-users-gear mr-3 w-5 text-center text-emerald-400"></i> Gestão HC & SPP</button>
                 
-                <div class="px-3 mt-6 text-[10px] font-bold text-slate-500 uppercase mb-2">Tobogãs</div>
-                <button onclick="mudarAba('t3')" id="btn-t3" class="sidebar-link w-full"><i class="fa-solid fa-map-location-dot mr-3 w-5 text-center text-blue-400"></i> 01-50 <span class="ml-auto text-[9px] bg-slate-800 px-1.5 py-0.5 rounded">01-50</span></button>
-                <button onclick="mudarAba('t5')" id="btn-t5" class="sidebar-link w-full"><i class="fa-solid fa-map-location-dot mr-3 w-5 text-center text-blue-400"></i> 50-98 <span class="ml-auto text-[9px] bg-slate-800 px-1.5 py-0.5 rounded">51-98</span></button>
-                
-                <div class="px-3 mt-6 text-[10px] font-bold text-cyan-400 uppercase mb-2">Especial</div>
-                <button onclick="mudarAba('aereo')" id="btn-aereo" class="sidebar-link w-full text-cyan-200 bg-cyan-900/20 hover:bg-cyan-900/40"><i class="fa-solid fa-truck-plane mr-3 w-5 text-center text-cyan-400"></i> Malha Aérea</button>
+                <div class="px-3 mt-6 text-[10px] font-bold text-slate-500 uppercase mb-2">Malha Logística</div>
+                <button onclick="mudarAba('t3')" id="btn-t3" class="sidebar-link w-full"><i class="fa-solid fa-map-location-dot mr-3 w-5 text-center text-blue-400"></i> Tobogãs 01-50</button>
+                <button onclick="mudarAba('t5')" id="btn-t5" class="sidebar-link w-full"><i class="fa-solid fa-map-location-dot mr-3 w-5 text-center text-blue-400"></i> Tobogãs 51-98</button>
+                <button onclick="mudarAba('aereo')" id="btn-aereo" class="sidebar-link w-full text-cyan-200 bg-cyan-900/20 hover:bg-cyan-900/40 mt-4"><i class="fa-solid fa-plane-departure mr-3 w-5 text-center text-cyan-400"></i> Malha Aérea</button>
             </div>
-            
-            <div class="p-4 border-t border-slate-800 text-center bg-slate-950">
-                <span id="data-status" class="text-[10px] font-bold text-slate-500 flex items-center justify-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Aguardando Sincronização</span>
-            </div>
+            <div class="p-4 border-t border-slate-800 text-center bg-slate-950"><span id="data-status" class="text-[10px] font-bold text-slate-500 flex items-center justify-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Aguardando Sincronização</span></div>
         </nav>
 
         <main class="flex-1 flex flex-col min-w-0 bg-slate-50">
@@ -88,22 +55,11 @@
                 <h1 class="text-xl font-extrabold text-slate-800 mr-4">Painel Operacional</h1>
                 <div class="flex items-center gap-3">
                     <div class="flex items-center bg-slate-50 rounded-lg px-3 py-1.5 border relative" id="dropdown-etd-container">
-                        <i class="fa-solid fa-clock-rotate-left text-blue-500 mr-2"></i>
-                        <span class="text-[10px] font-bold text-slate-500 mr-2 uppercase">Filtro ETD:</span>
+                        <i class="fa-solid fa-clock-rotate-left text-blue-500 mr-2"></i><span class="text-[10px] font-bold text-slate-500 mr-2 uppercase">ETD:</span>
                         <div class="relative inline-block text-left">
                             <button id="etd-btn-toggle" onclick="document.getElementById('etd-dropdown-panel').classList.toggle('hidden')" class="bg-transparent text-xs font-bold text-slate-800 flex items-center outline-none"><span id="etd-btn-text">TODOS</span> <i class="fa-solid fa-chevron-down ml-1 text-[10px]"></i></button>
                             <div id="etd-dropdown-panel" class="hidden absolute right-0 top-full mt-3 w-48 bg-white border rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto py-2"></div>
                         </div>
-                    </div>
-                    
-                    <div class="flex items-center bg-slate-50 rounded-lg px-3 py-1.5 border">
-                        <i class="fa-solid fa-bullseye text-blue-500 mr-2"></i>
-                        <span class="text-[10px] font-bold text-slate-500 mr-2 uppercase">Analisar %:</span>
-                        <select id="metric-selector" onchange="aplicarFiltros()" class="bg-transparent text-xs font-bold text-slate-800 outline-none cursor-pointer">
-                            <option value="concluido">Processado Oficial (WMS)</option>
-                            <option value="packed">Apenas Packed</option>
-                            <option value="gte_packed">Munição (Pck + Proc)</option>
-                        </select>
                     </div>
                 </div>
             </header>
@@ -111,118 +67,102 @@
             <div class="flex-1 overflow-y-auto p-6" id="main-scroll">
                 
                 <div id="view-dashboard" class="space-y-6">
-                    <div id="dash-backlog-area" class="hidden glass-panel p-5 border-l-4 border-red-500 bg-red-50/40 flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center text-2xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                            <div><h3 class="text-sm font-extrabold text-red-800 uppercase tracking-wider">Backlog (Atraso)</h3></div>
+                    <div class="glass-panel p-8 border-t-8 border-brand-500 bg-white relative overflow-hidden shadow-xl">
+                        <i class="fa-solid fa-globe absolute -right-10 -bottom-10 text-9xl text-slate-50 opacity-50"></i>
+                        <h3 class="text-sm font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><i class="fa-solid fa-chart-pie text-brand-500"></i> Operação Global (Terrestre + Aéreo)</h3>
+                        <div class="flex items-end gap-4 mb-4 relative z-10">
+                            <div class="text-6xl font-black text-slate-800 font-mono tracking-tighter" id="dash-glb-targetval">0</div>
+                            <div class="text-lg font-bold text-slate-400 mb-2">/ <span id="dash-glb-total">0</span> Peças no Dia</div>
+                            <div class="text-4xl font-black text-brand-600 ml-auto" id="dash-glb-pct">0.00%</div>
                         </div>
-                        <div class="flex gap-6 text-right">
-                            <div class="flex flex-col items-end"><span class="text-[10px] font-bold text-slate-500 uppercase">Atraso Real</span><span id="bl-total" class="text-2xl font-black font-mono">0</span></div>
-                            <div class="flex flex-col items-end"><span class="text-[10px] font-bold text-blue-500 uppercase">Processado In</span><span id="bl-proc" class="text-2xl font-black text-blue-600 font-mono">0</span></div>
-                            <div class="flex flex-col items-end bg-red-100 px-3 py-1 rounded"><span class="text-[10px] font-bold text-red-600 uppercase">Falta Fechar</span><span id="bl-pend" class="text-2xl font-black text-red-700 font-mono">0</span></div>
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="glass-panel p-6 border-l-4 border-blue-500">
-                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Operação Terrestre (No Prazo)</h3>
-                            <div class="flex items-end gap-3 mb-3"><div class="text-4xl font-black text-slate-800 font-mono" id="dash-terr-targetval">0</div><div class="text-sm font-bold text-slate-400 mb-1">/ <span id="dash-terr-total">0</span> Total</div><div class="text-2xl font-bold text-blue-600 ml-auto" id="dash-terr-pct">0.00%</div></div>
-                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden"><div class="bg-blue-500 h-full" id="dash-terr-bar" style="width:0%"></div></div>
-                            <div class="mt-3 text-[10px] font-bold text-slate-500 flex justify-between border-t pt-2"><span class="text-emerald-600">Pck: <span id="dash-terr-packed">0</span></span><span class="text-blue-500">Aberto: <span id="dash-terr-huin">0</span></span><span class="text-indigo-500">Fechado: <span id="dash-terr-hucl">0</span></span><span class="text-purple-500">Shp: <span id="dash-terr-ship">0</span></span></div>
-                        </div>
-                        <div class="glass-panel p-6 border-l-4 border-cyan-500 bg-cyan-900 text-white">
-                            <h3 class="text-xs font-bold text-cyan-300 uppercase tracking-widest mb-1">Operação Total (Com Aéreo)</h3>
-                            <div class="flex items-end gap-3 mb-3"><div class="text-4xl font-black text-white font-mono" id="dash-all-targetval">0</div><div class="text-sm font-bold text-cyan-200 mb-1">/ <span id="dash-all-total">0</span> Total</div><div class="text-2xl font-bold text-cyan-400 ml-auto" id="dash-all-pct">0.00%</div></div>
-                            <div class="w-full bg-cyan-950 h-2 rounded-full overflow-hidden"><div class="bg-cyan-400 h-full" id="dash-all-bar" style="width:0%"></div></div>
-                            <div class="mt-3 text-[10px] font-bold text-cyan-200 flex justify-between border-t border-cyan-800 pt-2"><span class="text-emerald-400">Pck: <span id="dash-all-packed">0</span></span><span class="text-blue-400">In: <span id="dash-all-huin">0</span></span><span class="text-indigo-400">Cls: <span id="dash-all-hucl">0</span></span><span class="text-purple-400">Shp: <span id="dash-all-ship">0</span></span></div>
+                        <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden mb-6 relative z-10"><div class="bg-brand-500 h-full shadow-[0_0_10px_rgba(14,165,233,0.5)] transition-all duration-500" id="dash-glb-bar" style="width:0%"></div></div>
+                        <div class="grid grid-cols-5 gap-4 border-t border-slate-100 pt-4 relative z-10">
+                            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Shippadas</span><span class="text-lg font-black text-purple-600" id="dash-glb-ship">0</span></div>
+                            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Fechadas (CLS)</span><span class="text-lg font-black text-indigo-500" id="dash-glb-hucl">0</span></div>
+                            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Abertos (IN)</span><span class="text-lg font-black text-blue-500" id="dash-glb-huin">0</span></div>
+                            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Packed (Retido)</span><span class="text-lg font-black text-emerald-500" id="dash-glb-packed">0</span></div>
+                            <div class="flex flex-col bg-amber-50 px-3 py-1 rounded border border-amber-100"><span class="text-[10px] font-bold text-amber-700 uppercase">Pendentes Físico</span><span class="text-lg font-black text-amber-600" id="dash-glb-pend">0</span></div>
                         </div>
                     </div>
                     
-                    <div id="dash-kpi-area" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
+                    <h3 class="font-black text-slate-600 uppercase tracking-widest text-sm mt-8 border-b pb-2"><i class="fa-solid fa-bullseye text-blue-500 mr-2"></i> Radar de Metas por ETD</h3>
+                    <div id="dash-kpi-area" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
                     
-                    <div class="glass-panel flex flex-col border-t-4 border-amber-500">
-                        <div class="p-4 border-b bg-amber-50 flex justify-between"><h3 class="font-bold text-amber-800">Gargalos Globais (RTP + GRP)</h3></div>
+                    <div class="glass-panel flex flex-col border-t-4 border-orange-500 mt-8 shadow-md">
+                        <div class="p-4 border-b bg-orange-50 flex justify-between items-center"><h3 class="font-bold text-orange-900"><i class="fa-solid fa-fire mr-2"></i> Gargalos Globais (Nas Esteiras)</h3><span class="text-[9px] font-bold text-orange-600 bg-white px-2 py-1 rounded border border-orange-200 uppercase">RTP + GRP (&lt; 45 MIN)</span></div>
                         <div class="overflow-auto max-h-80">
                             <table class="w-full text-xs text-left">
-                                <thead class="bg-white text-slate-400 uppercase font-bold sticky top-0 shadow-sm">
-                                    <tr><th class="p-3 pl-6">Rota</th><th class="p-3 text-center">Hora</th><th class="p-3 text-right text-red-500">Crítico (&lt;45m)</th><th class="p-3 text-right">Total Rota</th><th class="p-3 text-right pr-6">% Atingido</th></tr>
-                                </thead>
+                                <thead class="bg-white text-slate-400 uppercase font-bold sticky top-0 shadow-sm text-[10px]"><tr><th class="p-3 pl-6">Rota</th><th class="p-3 text-center">Hora</th><th class="p-3 text-right text-orange-600">Chegando (&lt;45m)</th><th class="p-3 text-right">Total Rota</th><th class="p-3 text-right pr-6">% Atingido</th></tr></thead>
                                 <tbody id="dash-offenders-body" class="divide-y font-mono"></tbody>
                             </table>
                         </div>
                     </div>
                 </div>
 
-                <div id="view-hc" class="hidden space-y-6">
-                    <div>
-                        <h2 class="text-xl font-bold text-slate-800 flex items-center">Gestão de Efetivo e Contentores <span class="ml-3 bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px] uppercase font-black tracking-widest border border-blue-200 shadow-sm"><i class="fa-solid fa-cloud mr-1"></i> Nuvem</span></h2>
+                <div id="view-live" class="hidden h-full flex flex-col">
+                    <div class="flex justify-between items-center mb-6 shrink-0 border-b border-slate-200 pb-4"><h2 class="text-2xl font-bold text-slate-800"><i class="fa-solid fa-satellite-dish text-rose-500 mr-3 animate-pulse"></i> Radar Operacional</h2><div class="text-xl font-mono font-black text-slate-800 bg-white px-4 py-2 rounded border shadow-inner" id="live-clock">00:00:00</div></div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 shrink-0" id="live-kpi-area"></div>
+                    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 flex-1 min-h-0">
+                        <div class="xl:col-span-2 glass-panel flex flex-col h-full border-t-4 border-rose-500 overflow-hidden shadow-md">
+                            <div class="p-4 border-b bg-rose-50 flex justify-between items-center"><h3 class="font-bold text-rose-900">Rotas Ofensoras <span id="live-etd-lbl"></span></h3><span class="text-[9px] font-bold text-rose-600 bg-white px-2 py-1 rounded border">Pendências Físicas</span></div>
+                            <div class="overflow-y-auto flex-1">
+                                <table class="w-full text-left text-xs font-mono"><thead class="bg-white text-slate-400 text-[9px] uppercase font-bold sticky top-0 z-10 shadow-sm"><tr><th class="p-3 pl-4">ROTA</th><th class="p-3 text-right text-emerald-600">PACKED</th><th class="p-3 text-right text-orange-500">PACKING(&lt;45M)</th><th class="p-3 text-right text-rose-500">PICK(1H+)</th><th class="p-3 text-right text-slate-400">WAV(CONGEL)</th><th class="p-3 pr-4 text-right">PROGRESSO</th></tr></thead><tbody id="live-offenders-body" class="divide-y divide-slate-100"></tbody></table>
+                            </div>
+                        </div>
+                        <div class="glass-panel flex flex-col h-full border-t-4 border-emerald-500 overflow-hidden shadow-md">
+                            <div class="p-4 border-b bg-emerald-50"><h3 class="font-bold text-emerald-900"><i class="fa-solid fa-box-open mr-2"></i> Mapa de Fullhacks (Packed)</h3></div>
+                            <div class="overflow-y-auto flex-1 p-3 space-y-2 bg-slate-50" id="live-fullhacks-area"></div>
+                        </div>
                     </div>
+                </div>
+
+                <div id="view-micro" class="hidden h-full flex flex-col glass-panel shadow-lg overflow-hidden">
+                    <div class="p-4 border-b bg-slate-800 flex flex-wrap gap-4 justify-between items-center shrink-0">
+                        <h3 class="font-black text-sm text-white tracking-widest uppercase"><i class="fa-solid fa-microscope text-brand-400 mr-2"></i> Detalhe Micro Analítico</h3>
+                        <div class="flex items-center gap-3">
+                            <select id="micro-risk-filter" onchange="aplicarFiltros()" class="bg-slate-700 border-none rounded-lg p-1.5 text-xs font-bold text-white outline-none cursor-pointer"><option value="padrao">Padrão (Pendente Físico)</option><option value="packed">Packed (Retido)</option><option value="imediato">Chegando Agora (&lt;45m)</option><option value="futuro">Em Picking (1H+)</option><option value="congelado">Congelado (Waving)</option></select>
+                        </div>
+                    </div>
+                    <div class="overflow-auto flex-1 bg-white">
+                        <table class="w-full text-left text-xs font-mono">
+                            <thead class="bg-slate-50 text-slate-500 font-bold sticky top-0 text-[9px] uppercase shadow-sm z-10">
+                                <tr><th class="p-3 pl-6">Rota</th><th>Hora</th><th class="text-right text-blue-500">IN</th><th class="text-right text-indigo-500">CLS</th><th class="text-right text-purple-600">SHP</th><th class="text-right text-emerald-600 border-l">PCK</th><th class="text-right text-orange-500">RTP+GRP</th><th class="text-right text-rose-500">PICK</th><th class="text-right text-slate-400 border-r">WAV</th><th class="text-right p-3">TOTAL</th><th class="text-right p-3">% ALVO</th></tr>
+                            </thead>
+                            <tbody id="micro-body" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="view-hc" class="hidden space-y-6">
+                    <div><h2 class="text-xl font-bold text-slate-800 flex items-center">Gestão de Efetivo e Contentores</h2></div>
                     <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
                         <div class="glass-panel p-6 flex flex-col gap-6">
                             <div>
                                 <h3 class="font-bold text-slate-700 mb-4 border-b pb-2"><i class="fa-solid fa-users text-blue-500"></i> Velocidade Operacional</h3>
                                 <div class="space-y-2">
-                                    <div class="flex items-center gap-4"><div class="w-28 font-bold text-xs uppercase">Picking</div><div class="flex-1 flex gap-2"><input type="number" id="inp-hc-pick" onchange="saveHC()" placeholder="HCs" class="w-full border rounded p-2 text-sm font-bold text-slate-700 outline-none focus:border-blue-500"><input type="number" id="inp-med-pick" onchange="saveHC()" placeholder="Pçs/h" class="w-full border rounded p-2 text-sm font-bold text-slate-700 outline-none focus:border-blue-500"></div></div>
+                                    <div class="flex items-center gap-4"><div class="w-28 font-bold text-xs uppercase">Picking</div><div class="flex-1 flex gap-2"><input type="number" id="inp-hc-pick" onchange="saveHC()" placeholder="HCs" class="w-full border rounded p-2 text-sm font-bold text-slate-700 outline-none"><input type="number" id="inp-med-pick" onchange="saveHC()" placeholder="Pçs/h" class="w-full border rounded p-2 text-sm font-bold text-slate-700 outline-none"></div></div>
                                     <div class="flex items-center gap-4 bg-slate-50 p-2 -mx-2 rounded border border-slate-100"><div class="w-28 font-bold text-xs uppercase pl-2">Packing</div><div class="flex-1 flex gap-2"><input type="number" id="inp-hc-pack" onchange="saveHC()" class="w-full border bg-white rounded p-2 text-sm font-bold outline-none"><input type="number" id="inp-med-pack" onchange="saveHC()" class="w-full border bg-white rounded p-2 text-sm font-bold outline-none"></div></div>
                                     <div class="flex items-center gap-4"><div class="w-28 font-bold text-xs uppercase">Atrelamento</div><div class="flex-1 flex gap-2"><input type="number" id="inp-hc-atr" onchange="saveHC()" class="w-full border rounded p-2 text-sm font-bold outline-none"><input type="number" id="inp-med-atr" onchange="saveHC()" class="w-full border rounded p-2 text-sm font-bold outline-none"></div></div>
                                     <div class="flex items-center gap-4 bg-slate-50 p-2 -mx-2 rounded border"><div class="w-28 font-bold text-xs uppercase pl-2">Stage Zone</div><div class="flex-1 flex gap-2"><input type="number" id="inp-hc-stg" onchange="saveHC()" class="w-full border bg-white rounded p-2 text-sm font-bold outline-none"><input type="number" id="inp-med-stg" onchange="saveHC()" class="w-full border bg-white rounded p-2 text-sm font-bold outline-none"></div></div>
                                 </div>
                             </div>
                         </div>
-                        <div class="glass-panel p-6 bg-slate-900 text-white relative">
-                            <h3 class="font-bold text-blue-400 mb-6 border-b border-slate-700 pb-2"><i class="fa-solid fa-chart-pie mr-2"></i> Relatório Dinâmico de Projeção</h3>
-                            <div id="hc-projections" class="relative z-10"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="view-live" class="hidden h-full flex flex-col">
-                    <div class="flex justify-between items-center mb-6 shrink-0 border-b border-slate-200 pb-4">
-                        <h2 class="text-2xl font-bold text-slate-800"><i class="fa-solid fa-satellite-dish text-rose-500 mr-3 animate-pulse"></i> Radar Operacional</h2>
-                        <div class="text-xl font-mono font-black text-slate-800 bg-white px-4 py-2 rounded border" id="live-clock">00:00:00</div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 shrink-0" id="live-kpi-area"></div>
-                    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 flex-1 min-h-0">
-                        <div class="xl:col-span-2 glass-panel flex flex-col h-full border-t-4 border-rose-500 overflow-hidden">
-                            <div class="p-4 border-b bg-rose-50"><h3 class="font-bold text-rose-900">Rotas Ofensoras <span id="live-etd-lbl"></span></h3></div>
-                            <div class="overflow-y-auto flex-1"><table class="w-full text-left text-xs font-mono"><tbody id="live-offenders-body" class="divide-y"></tbody></table></div>
-                        </div>
-                        <div class="glass-panel flex flex-col h-full border-t-4 border-emerald-500 overflow-hidden">
-                            <div class="p-4 border-b bg-emerald-50"><h3 class="font-bold text-emerald-900">Fullhacks (Packed)</h3></div>
-                            <div class="overflow-y-auto flex-1 p-3 space-y-2 bg-slate-50" id="live-fullhacks-area"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="view-micro" class="hidden h-full flex flex-col glass-panel">
-                    <div class="p-4 border-b bg-slate-50 flex gap-4 justify-between items-center"><h3 class="font-bold text-sm text-slate-800">Detalhe Micro</h3></div>
-                    <div class="overflow-auto flex-1">
-                        <table class="w-full text-left text-xs font-mono">
-                            <thead class="bg-white text-slate-500 font-bold sticky top-0 text-[10px] uppercase shadow-sm z-10">
-                                <tr><th class="p-3 pl-6">Rota</th><th>Hora</th><th class="text-right">IN</th><th class="text-right">CLS</th><th class="text-right">SHP</th><th class="text-right">PCK</th><th class="text-right">RTP</th><th class="text-right">GRP</th><th class="text-right">PICK</th><th class="text-right">WAV</th><th class="text-right p-3">TOTAL</th><th class="text-right p-3">% ALVO</th></tr>
-                            </thead>
-                            <tbody id="micro-body" class="divide-y"></tbody>
-                        </table>
+                        <div class="glass-panel p-6 bg-slate-900 text-white relative"><h3 class="font-bold text-blue-400 mb-6 border-b border-slate-700 pb-2"><i class="fa-solid fa-chart-pie mr-2"></i> Relatório Dinâmico de Projeção</h3><div id="hc-projections" class="relative z-10"></div></div>
                     </div>
                 </div>
 
                 <div id="view-t3" class="hidden h-full flex flex-col">
-                    <h2 class="font-bold text-2xl text-slate-800 mb-4"><i class="fa-solid fa-layer-group text-blue-500 mr-3"></i> Matriz T3 (01-50)</h2>
+                    <div class="flex justify-between items-end mb-4"><h2 class="font-bold text-2xl text-slate-800"><i class="fa-solid fa-map-location-dot text-blue-500 mr-3"></i> Relatório de Tobogãs <span class="bg-slate-200 text-xs px-2 py-1 rounded ml-2">01 a 50</span></h2><div id="t3-alerts" class="text-xs font-bold bg-white px-3 py-1.5 rounded-lg shadow-sm border border-rose-200 text-rose-600 animate-pulse">Calculando alertas...</div></div>
                     <div class="flex-1 overflow-y-auto bg-slate-100 p-5 rounded-2xl border shadow-inner" id="t3-list-container"></div>
                 </div>
                 <div id="view-t5" class="hidden h-full flex flex-col">
-                    <h2 class="font-bold text-2xl text-slate-800 mb-4"><i class="fa-solid fa-layer-group text-blue-500 mr-3"></i> Matriz T5 (51-98)</h2>
+                    <div class="flex justify-between items-end mb-4"><h2 class="font-bold text-2xl text-slate-800"><i class="fa-solid fa-map-location-dot text-blue-500 mr-3"></i> Relatório de Tobogãs <span class="bg-slate-200 text-xs px-2 py-1 rounded ml-2">51 a 98</span></h2><div id="t5-alerts" class="text-xs font-bold bg-white px-3 py-1.5 rounded-lg shadow-sm border border-rose-200 text-rose-600 animate-pulse">Calculando alertas...</div></div>
                     <div class="flex-1 overflow-y-auto bg-slate-100 p-5 rounded-2xl border shadow-inner" id="t5-list-container"></div>
                 </div>
-                <div id="view-macro" class="hidden space-y-4">
-                    <h2 class="text-xl font-bold">Visão Macro</h2>
-                    <div id="macro-fixed-container" class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8"></div>
-                    <div id="macro-container" class="grid grid-cols-1 xl:grid-cols-2 gap-6"></div>
-                </div>
+
                 <div id="view-aereo" class="hidden h-full flex flex-col">
-                    <h2 class="text-2xl font-bold text-slate-800 mb-4">Gestão de Expedição Aérea</h2>
                     <div id="aereo-dynamic-summary" class="mb-6 shrink-0"></div>
-                    <div class="overflow-y-auto flex-1 space-y-6" id="aereo-container"></div>
+                    <div class="overflow-y-auto flex-1 space-y-8" id="aereo-container"></div>
                 </div>
 
             </div>
