@@ -214,4 +214,26 @@ function processarTextoCola() {
     
     closeModal('import-modal');
     document.getElementById('input-paste').value = '';
+    // Prepara os dados do JavaScript para virarem texto e irem para o GitHub
+function codificarParaNuvem(cache, settings) {
+    return JSON.stringify(cache || []);
 }
+
+// Pega no texto do GitHub e transforma de volta em dados para o JavaScript
+function decodificarNuvem(payload) {
+    try {
+        if (payload) {
+            DATA_CACHE = JSON.parse(payload);
+            console.log("Dados carregados com sucesso da Nuvem!");
+            renderMatriz();
+        }
+    } catch(e) {
+        console.error("Erro ao ler os dados da nuvem:", e);
+    }
+}
+
+// Função temporária apenas para evitar que o código quebre. 
+function renderMatriz() {
+    console.log("A preparar para desenhar a interface com os dados...", DATA_CACHE);
+}
+
