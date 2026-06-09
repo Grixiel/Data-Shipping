@@ -17,6 +17,7 @@ window.onload = () => {
     sincronizarComBanco(true); 
     setInterval(() => sincronizarComBanco(false), 30000);
     setInterval(verificarDefasagem, 60000);
+    
 };
 
 
@@ -163,4 +164,22 @@ function closeModal(id) {
 
 function fecharLoader() {
     document.getElementById('global-loader').style.display = 'none';
+    function processarTextoCola() {
+    let texto = document.getElementById('input-paste').value;
+
+    if (!texto.trim()) {
+        alert("Por favor, cole os dados do WMS antes de salvar.");
+        return;
+    }
+
+    let mesclar = document.getElementById('chk-merge').checked;
+
+
+    console.log("A processar dados...", { texto, mesclar });
+    document.getElementById('global-loader').classList.remove('hidden');
+    document.getElementById('global-loader').style.display = 'flex';
+    salvarNoBanco();
+    closeModal('import-modal');
+    document.getElementById('input-paste').value = '';
+}
 }
