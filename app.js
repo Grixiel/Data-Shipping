@@ -61,10 +61,13 @@ function carregarMapaTobogas() {
 
 function sincronizarComBanco(manual) {
     if(manual) { document.getElementById('global-loader').classList.remove('hidden'); }
-    setStatusUi('Sincronizando...', 'bg-blue-500 animate-pulse');
-    
+    setStatusUi('Conectando...', 'bg-blue-500 animate-pulse');
+
     fetch(`https://api.github.com/gists/${GIST_ID}?t=${Date.now()}`, { headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}` } })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) throw new Error("Erro de Token ou Conexão");
+        return res.json();
+    })
     .then(data => {
         if(manual) fecharLoader();
         try {
@@ -72,12 +75,20 @@ function sincronizarComBanco(manual) {
             if(content.time !== LAST_CLOUD_TIME) {
                 LAST_CLOUD_TIME = content.time;
                 decodificarNuvem(content.payload);
-                setStatusUi(`Atualizado: ${LAST_CLOUD_TIME}`, 'bg-emerald-500');
             }
-        } catch(e) { if(manual) openModal('import-modal'); }
-    }).catch(() => { if(manual) fecharLoader(); });
+            // Atualiza o painel com a hora da última sincronização
+            setStatusUi(`Atualizado: ${LAST_CLOUD_TIME || new Date().toLocaleTimeString('pt-BR')}`, 'bg-emerald-500');
+        } catch(e) {
+            console.error("Base vazia:", e);
+            setStatusUi('Base Vazia (Suba WMS)', 'bg-amber-500');
+            if(manual) openModal('import-modal');
+        }
+    }).catch((err) => {
+        console.error("Falha no fetch:", err);
+        setStatusUi('Falha de Acesso (Token)', 'bg-red-500');
+        if(manual) fecharLoader();
+    });
 }
-
 function salvarNoBanco() {
     setStatusUi('Salvando Nuvem...', 'bg-amber-500 animate-pulse');
     let payload = JSON.stringify({ d: DATA_CACHE, s: SETTINGS_DATA });
