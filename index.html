@@ -17,9 +17,247 @@
 <body class="flex flex-col h-screen relative">
     <div id="floating-tip" class="fixed z-[9999] hidden bg-slate-900/95 text-white p-5 rounded-xl shadow-2xl border border-slate-700 max-w-sm font-sans text-xs"></div>
     <div id="global-loader" class="loader-overlay hidden z-[9999]"><div class="spinner mb-4"></div><h2 class="text-xl font-bold text-slate-800" id="loader-title">Processando...</h2><button onclick="fecharLoader()" class="px-4 py-2 border text-slate-500 text-xs font-bold rounded-lg hover:bg-slate-100 mt-6">Forçar Fechamento</button></div>
-    -----------------------------------------------------------------------------------------------
-    //Modal Appscript - Div
----------------------------------------------------------------------------------------------------
+<div id="import-modal" class="fixed inset-0 z-[80] hidden flex items-center justify-center modal-overlay">
+        <div class="bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl">
+            <div class="bg-slate-900 p-6 flex justify-between items-center shrink-0">
+                <h2 class="text-2xl font-bold text-white"><i class="fa-solid fa-bolt text-blue-500"></i> Atualizar Base do WMS</h2>
+                <button onclick="closeModal('import-modal')" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-6 bg-slate-50 space-y-6">
+                <div class="bg-white p-5 border-l-4 border-blue-500 rounded-xl shadow-sm">
+                    <h3 class="font-bold text-slate-800 mb-2 flex items-center gap-2"><span class="bg-blue-100 text-blue-600 w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span> Link do Relatório de Hoje</h3>
+                    <p class="text-xs text-slate-500 mb-3">O link abaixo já está configurado para puxar os dados do dia de hoje. Clique para abrir o WMS.</p>
+                    <a id="wms-dynamic-link" href="#" target="_blank" class="inline-flex items-center text-sm text-blue-600 bg-blue-50 px-4 py-2 rounded-lg font-bold hover:bg-blue-100 transition-colors border border-blue-100">
+                        <i class="fa-solid fa-arrow-up-right-from-square mr-2"></i> Abrir WMS Filtrado
+                    </a>
+                </div>
+
+                <div class="bg-white p-5 border-l-4 border-emerald-500 rounded-xl shadow-sm">
+                    <h3 class="font-bold text-slate-800 mb-2 flex items-center gap-2"><span class="bg-emerald-100 text-emerald-600 w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span> Como extrair os dados</h3>
+                    <ul class="text-xs text-slate-600 space-y-2 mb-4">
+                        <li><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Instale a extensão <a href="https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?pli=1" target="_blank" class="text-blue-500 font-bold hover:underline">Tampermonkey</a>.</li>
+                        <li><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Vá em Gerenciar Extensão e ative <strong>"Permitir scripts de usuário"</strong>.</li>
+                        <li><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Clique no Tampermonkey > "Adicionar novo script". Cole o código abaixo e salve.</li>
+                        <li class="bg-amber-50 p-2 rounded text-amber-800 font-medium"><i class="fa-solid fa-keyboard mr-2"></i> <strong>Ação:</strong> Com o relatório aberto, aperte <code>ALT + Z</code> (ou acesse o menu) para copiar tudo.</li>
+                    </ul>
+                    <textarea readonly class="w-full h-32 bg-slate-50 text-slate-600 font-mono text-[10px] p-3 rounded-lg border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 transition-all">// ==UserScript==
+// @name         Extraindo Dados WMS
+// @namespace    http://tampermonkey.net/
+// @version      20.0
+// @description  Abre as gavetas burlando o React, espera carregar e copia tudo para o Excel (Alt+Z)
+// @author       Você
+// @match        https://wms.adminml.com/*
+// @grant        GM_registerMenuCommand
+// @run-at       document-idle
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    var teste = document.createElement("div");
+    teste.innerText = "✅ SCRIPT CONECTADO";
+    teste.style = "position:fixed; bottom:10px; right:10px; background:#27ae60; color:white; padding:10px 15px; font-size:14px; font-weight:bold; z-index:9999999; border-radius:5px; box-shadow:0 0 10px rgba(0,0,0,0.5); font-family:sans-serif;";
+    document.body.appendChild(teste);
+    setTimeout(() => teste.remove(), 4000);
+    document.addEventListener('keydown', function(e) {
+        if (e.altKey && (e.code === 'KeyZ' || e.key === 'z' || e.key === 'Z')) {
+            e.preventDefault();
+            executarProcessoCompleto();
+        }
+    }, true);
+
+    GM_registerMenuCommand(" Extrair Dados Agora", executarProcessoCompleto);
+    async function executarProcessoCompleto() {
+        var d = document;
+
+        var aviso = d.createElement("div");
+        aviso.style = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:rgba(0,0,0,0.85); color:#f1c40f; padding:25px 45px; border-radius:12px; font-size:24px; font-weight:bold; z-index:9999999; pointer-events:none; box-shadow:0 0 25px rgba(0,0,0,0.6); font-family:sans-serif; text-align:center;";
+        aviso.innerText = " Pegando gavetas...";
+        d.body.appendChild(aviso);
+
+        let setasAbertas = abrirSetasModoHacker();
+
+        if (setasAbertas > 0) {
+            aviso.innerText = `⏳ ${setasAbertas} abertas! Esperando dados carregarem...`;
+            await new Promise(r => setTimeout(r, 1500));
+        } else {
+            aviso.innerText = " Nenhuma seta fechada. Extraindo...";
+            await new Promise(r => setTimeout(r, 500));
+        }
+
+        try {
+            processarCopia(d);
+            aviso.style.background = "#27ae60";
+            aviso.style.color = "white";
+            aviso.innerText = " Tudo Aberto e Copiado!";
+        } catch (e) {
+            aviso.style.background = "#c0392b";
+            aviso.style.color = "white";
+            aviso.innerText = " Erro: " + e;
+        }
+
+        setTimeout(() => aviso.remove(), 2500);
+    }
+
+    function hackearCliqueReact(elemento) {
+        if (!elemento) return;
+        try { elemento.click(); } catch(e){}
+        for (let chave in elemento) {
+            if (chave.startsWith('__reactProps$') || chave.startsWith('__reactEventHandlers$')) {
+                let propriedades = elemento[chave];
+                if (propriedades && typeof propriedades.onClick === 'function') {
+                    propriedades.onClick({
+                        bubbles: true, cancelable: true, preventDefault: () => {},
+                        stopPropagation: () => {}, target: elemento, currentTarget: elemento, isTrusted: true
+                    });
+                }
+            }
+        }
+    }
+
+    function abrirSetasModoHacker() {
+        let botoesHackeados = 0;
+        const svgs = document.querySelectorAll('svg');
+
+        svgs.forEach(svg => {
+            const rect = svg.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0 && rect.width < 50 && rect.top > 180 && rect.left < 150) {
+                let atual = svg;
+                for(let i = 0; i < 3; i++) {
+                    if(atual) {
+                        hackearCliqueReact(atual);
+                        atual = atual.parentElement;
+                    }
+                }
+                botoesHackeados++;
+            }
+        });
+        return botoesHackeados;
+    }
+
+    function processarCopia(d) {
+        var items=[];
+        var walker=d.createTreeWalker(d.body, NodeFilter.SHOW_TEXT, {
+            acceptNode: function(n){
+                if(!n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+                var tag = n.parentNode.tagName;
+                if(["SCRIPT","STYLE","NOSCRIPT","TEXTAREA"].includes(tag)) return NodeFilter.FILTER_REJECT;
+                if(!n.parentNode.offsetParent) return NodeFilter.FILTER_REJECT;
+                return NodeFilter.FILTER_ACCEPT;
+            }
+        });
+
+        var corteY = 0;
+        var achouReferencia = false;
+        var tempItems = [];
+        var ySeguro = 180;
+
+        while(walker.nextNode()){
+            var node=walker.currentNode;
+            var rect=node.parentNode.getBoundingClientRect();
+            var txt=node.nodeValue.trim();
+            if(txt==="-" || txt==="–") txt="0";
+
+            var item = {
+                t: txt,
+                y: rect.top + window.scrollY + (rect.height/2),
+                l: rect.left + window.scrollX,
+                cx: rect.left + window.scrollX + (rect.width/2),
+                isData: (txt.match(/[0-9]/) || txt.includes("Mercado") || txt.includes("hr"))
+            };
+
+            if(rect.width > 0 && item.y > ySeguro) tempItems.push(item);
+
+            if(!achouReferencia && (txt.includes("Horário de expedição") || txt === "Performance" || txt === "Planning")){
+                corteY = item.y - 60;
+                achouReferencia = true;
+            }
+        }
+
+        if(!achouReferencia) corteY = 0;
+        items = tempItems.filter(function(i){ return i.y > corteY; });
+        if(items.length === 0) throw "Sem dados visíveis";
+        items.sort((a,b) => a.y - b.y);
+
+        var linhas=[];
+        var linhaAtual=null;
+        items.forEach(k => {
+            if(linhaAtual && Math.abs(k.y - linhaAtual.y) < 15){
+                linhaAtual.cols.push(k);
+                if(k.isData) linhaAtual.hasData = true;
+            } else {
+                if(linhaAtual) linhas.push(linhaAtual);
+                linhaAtual = { y: k.y, cols: [k], hasData: k.isData };
+            }
+        });
+        if(linhaAtual) linhas.push(linhaAtual);
+
+        var posicoesX = [];
+        linhas.forEach(l => {
+            if(l.hasData && (l.cols.length > 2 || l.cols.some(c => c.t.includes("Mercado")))){
+                l.cols.forEach(c => posicoesX.push(c.l));
+            }
+        });
+        posicoesX.sort((a,b) => a - b);
+
+        var colunasMestras = [];
+        posicoesX.forEach(x => {
+            var existente = colunasMestras.find(m => Math.abs(m - x) < 40);
+            if(!existente) colunasMestras.push(x);
+        });
+        colunasMestras.sort((a,b) => a - b);
+
+        var resultado = "";
+        linhas.forEach(l => {
+            var linhaExcel = new Array(colunasMestras.length).fill("");
+            l.cols.forEach(item => {
+                var melhorCol = -1;
+                var menorDist = 9999;
+                colunasMestras.forEach((mx, idx) => {
+                    var dist = Math.abs(item.l - mx);
+                    if(!item.isData){
+                        var distCentro = Math.abs(item.cx - mx);
+                        if(distCentro < dist) dist = distCentro;
+                    }
+                    if(dist < menorDist){ menorDist = dist; melhorCol = idx; }
+                });
+                var tolerancia = item.isData ? 60 : 150;
+                if(melhorCol !== -1 && menorDist < tolerancia){
+                    if(linhaExcel[melhorCol] !== "") linhaExcel[melhorCol] += " " + item.t;
+                    else linhaExcel[melhorCol] = item.t;
+                }
+            });
+            if(linhaExcel.join("").trim().length > 0) resultado += linhaExcel.join("\t") + "\n";
+        });
+
+        var textarea = d.createElement("textarea");
+        textarea.value = resultado;
+        d.body.appendChild(textarea);
+        textarea.select();
+        d.execCommand("copy");
+        d.body.removeChild(textarea);
+    }
+})();</textarea>
+                </div>
+
+                <div class="bg-white p-5 border-l-4 border-amber-500 rounded-xl shadow-sm">
+                    <h3 class="font-bold text-slate-800 mb-2 flex items-center gap-2"><span class="bg-amber-100 text-amber-600 w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span> Colar Dados</h3>
+                    <textarea id="input-paste" class="w-full h-32 border border-slate-200 rounded-xl p-4 font-mono text-xs outline-none focus:ring-2 focus:ring-amber-500 transition-all shadow-inner bg-slate-50" placeholder="Cole aqui os dados que o script copiou..."></textarea>
+                </div>
+            </div>
+            
+            <div class="p-5 bg-white border-t flex justify-between items-center shrink-0">
+                <label class="flex items-center gap-2 text-[11px] font-bold text-slate-600 cursor-pointer bg-slate-50 border border-slate-200 px-3 py-2 rounded-lg hover:bg-slate-100 transition shadow-sm">
+                    <input type="checkbox" id="chk-merge" checked class="w-4 h-4 text-blue-600 rounded cursor-pointer"> Mesclar com Nuvem (Parcial)
+                </label>
+                <div class="flex gap-3">
+                    <button onclick="closeModal('import-modal')" class="px-6 py-2.5 text-slate-600 font-bold hover:bg-slate-100 rounded-lg">Cancelar</button>
+                    <button onclick="processarTextoCola()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-8 rounded-lg shadow-md"><i class="fa-solid fa-cloud-arrow-up mr-2"></i> SALVAR NA NUVEM</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="flex h-full overflow-hidden">
         <nav class="w-64 bg-slate-900 border-r border-slate-800 flex-shrink-0 flex flex-col z-20 shadow-2xl">
             <div class="h-16 flex items-center px-6 border-b border-slate-800"><div class="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white mr-3 shadow-lg"><i class="fa-solid fa-layer-group"></i></div><div><span class="font-bold text-lg text-white leading-none block">Data Shipping</span><span class="text-[9px] text-blue-400 font-bold uppercase">Cloud Shipping</span></div></div>
