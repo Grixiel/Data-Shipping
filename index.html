@@ -17,18 +17,9 @@
 <body class="flex flex-col h-screen relative">
     <div id="floating-tip" class="fixed z-[9999] hidden bg-slate-900/95 text-white p-5 rounded-xl shadow-2xl border border-slate-700 max-w-sm font-sans text-xs"></div>
     <div id="global-loader" class="loader-overlay hidden z-[9999]"><div class="spinner mb-4"></div><h2 class="text-xl font-bold text-slate-800" id="loader-title">Processando...</h2><button onclick="fecharLoader()" class="px-4 py-2 border text-slate-500 text-xs font-bold rounded-lg hover:bg-slate-100 mt-6">Forçar Fechamento</button></div>
-
-    <div id="import-modal" class="fixed inset-0 z-[80] hidden flex items-center justify-center modal-overlay">
-        <div class="bg-white w-full max-w-4xl h-[85vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl">
-            <div class="bg-slate-900 p-6 flex justify-between items-center shrink-0"><h2 class="text-2xl font-bold text-white"><i class="fa-solid fa-bolt text-blue-500"></i> Atualizar Base do WMS</h2><button onclick="closeModal('import-modal')" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-2xl"></i></button></div>
-            <div class="flex-1 p-6 bg-slate-50"><textarea id="input-paste" class="w-full h-full border border-slate-300 rounded-xl p-4 font-mono text-xs outline-none shadow-inner" placeholder="Cole os dados do WMS aqui..."></textarea></div>
-            <div class="p-5 bg-white border-t flex justify-between items-center shrink-0">
-                <label class="flex items-center gap-2 text-[11px] font-bold text-slate-600 cursor-pointer bg-slate-50 border border-slate-200 px-3 py-2 rounded-lg hover:bg-slate-100 transition shadow-sm"><input type="checkbox" id="chk-merge" checked class="w-4 h-4 text-blue-600 rounded cursor-pointer"> Mesclar com Nuvem (Parcial)</label>
-                <div class="flex gap-3"><button onclick="closeModal('import-modal')" class="px-6 py-2.5 text-slate-600 font-bold hover:bg-slate-100 rounded-lg">Cancelar</button><button onclick="processarTextoCola()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-8 rounded-lg shadow-md"><i class="fa-solid fa-cloud-arrow-up mr-2"></i> SALVAR NA NUVEM</button></div>
-            </div>
-        </div>
-    </div>
-
+    -----------------------------------------------------------------------------------------------
+    //Modal Appscript - Div
+---------------------------------------------------------------------------------------------------
     <div class="flex h-full overflow-hidden">
         <nav class="w-64 bg-slate-900 border-r border-slate-800 flex-shrink-0 flex flex-col z-20 shadow-2xl">
             <div class="h-16 flex items-center px-6 border-b border-slate-800"><div class="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white mr-3 shadow-lg"><i class="fa-solid fa-layer-group"></i></div><div><span class="font-bold text-lg text-white leading-none block">Data Shipping</span><span class="text-[9px] text-blue-400 font-bold uppercase">Cloud Shipping</span></div></div>
