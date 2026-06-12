@@ -10,7 +10,6 @@ const CURRENT_R_STR = "1:JETSL1,2:JETSL1,3:SSP8,4:SRJ13,5:SRJ8,6:SSP10,7:SBA4,8:
 
 // --- VARIÁVEIS GLOBAIS ---
 let DATA_CACHE = null; 
-// Valores iniciais a zero forçam o preenchimento!
 let SETTINGS_DATA = { pickHC: 0, pickM: 0, packHC: 0, packM: 0, atrHC: 0, atrM: 0, stgHC: 0, stgM: 0, manM: 120, gayM: 500 };
 let RAMPA_MAP = {}; let ROUTE_LIST = []; let AVAILABLE_HOURS = []; let SELECTED_HOURS = []; let LAST_CLOUD_TIME = null;
 
@@ -65,8 +64,39 @@ function salvarNoBanco() {
 
 function decodificarNuvem(payload) {
     if (!payload) return; let parsed = JSON.parse(payload); DATA_CACHE = parsed.d; if(parsed.s) SETTINGS_DATA = parsed.s;
-    ['pickHC','pickM','packHC','packM','atrHC','atrM','stgHC','stgM'].forEach(k => { let el = document.getElementById('inp-' + k.replace(/[A-Z]/g, l => '-' + l.toLowerCase())); if(el) el.value = SETTINGS_DATA[k] || ''; });
+    
+    // Atualiza todos os inputs visíveis (Inlines)
+    let syncUI = (id, val) => { let el = document.getElementById(id); if(el) el.value = val || ''; };
+    syncUI('inline-hc-pick', SETTINGS_DATA.pickHC); syncUI('inline-lq-pick', SETTINGS_DATA.pickM);
+    syncUI('inline-hc-pack', SETTINGS_DATA.packHC); syncUI('inline-lq-pack', SETTINGS_DATA.packM);
+
     AVAILABLE_HOURS = Object.keys(DATA_CACHE.kpis || {}).filter(k => k !== "99" && k !== "S/H" && k !== "ATRASO").sort(); SELECTED_HOURS = []; renderEtdCheckboxes(); aplicarFiltros();
+}
+
+function salvarHCDinamico() {
+    let g = (id) => { let el = document.getElementById(id); let val = el ? parseFloat(el.value) : 0; return isNaN(val) || val < 0 ? 0 : val; };
+    SETTINGS_DATA.pickHC = g('inline-hc-pick');
+    SETTINGS_DATA.pickM = g('inline-lq-pick');
+    SETTINGS_DATA.packHC = g('inline-hc-pack');
+    SETTINGS_DATA.packM = g('inline-lq-pack');
+    
+    calcProjections();
+    aplicarFiltros(); 
+    salvarNoBanco();
+}
+
+// MOTOR DE MATEMÁTICA E CÁLCULO DE SLA
+function calcularSLA(pecasPendentes, hc, liquidaPorHora) {
+    if (!hc || hc === 0 || !liquidaPorHora || liquidaPorHora === 0) {
+        return { capacidadeHora: 0, pecasConcluidasNaHora: 0, acumuloProximaHora: pecasPendentes };
+    }
+    const capacidadeHora = hc * liquidaPorHora;
+    let acumuloProximaHora = 0;
+    
+    if (pecasPendentes > capacidadeHora) {
+        acumuloProximaHora = pecasPendentes - capacidadeHora;
+    }
+    return { capacidadeHora, pecasConcluidasNaHora: Math.min(pecasPendentes, capacidadeHora), acumuloProximaHora };
 }
 
 function processarTextoCola() {
@@ -132,6 +162,7 @@ function processarTextoCola() {
                 if(tot >= 0) {
                     if(hAct === "S/H") hAct = "99"; let kId = c + "-" + hAct;
                     if(!mM[kId]) { mM[kId] = { nome: c, horario: hAct, concluido: 0, packed: 0, rtp: 0, grp: 0, pick: 0, wav: 0, rtw: 0, total: 0, huIn: 0, huCl: 0, ship: 0, isAereo: isAereo(c) }; }
+                    // Preserva a integridade da separação entre Wav e RTW para cálculo realístico
                     mM[kId].concluido += cReal; mM[kId].packed += m.p; mM[kId].rtp += m.r; mM[kId].grp += (m.rtg + m.g); mM[kId].pick += m.pi; mM[kId].wav += m.wav; mM[kId].rtw += m.rtw; mM[kId].huIn += m.huIn; mM[kId].huCl += m.huCl; mM[kId].ship += m.ship; mM[kId].total += tot;
                     if(!k[hAct]) k[hAct] = { total: 0 }; k[hAct].total += tot;
                 }
@@ -154,7 +185,26 @@ function processarTextoCola() {
 function aplicarFiltros() {
     if(!DATA_CACHE) return;
     let lst = DATA_CACHE.micro;
+    
+    // Filtro por ETD Superior
     if(SELECTED_HOURS.length > 0) lst = lst.filter(x => SELECTED_HOURS.includes(x.horario) || x.horario === 'ATRASO');
+    
+    // Filtro por Busca de Rota (Inline)
+    let busca = document.getElementById('inline-search');
+    if(busca && busca.value.trim() !== '') {
+        let term = busca.value.toUpperCase().trim();
+        lst = lst.filter(x => x.nome.toUpperCase().includes(term));
+    }
+
+    // Filtro de Status Avançado (Inline)
+    let statusFilter = document.getElementById('inline-status-filter');
+    if(statusFilter) {
+        let val = statusFilter.value;
+        if(val === 'waving') lst = lst.filter(x => x.wav > 0);
+        if(val === 'rtw') lst = lst.filter(x => x.rtw > 0);
+        if(val === 'wip') lst = lst.filter(x => (x.pick + x.rtp + x.grp) > 0);
+    }
+
     renderDash(lst); renderAereo(DATA_CACHE.micro); renderMatriz(lst); renderMicro(lst); calcProjections(); updateLiveClock();
 }
 
@@ -171,12 +221,6 @@ function setStatusUi(msg, color) { setHtml('data-status', `<span class="flex ite
 function parseNum(s) { if(!s || s === '-' || s === '–') return 0; let c = s.replace(/[^\d]/g, ''); return c === '' ? 0 : parseInt(c, 10); }
 function isAereo(c) { return RAMPA_MAP[99]?.includes(c) || RAMPA_MAP[100]?.includes(c) || /_A$|_B$|_C$/.test(c); }
 
-function saveHC() {
-    let g = (id) => { let el = document.getElementById(id); let val = el ? parseFloat(el.value) : 0; return isNaN(val) || val < 0 ? 0 : val; };
-    SETTINGS_DATA = { pickHC: g('inp-hc-pick'), pickM: g('inp-med-pick'), packHC: g('inp-hc-pack'), packM: g('inp-med-pack'), atrHC: g('inp-hc-atr'), atrM: g('inp-med-atr'), stgHC: g('inp-hc-stg'), stgM: g('inp-med-stg') };
-    calcProjections(); salvarNoBanco();
-}
-
 function renderEtdCheckboxes() {
     let h = `<label class="flex gap-2 p-2 text-xs font-bold hover:bg-slate-50 cursor-pointer"><input type="checkbox" onchange="toggleAllEtds()" ${SELECTED_HOURS.length === 0 ? 'checked' : ''} class="w-4 h-4 rounded"> TODOS</label><hr>`;
     AVAILABLE_HOURS.forEach(hr => { h += `<label class="flex gap-2 p-2 text-xs hover:bg-slate-50 cursor-pointer"><input type="checkbox" value="${hr}" onchange="toggleSingleEtd(this)" ${SELECTED_HOURS.includes(hr) ? 'checked' : ''} class="w-4 h-4 rounded"> ${hr}H</label>`; });
@@ -189,7 +233,8 @@ function showTooltip(e, html) { let t = document.getElementById('floating-tip');
 function moveTooltip(e) { let t = document.getElementById('floating-tip'); if(!t || t.classList.contains('hidden')) return; let x = e.clientX + 15, y = e.clientY + 15; if (x + t.offsetWidth > window.innerWidth) x = e.clientX - t.offsetWidth - 15; if (y + t.offsetHeight > window.innerHeight) y = window.innerHeight - t.offsetHeight - 15; t.style.left = Math.max(10, x) + 'px'; t.style.top = Math.max(10, y) + 'px'; }
 function hideTooltip() { setClass('floating-tip', 'add', 'hidden'); }
 
-// --- RENDERIZADORES DE TELA ---
+// --- RENDERIZADORES DE TELA (COM LÓGICA TRANSPARENTE E ACÚMULO/ROLLOVER) ---
+
 function renderDash(lst) {
     let allValid = lst.filter(i => i.horario !== 'ATRASO');
     let tTot = 0, tC = 0, tPck = 0, tIn = 0, tCls = 0, tShp = 0;
@@ -201,10 +246,6 @@ function renderDash(lst) {
     let pendentesGlobal = tTot - (tIn + tCls + tShp + tPck);
     setVal('dash-glb-pend', pendentesGlobal.toLocaleString());
     let pG = tTot > 0 ? ((tC / tTot) * 100).toFixed(2) : '0.00'; setVal('dash-glb-pct', pG + '%'); setStyle('dash-glb-bar', 'width', pG + '%');
-
-    let bT = 0, bP = 0; lst.filter(i => i.horario === 'ATRASO').forEach(i => { bT += i.total; bP += i.concluido; });
-    let bArea = document.getElementById('dash-backlog-area');
-    if(bArea) { if(bT > 0) { bArea.classList.remove('hidden'); setVal('bl-total', bT.toLocaleString()); setVal('bl-proc', bP.toLocaleString()); setVal('bl-pend', Math.max(0, bT - bP).toLocaleString()); } else { bArea.classList.add('hidden'); } }
 
     let grps = {};
     allValid.forEach(i => { if(!grps[i.horario]) grps[i.horario] = { t: 0, c: 0 }; grps[i.horario].t += i.total; grps[i.horario].c += i.concluido; });
@@ -227,54 +268,85 @@ function renderDash(lst) {
     });
     setHtml('dash-kpi-area', hKpi);
 
-    let off = allValid.filter(i => (i.rtp > 0 || i.grp > 0)).sort((a, b) => (b.rtp + b.grp) - (a.rtp + a.grp)).slice(0, 10);
-    setHtml('dash-offenders-body', off.length ? off.map(r => `<tr><td class="p-3 pl-6 font-bold text-slate-800">${r.nome}</td><td class="p-3 text-center"><span class="bg-slate-100 px-2 py-1 rounded text-[10px] font-bold">${r.horario}h</span></td><td class="p-3 text-right text-orange-600 font-bold">${r.rtp + r.grp}</td><td class="p-3 text-right font-bold text-slate-600">${r.total}</td><td class="p-3 pr-6 text-right">${r.total > 0 ? ((r.concluido/r.total)*100).toFixed(1) : 0}%</td></tr>`).join('') : '<tr><td colspan="5" class="p-8 text-center text-emerald-600 font-bold">Sem gargalos nas esteiras.</td></tr>');
+    // Calculadora de Gargalos por Capacidade/Acúmulo no Dashboard
+    let capTotalPick = (SETTINGS_DATA.pickHC || 0) * (SETTINGS_DATA.pickM || 0);
+    // Ordena quem tem maior fila aglomerada (RTW + WIP)
+    let off = allValid.filter(i => (i.rtw + i.pick + i.rtp + i.grp) > 0).sort((a, b) => (b.rtw + b.pick) - (a.rtw + a.pick)).slice(0, 10);
+    
+    setHtml('dash-offenders-body', off.length ? off.map(r => {
+        let filaDestaRota = r.rtw + r.pick + r.rtp + r.grp;
+        // Simplificação: Se a fila de uma única rota for maior que a capacidade inteira (raro, mas pode ocorrer se o HC estiver incorreto), acusa acúmulo.
+        let acumulo = filaDestaRota > capTotalPick ? (filaDestaRota - capTotalPick) : 0;
+        let acAlert = acumulo > 0 ? `<span class="bg-rose-500 text-white px-2 py-1 rounded shadow-sm">${acumulo} atrasam</span>` : `<span class="text-emerald-500">Fluxo Contínuo</span>`;
+
+        return `<tr><td class="p-3 pl-6 font-bold text-slate-800">${r.nome}</td><td class="p-3 text-center"><span class="bg-slate-100 px-2 py-1 rounded text-[10px] font-bold">${r.horario}h</span></td><td class="p-3 text-right text-orange-600 font-bold">${filaDestaRota}</td><td class="p-3 text-right font-bold text-rose-600">${acAlert}</td><td class="p-3 pr-6 text-right">${r.total > 0 ? ((r.concluido/r.total)*100).toFixed(1) : 0}%</td></tr>`
+    }).join('') : '<tr><td colspan="5" class="p-8 text-center text-emerald-600 font-bold">Operação Saudável.</td></tr>');
 }
 
 function renderMicro(lst) {
-    let riskEl = document.getElementById('micro-risk-filter'); let riskMode = riskEl ? riskEl.value : 'padrao';
     let filtered = lst.filter(i => !i.isAereo);
     
-    filtered.sort((a, b) => {
-        if (riskMode === 'packed') return b.packed - a.packed;
-        if (riskMode === 'imediato') return (b.rtp + b.grp) - (a.rtp + a.grp);
-        if (riskMode === 'futuro') return (b.pick) - (a.pick);
-        if (riskMode === 'congelado') return (b.wav + b.rtw) - (a.wav + a.rtw);
-        return (b.total - (b.huIn + b.huCl + b.ship)) - (a.total - (a.huIn + a.huCl + a.ship)); 
-    });
+    // Atualiza banner superior com a matemática global
+    let capPick = (SETTINGS_DATA.pickHC || 0) * (SETTINGS_DATA.pickM || 0);
+    let capPack = (SETTINGS_DATA.packHC || 0) * (SETTINGS_DATA.packM || 0);
+    setHtml('micro-capacity-banner', `Capacidade Atual &rarr; <strong class="text-blue-300">Picking: ${capPick} pçs/h</strong> | <strong class="text-orange-300">Packing: ${capPack} pçs/h</strong>`);
 
-    setHtml('micro-body', filtered.map(r => `
-        <tr class="hover:bg-slate-50 transition-colors">
+    // Ordenação padrão para trazer gargalos para o topo
+    filtered.sort((a, b) => (b.rtw + b.pick + b.rtp + b.grp) - (a.rtw + a.pick + a.rtp + a.grp));
+
+    setHtml('micro-body', filtered.map(r => {
+        // Separação rígida de status para transparência total
+        let retidoWav = r.wav;
+        let liberadoRtw = r.rtw; 
+        let processandoWip = r.pick + r.rtg + r.g + r.r;
+        let prontoConcluido = r.packed + r.huIn + r.huCl + r.ship;
+
+        // Cálculo de Atraso se a fila da rota extrapolar a capacidade
+        let atraso = (liberadoRtw + processandoWip) > capPick && capPick > 0 
+            ? ((liberadoRtw + processandoWip) - capPick) 
+            : 0;
+
+        let alertaRollover = atraso > 0 
+            ? `<span class="bg-rose-500/10 text-rose-600 font-bold px-2 py-1 rounded border border-rose-200" title="Excede Capacidade: Pode virar backlog">Atraso de ${atraso}</span>` 
+            : `<span class="text-emerald-500"><i class="fa-solid fa-check"></i> 0</span>`;
+
+        // Se HC for nulo, tudo é atraso/dado bruto
+        if (capPick === 0 && (liberadoRtw + processandoWip) > 0) {
+            alertaRollover = `<span class="text-rose-500 font-bold"><i class="fa-solid fa-ban mr-1"></i> HC = 0</span>`;
+        }
+
+        return `
+        <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
             <td class="p-3 pl-6 font-bold text-slate-800">${r.nome}</td>
             <td class="p-3 text-center"><span class="bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold">${r.horario}h</span></td>
-            <td class="text-right p-3 text-blue-500 font-bold">${r.huIn}</td>
-            <td class="text-right p-3 text-indigo-500 font-bold">${r.huCl}</td>
-            <td class="text-right p-3 text-purple-600 font-bold">${r.ship}</td>
-            <td class="text-right p-3 text-emerald-600 font-bold border-l border-slate-100 bg-emerald-50/30">${r.packed}</td>
-            <td class="text-right p-3 text-orange-500 font-bold bg-orange-50/30">${r.rtp + r.grp}</td>
-            <td class="text-right p-3 text-rose-500 font-bold bg-rose-50/30">${r.pick}</td>
-            <td class="text-right p-3 text-slate-400 font-bold border-r border-slate-100 bg-slate-50">${r.wav + r.rtw}</td>
+            
+            <td class="text-right p-3 text-slate-500 font-bold bg-slate-50 border-l border-slate-200">${retidoWav}</td>
+            <td class="text-right p-3 text-orange-600 font-bold bg-orange-50/50">${liberadoRtw}</td>
+            <td class="text-right p-3 text-emerald-600 font-bold bg-emerald-50/50">${processandoWip}</td>
+            <td class="text-right p-3 text-blue-600 font-bold bg-blue-50/50 border-r border-slate-200">${prontoConcluido}</td>
+            
+            <td class="text-right p-3 border-r border-slate-200">${alertaRollover}</td>
+            
             <td class="text-right p-3 font-extrabold text-slate-900">${r.total}</td>
             <td class="p-3 pr-6 text-right font-black text-brand-600">${r.total > 0 ? ((r.concluido/r.total)*100).toFixed(1) : 0}%</td>
-        </tr>`).join(''));
+        </tr>`;
+    }).join(''));
 }
 
 function renderMatriz(lst) {
     let alertRamps3 = [], alertRamps5 = [];
     
-    // Puxa as capacidades globais preenchidas na aba de Gestão
+    // Puxa as capacidades globais
     let capPick = (SETTINGS_DATA.pickHC || 0) * (SETTINGS_DATA.pickM || 0); 
     let capPack = (SETTINGS_DATA.packHC || 0) * (SETTINGS_DATA.packM || 0);
-    let prodAtrelamento = (SETTINGS_DATA.atrM && SETTINGS_DATA.atrM > 0) ? SETTINGS_DATA.atrM : 0; 
-    let hcIsMissing = (capPick === 0 || capPack === 0 || prodAtrelamento === 0);
-
+    
     const ren = (id, s, e, alertsArray) => {
         let h = '<div class="col-span-full grid grid-cols-2 sm:grid-cols-5 xl:grid-cols-10 gap-3">';
         for(let i = s; i <= e; i++) {
-            let rr = RAMPA_MAP[i] || []; let st = { p: 0, r: 0, g: 0, pi: 0, w: 0, t: 0 }; let aR = []; 
-            rr.forEach(ro => { let d = lst.find(x => x.nome === ro); if(d) { st.p += d.packed; st.r += d.rtp; st.g += d.grp; st.pi += d.pick; st.w += (d.wav + d.rtw); st.t += d.total; aR.push(ro); } });
+            let rr = RAMPA_MAP[i] || []; let st = { p: 0, r: 0, g: 0, pi: 0, w: 0, rtw: 0, t: 0 }; let aR = []; 
+            rr.forEach(ro => { let d = lst.find(x => x.nome === ro); if(d) { st.p += d.packed; st.r += d.rtp; st.g += d.grp; st.pi += d.pick; st.w += d.wav; st.rtw += d.rtw; st.t += d.total; aR.push(ro); } });
             
-            let volAtivo = st.p + st.r + st.g + st.pi; 
+            let volAtivo = st.p + st.r + st.g + st.pi + st.rtw; 
             let hBg = 'bg-white', textC = 'text-slate-500';
             
             if (volAtivo > 0) { 
@@ -284,30 +356,12 @@ function renderMatriz(lst) {
                 else { hBg = 'bg-emerald-100 border-emerald-300'; textC = 'text-emerald-700'; } 
             }
 
-            let calcHtml = "";
-            if (hcIsMissing) {
-                calcHtml = `<div class="bg-rose-500/20 p-2 rounded border border-rose-500/30 text-rose-400 text-center font-bold">⚠️ Preencha os HCs (Pick/Pack) e a média do Atrelamento na Aba Gestão para ativar o cálculo de tempo.</div>`;
-            } else {
-                // MATEMÁTICA OPERACIONAL DE FLUXO CONTÍNUO (LEAD TIME)
-                // 1. Packed: Tempo de Atrelamento + 5 min trânsito
-                let tAgora = (st.p / prodAtrelamento) * 60 + 5; 
-                // 2. Packing: Tempo fila Packing + 5 min + Tempo de Atrelamento
-                let tBreve = ((st.r + st.g) / capPack) * 60 + 5 + ((st.r + st.g) / prodAtrelamento) * 60; 
-                // 3. Picking: Tempo fila Picking + Tempo fila Packing + 10 min trânsito + Tempo de Atrelamento
-                let tFuturo = (st.pi / capPick) * 60 + (st.pi / capPack) * 60 + 10 + (st.pi / prodAtrelamento) * 60; 
-                
-                let fT = (m) => m === 0 ? '0 min' : (m < 60 ? Math.round(m) + ' min' : (m/60).toFixed(1) + 'h');
-
-                calcHtml = `
-                    <div class="flex justify-between items-center bg-emerald-500/20 p-1.5 rounded border border-emerald-500/30"><span>AGORA (Packed):</span> <strong class="text-emerald-400 font-mono text-sm">${st.p} pçs <i class="fa-solid fa-arrow-right mx-1"></i> ${fT(tAgora)}</strong></div>
-                    <div class="flex justify-between items-center bg-orange-500/20 p-1.5 rounded border border-orange-500/30"><span>EM BREVE (Pck):</span> <strong class="text-orange-400 font-mono text-sm">${st.r + st.g} pçs <i class="fa-solid fa-arrow-right mx-1"></i> ${fT(tBreve)}</strong></div>
-                    <div class="flex justify-between items-center bg-rose-500/20 p-1.5 rounded border border-rose-500/30"><span>FUTURO (Pick):</span> <strong class="text-rose-400 font-mono text-sm">${st.pi} pçs <i class="fa-solid fa-arrow-right mx-1"></i> ${fT(tFuturo)}</strong></div>
-                `;
-            }
-
-            let tooltipHtml = encodeURIComponent(`<div class="font-black text-sm mb-2 border-b pb-1">Ciclo Operacional - Tobogã ${i}</div>
-                <div class="space-y-2 text-xs mb-3">${calcHtml}</div>
-                <div class="text-[9px] text-slate-400 border-t pt-2">* O tempo é cumulativo: Pick + Pack + Trânsito + Atrelamento.<br>* Exige preenchimento do HC. Volume congelado ignorado.</div>`);
+            let tooltipHtml = encodeURIComponent(`<div class="font-black text-sm mb-2 border-b pb-1 text-slate-800">Tobogã ${i}</div>
+                <div class="space-y-1.5 text-xs text-slate-600 bg-white p-2 rounded shadow-sm border border-slate-200">
+                    <div class="flex justify-between items-center border-b pb-1"><span>Retido (WAV):</span> <strong class="text-slate-500">${st.w} pçs</strong></div>
+                    <div class="flex justify-between items-center border-b pb-1"><span>Fila (RTW):</span> <strong class="text-orange-500">${st.rtw} pçs</strong></div>
+                    <div class="flex justify-between items-center"><span>Processando (Pick/Pack):</span> <strong class="text-emerald-500">${st.pi + st.r + st.g} pçs</strong></div>
+                </div>`);
 
             h += `<div onmouseenter="showTooltip(event, this.dataset.tip)" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()" data-tip="${tooltipHtml}" class="rounded-xl flex flex-col justify-between ${st.t === 0 ? 'opacity-40 grayscale bg-white/50 border border-slate-200' : hBg + ' shadow-md hover:-translate-y-1 cursor-help border'} overflow-hidden h-[90px] transition-all">
                     <div class="px-3 py-2 flex justify-between items-center border-b border-white/20"><span class="font-black ${textC} text-lg">${i}</span><span class="${textC} text-xs font-bold font-mono">${volAtivo > 0 ? volAtivo : ''}</span></div>
@@ -318,7 +372,6 @@ function renderMatriz(lst) {
     
     ren('t3-list-container', 1, 50, alertRamps3); ren('t5-list-container', 51, 98, alertRamps5);
     
-    // NOVO VISUAL DOS ALERTAS DE TOBOGÃ
     let uiAlerts = (arr) => {
         if(!arr.length) return `<span class="text-emerald-600"><i class="fa-solid fa-check-circle mr-1"></i> Fluxo Estável</span>`;
         let show = arr.slice(0, 6);
@@ -331,6 +384,7 @@ function renderMatriz(lst) {
     setHtml('t5-alerts', uiAlerts(alertRamps5));
     let t5El = document.getElementById('t5-alerts'); if(t5El) t5El.className = alertRamps5.length ? 'text-xs font-bold bg-white px-3 py-1.5 rounded-lg shadow-sm border border-rose-200' : 'text-xs font-bold bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 text-emerald-600';
 }
+
 function renderAereo(lst) {
     let aer = lst.filter(i => i.isAereo); let aT = 0, aC = 0, aIn = 0, aCl = 0, aSh = 0;
     let grps = {};
@@ -398,36 +452,57 @@ function renderAereo(lst) {
 function calcProjections() {
     if(!DATA_CACHE) return;
     let s = SETTINGS_DATA; 
+    
+    // Matemática nova global de Capacidade vs Fila Ativa
     let capPick = (s.pickHC || 0) * (s.pickM || 0); 
     let capPack = (s.packHC || 0) * (s.packM || 0);
     
     let list = DATA_CACHE.micro.filter(i => !i.isAereo && i.horario !== "ATRASO");
-    let vPi = 0, vPa = 0; 
-    list.forEach(i => { vPi += i.pick; vPa += (i.rtp + i.grp); }); 
+    let filaPickRTW = 0, procWIP = 0; 
     
-    let tPick = capPick > 0 ? (vPi / capPick) : Infinity; 
-    let tPack = capPack > 0 ? (vPa / capPack) : Infinity;
+    // Waving não entra na matemática ativa pois está retido!
+    list.forEach(i => { filaPickRTW += i.rtw; procWIP += (i.pick + i.rtp + i.grp); }); 
+    
+    let tPick = capPick > 0 ? (filaPickRTW / capPick) : Infinity; 
+    let tPack = capPack > 0 ? (procWIP / capPack) : Infinity;
     
     let fT = (h) => {
-        if(h === Infinity) return '<span class="text-rose-500">Parado (HC 0)</span>';
+        if(h === Infinity || h < 0) return '<span class="text-rose-500 font-bold bg-rose-500/20 px-2 rounded border border-rose-500/50">Recurso Zerado (Tempo Indeterminado)</span>';
         if(h === 0) return '0 min';
         return h < 1 ? Math.round(h * 60) + " min" : h.toFixed(1) + "h";
     };
 
     setHtml('hc-projections', `
-        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center mb-4">
-            <span class="text-slate-400 text-xs uppercase font-bold">Pçs Ativas (Sem Waving)</span>
-            <span class="text-2xl font-black text-white">${(vPi + vPa).toLocaleString()}</span>
+        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center mb-4 shadow-sm">
+            <span class="text-slate-400 text-xs uppercase font-bold"><i class="fa-solid fa-layer-group text-blue-500 mr-1"></i> Volume Liberado/Ativo (S/ Waving)</span>
+            <span class="text-3xl font-black text-white font-mono tracking-tighter">${(filaPickRTW + procWIP).toLocaleString()}</span>
         </div>
-        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 mb-3">
-            <div class="flex justify-between items-center mb-1"><h4 class="font-bold text-blue-400">Picking</h4><span class="text-xs bg-slate-900 px-2 py-1 rounded text-slate-300 border border-slate-700">Capacidade: ${capPick.toLocaleString()} pçs/h</span></div>
-            <div class="text-xs text-slate-400">Pendente: <strong class="text-white">${vPi.toLocaleString()} pçs</strong> <i class="fa-solid fa-arrow-right mx-1"></i> Tempo estimado de fila: <strong class="text-blue-400 text-sm ml-1">${fT(tPick)}</strong></div>
+        
+        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 mb-3 shadow-inner">
+            <div class="flex justify-between items-center mb-2">
+                <h4 class="font-bold text-blue-400 text-lg uppercase tracking-wider"><i class="fa-solid fa-user-check"></i> Picking</h4>
+                <span class="text-xs bg-slate-900 px-3 py-1 rounded-full text-slate-300 border border-slate-700 shadow-sm"><strong class="text-white">${capPick.toLocaleString()}</strong> pçs/h</span>
+            </div>
+            <div class="text-xs text-slate-400 flex flex-col gap-2">
+                <div class="flex justify-between border-b border-slate-700/50 pb-1">Fila Acumulada (RTW): <strong class="text-white font-mono text-sm">${filaPickRTW.toLocaleString()} pçs</strong></div>
+                <div class="flex justify-between pt-1">Tempo estimado de vazão: <strong class="text-blue-400 text-sm">${fT(tPick)}</strong></div>
+            </div>
         </div>
-        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 mb-2">
-            <div class="flex justify-between items-center mb-1"><h4 class="font-bold text-orange-400">Packing (Esteiras)</h4><span class="text-xs bg-slate-900 px-2 py-1 rounded text-slate-300 border border-slate-700">Capacidade: ${capPack.toLocaleString()} pçs/h</span></div>
-            <div class="text-xs text-slate-400">Pendente: <strong class="text-white">${vPa.toLocaleString()} pçs</strong> <i class="fa-solid fa-arrow-right mx-1"></i> Tempo estimado de fila: <strong class="text-orange-400 text-sm ml-1">${fT(tPack)}</strong></div>
+        
+        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 mb-2 shadow-inner">
+            <div class="flex justify-between items-center mb-2">
+                <h4 class="font-bold text-orange-400 text-lg uppercase tracking-wider"><i class="fa-solid fa-box-open"></i> Packing (Esteiras)</h4>
+                <span class="text-xs bg-slate-900 px-3 py-1 rounded-full text-slate-300 border border-slate-700 shadow-sm"><strong class="text-white">${capPack.toLocaleString()}</strong> pçs/h</span>
+            </div>
+            <div class="text-xs text-slate-400 flex flex-col gap-2">
+                <div class="flex justify-between border-b border-slate-700/50 pb-1">Em Processamento (WIP): <strong class="text-white font-mono text-sm">${procWIP.toLocaleString()} pçs</strong></div>
+                <div class="flex justify-between pt-1">Tempo estimado de vazão: <strong class="text-orange-400 text-sm">${fT(tPack)}</strong></div>
+            </div>
         </div>
-        <div class="text-[9px] text-slate-500 mt-3 text-center uppercase tracking-widest"><i class="fa-solid fa-snowflake text-cyan-500 mr-1"></i> Status Waving (Congelado) - Ignorado no cálculo ativo.</div>
+        
+        <div class="text-[10px] text-slate-500 mt-4 text-center uppercase tracking-widest font-bold">
+            <i class="fa-solid fa-snowflake text-cyan-500 mr-1 animate-pulse"></i> O sistema ignora pacotes em "Waving" para fins de cálculo de tempo, pois não geram produção imediata.
+        </div>
     `);
 }
 
