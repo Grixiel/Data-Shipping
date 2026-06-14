@@ -1,11 +1,10 @@
 // --- CONFIGURAÇÃO (LOCAL) ---
 const CSV_PLANILHA_TOBOGAS = "https://docs.google.com/spreadsheets/d/1wRtBiDY1U9gOeRE_15mg8iKKVQE2wBnRX9Jb69fMUvE/pub?output=csv"; 
-
 const CURRENT_R_STR = "1:JETSL1,2:JETSL1,3:SSP8,4:SRJ13,5:SRJ8,6:SSP10,7:SBA4,8:SSP11,9:SSP5,10:SSP39,11:SSP4,12:SMG15,13:SSP23,14:SMG12,15:SSP9,16:SSP20,17:SMG2,18:SMG8,19:SMG9,20:SSP38,21:SPR8,22:SSC2,23:SSC2,24:SDF1,25:SDF1,26:SSP13,27:SRJ5,28:SSP14,29:SSP14,30:SMG14|SSP18|SSP9_S,31:SMG14|SSP18|SSP9_S,32:JETHUB1|SMG5|SSP34|SSP38_S,33:JETHUB1|SMG5|SSP34|SSP38_S,34:SES1|SRJ10_CHP|SSP36|SSP37_S|SSP4_CHP,35:SES1|SRJ10_CHP|SSP36|SSP37_S|SSP4_CHP,36:SRS10|SSC3|SSP1_S|SSP5A_S,37:SRS10|SSC3|SSP1_S|SSP5A_S,38:SGO2|SMG1|SRJ3_CHP|SSP28,39:SGO2|SMG1|SRJ3_CHP|SSP28,40:SMS2|SRJ1_CHP|SSP3_S|SSP40_CHP|SSP48,41:SMS2|SRJ1_CHP|SSP3_S|SSP40_CHP|SSP48,42:SAL1_CHP|SSP30_S,43:SAL1_CHP|SSP30_S,44:SES3|SPR4|SRS8|SSP5_S,45:SES3|SPR4|SRS8|SSP5_S,46:SES3_X|SPR2|SRD1|SSP26,47:SES3_X|SPR2|SRD1|SSP26,48:JETGO1|SAL1|SSC7|SSP12|SSP6,49:JETGO1|SAL1|SSC7|SSP12|SSP6,50:MSP1_E|MSP21_E|MSP5_E|MSP7_E,51:JADHUB|JETBA2|JETBA3|LOGHUB|SSP46|XSP9_1|XSP9_2|XSP9_6,52:MSP1_E|MSP21_E|MSP5_E|MSP7_E|SRJ2,53:SPR1|SSP18_S|SSP3,54:SPR1|SSP18_S|SSP3,55:SMG13|SRS1_CHP|SRS4|SSP7,56:SMG13|SRS1_CHP|SRS4|SSP7,57:IMISL1|SRJ12|SRJ6_CHP|SRJ7|SSP1,58:IMISL1|SRJ12|SRJ6_CHP|SRJ7|SSP1,59:SMG3|SRJ10|SSC4|SSP17,60:SMG3|SRJ10|SSC4|SSP17,61:SMG11|SPI1|SRJ9|SSP1_CHP|SSP40,62:SMG11|SPI1|SRJ9|SSP1_CHP|SSP40,63:SBA7|SPR5|SSC5|SSP40_S|SSP7_S,64:SBA7|SPR5|SSC5|SSP40_S|SSP7_S,65:SBA3|SMG10|SPR7|SSP24|SSP39_S,66:SBA3|SMG10|SPR7|SSP24|SSP39_S,67:SRJ1|SRS5|SSP16|SSP45_CHP|SSP5F_S,68:SRS5|SSP16|SSP45_CHP|SSP49|SSP5F_S,69:SMG13_X|SMG1_CHP|SMG4|SMR1|SSP6_S,70:SMG13_X|SMG1_CHP|SMG4|SMR1|SSP6_S,71:SCE1|SMS1|SPR1_CHP|SSP25_S|SSP37,72:SCE1|SMS1|SPR1_CHP|SSP25_S|SSP37,73:SMG8_CHP|SRD2|SSC1|SSP25|XSP9_6_CHP,74:SMG8_CHP|SRD2|SSC1|SSP25|XSP9_6_CHP,75:SBA6|SMG7|SSP22_CHP|SSP29_S,76:SBA6|SMG7|SSP22_CHP|SSP29_S,77:SBA2|SPA1_X|SRS3|SSC8|SSP31,78:SBA2|SPA1_X|SRS3|SSC8|SSP31,79:SES2|SGO1|SRJ4|SSP45|SSP45_S,80:SES2|SGO1|SRJ4|SSP45|SSP45_S,81:SMR2|SRS2|SSP27_S|SSP29|XSP9_1_CHP,82:SMR2|SRS2|SSP27_S|SSP29|XSP9_1_CHP,83:SPR3|SRJ6|SRS7|SSP12_CHP,84:SPR3|SRJ6|SRS7|SSP12_CHP,85:SMN1|SSC9|SSP15|SSP18_CHP|SSP48_S,86:SMN1|SSC9|SSP15|SSP18_CHP|SSP48_S,87:SRS1|SSP17_CHP|SSP27|SSP49_S|STO1,88:SRS1|SSP17_CHP|SSP27|SSP49_S|STO1,89:SBA1|SMG6|SSP21_CHP|SSP49,90:SBA1|SSP21_CHP|SSP49,91:JETRD1|SRJ3|SSP23_S|SSP30|SSP7_CHP,92:JETRD1|SRJ3|SSP23_S|SSP30|SSP7_CHP,93:SSP21_S|SSP22|STO2,94:SSP21_S|SSP22|STO2,95:SDF2|SPA1|SPR6_CHP|SRS9,96:SDF2|SPA1|SPR6_CHP|SRS9,97:SGO1_X|SPE1|SPR6|SSP15_CHP|SSP21,98:SGO1_X|SPE1|SPR6|SSP15_CHP|SSP21,99:SAL1_A|SAL1_B|SAM1_A|SAM1_C|SBA1_A|SBA2_A|SBA6_A|SCE1_A|SDF1_A|SDF2_A|SES1_A|SES1_B|SFN1_C|SGO1X_A|SGO1_A|SGO1_B|SJP1X_A|SJP1_A|SMN1_A|SMR1_A|SMR1_B|SMR2_A|SPA1X_A|SPA1_A|SPA1_B|SPE1_A|SPI1_A|SRN1_A|SRS1_A|SRS8_A|SRS9_A|SSE1_A|SAM1_B|SCE1_B|SJP1_B|SMN1_B|SPI1_B|SRN1_B|SRS1_B|SSE1_B|STO1_B|SAL1_C|SBA1_C|SCE1_C|SJP1_C|SMR1_C|SPA1_C|SRN1_C|SSE1_C,100:SAL1_A|SAL1_B|SAM1_A|SAM1_C|SBA1_A|SBA2_A|SBA6_A|SCE1_A|SDF1_A|SDF2_A|SES1_A|SES1_B|SFN1_C|SGO1X_A|SGO1_A|SGO1_B|SJP1X_A|SJP1_A|SMN1_A|SMR1_A|SMR1_B|SMR2_A|SPA1X_A|SPA1_A|SPA1_B|SPE1_A|SPI1_A|SRN1_A|SRS1_A|SRS8_A|SRS9_A|SSE1_A|SAM1_B|SCE1_B|SJP1_B|SMN1_B|SPI1_B|SRN1_B|SRS1_B|SSE1_B|STO1_B|SAL1_C|SBA1_C|SCE1_C|SJP1_C|SMR1_C|SPA1_C|SRN1_C|SSE1_C";
 
 // --- VARIÁVEIS GLOBAIS ---
 let DATA_CACHE = null; 
-let SETTINGS_DATA = { pickHC: 0, pickM: 0, packHC: 0, packM: 0, atrHC: 0, atrM: 0 };
+let SETTINGS_DATA = { autoStart: 1, autoEnd: 29, pickHC: 0, pickM: 0, packHC: 0, packM: 0, indHC: 0, indM: 450, atrHC: 0, atrM: 450 };
 let RAMPA_MAP = {}; let ROUTE_LIST = []; let AVAILABLE_HOURS = []; let SELECTED_HOURS = [];
 
 // --- UTILITÁRIOS ---
@@ -18,7 +17,6 @@ window.onload = () => {
     carregarMapaImediato(); 
     carregarMapaTobogas(); 
     carregarDadosLocais(); 
-    setInterval(updateLiveClock, 1000); 
 };
 
 function carregarMapaImediato() {
@@ -42,15 +40,17 @@ function carregarMapaTobogas() {
 }
 
 function carregarDadosLocais() {
-    let saved = localStorage.getItem("WMS_DATA_SHIPPING");
+    let saved = localStorage.getItem("WMS_DATA_SHIPPING_V2");
     if(saved) {
         let parsed = JSON.parse(saved);
         DATA_CACHE = parsed.d;
-        if(parsed.s) SETTINGS_DATA = parsed.s;
+        if(parsed.s) { SETTINGS_DATA = { ...SETTINGS_DATA, ...parsed.s }; }
         
         let syncUI = (id, val) => { let el = document.getElementById(id); if(el) el.value = val || ''; };
+        syncUI('inline-auto-start', SETTINGS_DATA.autoStart); syncUI('inline-auto-end', SETTINGS_DATA.autoEnd);
         syncUI('inline-hc-pick', SETTINGS_DATA.pickHC); syncUI('inline-lq-pick', SETTINGS_DATA.pickM);
         syncUI('inline-hc-pack', SETTINGS_DATA.packHC); syncUI('inline-lq-pack', SETTINGS_DATA.packM);
+        syncUI('inline-hc-ind', SETTINGS_DATA.indHC); syncUI('inline-lq-ind', SETTINGS_DATA.indM);
         syncUI('inline-hc-atr', SETTINGS_DATA.atrHC); syncUI('inline-lq-atr', SETTINGS_DATA.atrM);
 
         AVAILABLE_HOURS = Object.keys(DATA_CACHE.kpis || {}).filter(k => k !== "99" && k !== "S/H" && k !== "ATRASO").sort(); SELECTED_HOURS = []; renderEtdCheckboxes(); aplicarFiltros();
@@ -59,65 +59,76 @@ function carregarDadosLocais() {
 
 function salvarDadosLocais() {
     let payload = JSON.stringify({ d: DATA_CACHE, s: SETTINGS_DATA });
-    localStorage.setItem("WMS_DATA_SHIPPING", payload);
+    localStorage.setItem("WMS_DATA_SHIPPING_V2", payload);
 }
 
 function salvarHCDinamico() {
     let g = (id) => { let el = document.getElementById(id); let val = el ? parseFloat(el.value) : 0; return isNaN(val) || val < 0 ? 0 : val; };
+    SETTINGS_DATA.autoStart = g('inline-auto-start') || 1; SETTINGS_DATA.autoEnd = g('inline-auto-end') || 29;
     SETTINGS_DATA.pickHC = g('inline-hc-pick'); SETTINGS_DATA.pickM = g('inline-lq-pick');
     SETTINGS_DATA.packHC = g('inline-hc-pack'); SETTINGS_DATA.packM = g('inline-lq-pack');
+    SETTINGS_DATA.indHC = g('inline-hc-ind'); SETTINGS_DATA.indM = g('inline-lq-ind');
     SETTINGS_DATA.atrHC = g('inline-hc-atr'); SETTINGS_DATA.atrM = g('inline-lq-atr');
     
     salvarDadosLocais();
     aplicarFiltros(); 
 }
 
-// FORMATADOR DE TEMPO NARRATIVO E RELATÓRIO DO TOBOGÃ
-function gerarTooltipNarrativo(titulo, arrRotas) {
-    if(!arrRotas || arrRotas.length === 0) return `<div class="p-2">Vazio</div>`;
+// FORMATADOR DE TEMPO FÍSICO REALISTA
+function formatarTempoFisico(minutos) {
+    if(minutos === Infinity || isNaN(minutos)) return "?";
+    if (minutos < 60) return Math.round(minutos) + " min";
+    let horas = Math.floor(minutos / 60);
+    let restMin = Math.round(minutos % 60);
+    return horas + "h " + restMin + "m";
+}
+
+function gerarTooltipNarrativo(chuteNum, arrRotas, totalZonasArea) {
+    if(!arrRotas || arrRotas.length === 0) return `<div class="p-2">Sem movimentação</div>`;
     
-    let tWav = 0, tRtw = 0, tWip = 0, tPacked = 0;
-    arrRotas.forEach(r => { tWav += r.wav; tRtw += r.rtw; tWip += (r.pick + r.rtp + r.grp); tPacked += r.packed; });
+    let isAuto = chuteNum >= SETTINGS_DATA.autoStart && chuteNum <= SETTINGS_DATA.autoEnd;
+    let tipoRecurso = isAuto ? "Indiretos" : "Atrelamento";
+    let lqRecurso = isAuto ? (SETTINGS_DATA.indM || 450) : (SETTINGS_DATA.atrM || 450);
 
-    let capAtrMin = ((SETTINGS_DATA.atrHC || 0) * (SETTINGS_DATA.atrM || 0)) / 60;
-    let capPackMin = ((SETTINGS_DATA.packHC || 0) * (SETTINGS_DATA.packM || 0)) / 60;
-    let capPickMin = ((SETTINGS_DATA.pickHC || 0) * (SETTINGS_DATA.pickM || 0)) / 60;
+    let tWav = 0, tRtw = 0, tPick = 0, tPack = 0, tPacked = 0, tPronto = 0;
+    arrRotas.forEach(r => { 
+        tWav += r.wav; tRtw += r.rtw; tPick += r.pick; 
+        tPack += (r.rtp + r.grp); tPacked += r.packed; 
+        tPronto += (r.huIn + r.huCl + r.ship);
+    });
 
-    let timeAtr = capAtrMin > 0 ? Math.ceil(tPacked / capAtrMin) : Infinity;
-    let timePack = capPackMin > 0 ? Math.ceil(tWip / capPackMin) : Infinity;
-    let timePick = capPickMin > 0 ? Math.ceil(tRtw / capPickMin) : Infinity;
+    let totalFuturo = tPacked + tPack + tPick + tRtw; 
+    let reqPessoas = lqRecurso > 0 ? (totalZonasArea / lqRecurso).toFixed(1) : "∞";
 
-    let totalPendentes = tPacked + tWip + tRtw + tWav; // Ignorando HuIn, HuCl e Shipped
+    let rotasOfensoras = [...arrRotas].sort((a, b) => (b.rtw + b.pick + b.rtp + b.grp) - (a.rtw + a.pick + a.rtp + a.grp));
 
-    let html = `<div class="font-sans text-sm min-w-[280px]">`;
-    html += `<div class="font-black border-b border-slate-700 pb-2 mb-3 text-white">${titulo} <span class="float-right text-slate-400 text-[10px] uppercase font-bold tracking-widest mt-1">Previsão</span></div>`;
+    let html = `<div class="font-sans text-sm min-w-[320px]">`;
+    html += `<div class="font-black border-b border-slate-700 pb-2 mb-3 text-white flex justify-between items-center"><span>Tobogã ${chuteNum} <span class="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded ml-1">${isAuto ? 'AUTO' : 'MANUAL'}</span></span> <span class="text-slate-400 text-[9px] uppercase font-bold tracking-widest">Previsão Realista</span></div>`;
     
-    html += `<div class="text-slate-300 mb-3">Análise de fluxo para <strong class="text-white">${totalPendentes} pçs</strong> totais pendentes:</div>`;
+    html += `<div class="text-slate-300 mb-4 text-xs">Análise de fluxo para <strong class="text-white">${totalFuturo + tWav} pçs</strong> pendentes no total:</div>`;
 
-    // AGORA (PACKED -> ATRELAMENTO)
     if(tPacked > 0) {
-        let msgAtr = timeAtr === Infinity ? "HC Atrelamento Zerado!" : `Levará ~${timeAtr} min para escoar.`;
-        html += `<div class="text-slate-300 leading-tight mb-2"><span class="text-emerald-400 font-black">&bull; AGORA:</span> <strong>${tPacked} pçs</strong> embaladas retidas no tobogã. Exigem atrelamento imediato. <span class="text-[10px] text-slate-400 block mt-0.5">${msgAtr}</span></div>`;
+        let msgAler = lqRecurso <= 0 ? `<span class="text-rose-400">HC Zerado!</span>` : `Exige atrelamento imediato.`;
+        html += `<div class="text-slate-300 leading-tight mb-3 text-xs"><span class="text-emerald-400 font-black">&bull; AGORA:</span> <strong>${tPacked} pçs</strong> embaladas retidas no tobogã. ${msgAler}</div>`;
     }
-
-    // EM BREVE (WIP -> PACKING)
-    if(tWip > 0) {
-        let maxTimePack = timePack === Infinity ? "???" : timePack;
-        let textTime = timePack === Infinity ? `<span class="text-rose-400 bg-rose-900/20 px-1 rounded">Sem HC Packing!</span>` : `Começarão a descer continuamente até os próximos <strong>${maxTimePack} min</strong>.`;
-        html += `<div class="text-slate-300 leading-tight mb-2"><span class="text-orange-400 font-black">&bull; EM 0 a ${maxTimePack} MIN:</span> <strong>${tWip} pçs</strong> estão em WIP (Picking e Packing). ${textTime}</div>`;
+    if(tPack > 0) {
+        html += `<div class="text-slate-300 leading-tight mb-3 text-xs"><span class="text-orange-400 font-black">&bull; EM 0 a 15 MIN:</span> <strong>${tPack} pçs</strong> estão na mesa/esteira de Packing. Começarão a descer continuamente agora.</div>`;
     }
-
-    // FUTURO (RTW -> PICKING)
+    if(tPick > 0) {
+        html += `<div class="text-slate-300 leading-tight mb-3 text-xs"><span class="text-amber-400 font-black">&bull; EM 15 a 45 MIN:</span> <strong>${tPick} pçs</strong> estão em separação (Picking). Começarão a chegar na mesa de embalagem neste intervalo.</div>`;
+    }
     if(tRtw > 0 || tWav > 0) {
-        let startTimePick = timePack === Infinity ? "???" : timePack;
-        let endTimePick = (timePack === Infinity || timePick === Infinity) ? "???" : (timePack + timePick);
-        let textPick = timePick === Infinity ? `<span class="text-rose-400 bg-rose-900/20 px-1 rounded">Sem HC Picking!</span>` : `A rampa sofrerá nova injeção contínua por <strong>~${timePick} min</strong>.`;
-        
-        let textVolumeFila = tRtw > 0 ? `A onda da Fila (<strong>${tRtw} pçs</strong>)` : `As peças Congeladas (<strong>${tWav} pçs</strong>)`;
-        let volExtra = tWav > 0 && tRtw > 0 ? ` + ${tWav} congeladas` : ``;
-
-        html += `<div class="text-slate-300 leading-tight"><span class="text-rose-400 font-black">&bull; DAQUI A ${startTimePick} a ${endTimePick} MIN:</span> ${textVolumeFila}${volExtra} atingirá o Packing. ${textPick}</div>`;
+        let textVolumeFila = tRtw > 0 ? `A onda da Fila (<strong>${tRtw} pçs</strong>)` : `As peças em Waving (<strong>${tWav} pçs</strong>)`;
+        let volExtra = tWav > 0 && tRtw > 0 ? ` + ${tWav} retidas em planejamento` : ``;
+        html += `<div class="text-slate-300 leading-tight text-xs"><span class="text-rose-400 font-black">&bull; DAQUI A 45 a 60+ MIN:</span> ${textVolumeFila}${volExtra} atingirá o Packing no final da hora. A rampa sofrerá nova injeção contínua.</div>`;
     }
+
+    html += `
+        <div class="mt-4 pt-3 border-t border-slate-700 bg-slate-800/50 p-2 rounded">
+            <div class="text-[10px] text-slate-400 uppercase font-bold mb-1"><i class="fa-solid fa-users text-blue-400"></i> Sugestão para a Área Mestra (10 Tobogãs)</div>
+            <div class="text-xs text-white">O volume atual caindo em toda esta área exige <strong>~${reqPessoas} pessoas</strong> (${tipoRecurso}) para não capotar.</div>
+        </div>
+    `;
 
     html += `</div>`;
     return encodeURIComponent(html);
@@ -209,26 +220,15 @@ function aplicarFiltros() {
     if(!DATA_CACHE) return;
     let lst = DATA_CACHE.micro;
     
-    // 1. Filtro ETD
     if(SELECTED_HOURS.length > 0) lst = lst.filter(x => SELECTED_HOURS.includes(x.horario) || x.horario === 'ATRASO');
     
-    // 2. Busca Input
     let busca = document.getElementById('inline-search');
     if(busca && busca.value.trim() !== '') {
         let term = busca.value.toUpperCase().trim();
         lst = lst.filter(x => x.nome.toUpperCase().includes(term));
     }
 
-    // 3. Status Avançado (Micro/Matriz)
-    let statusFilter = document.getElementById('inline-status-filter');
-    if(statusFilter) {
-        let val = statusFilter.value;
-        if(val === 'waving') lst = lst.filter(x => x.wav > 0);
-        if(val === 'rtw') lst = lst.filter(x => x.rtw > 0);
-        if(val === 'wip') lst = lst.filter(x => (x.pick + x.rtp + x.grp) > 0);
-    }
-
-    renderDash(lst); renderAereo(DATA_CACHE.micro); renderMatriz(lst); renderMicro(lst); updateLiveClock();
+    renderDash(lst); renderAereo(DATA_CACHE.micro); renderMatriz(lst); renderMicro(lst);
 }
 
 function mudarAba(aba) { 
@@ -254,42 +254,71 @@ function showTooltip(e, html) { let t = document.getElementById('floating-tip');
 function moveTooltip(e) { let t = document.getElementById('floating-tip'); if(!t || t.classList.contains('hidden')) return; let x = e.clientX + 15, y = e.clientY + 15; if (x + t.offsetWidth > window.innerWidth) x = e.clientX - t.offsetWidth - 15; if (y + t.offsetHeight > window.innerHeight) y = window.innerHeight - t.offsetHeight - 15; t.style.left = Math.max(10, x) + 'px'; t.style.top = Math.max(10, y) + 'px'; }
 function hideTooltip() { setClass('floating-tip', 'add', 'hidden'); }
 
-// --- RENDERIZADORES DE TELA ---
+// --- RENDERIZADORES DE TELA (COM SUB-CARDS DINÂMICOS) ---
 
 function renderDash(lst) {
     let allValid = lst.filter(i => i.horario !== 'ATRASO');
-    let tTot = 0, tC = 0, tPck = 0, tIn = 0, tCls = 0, tShp = 0, tWip = 0, tRtw = 0;
+    let tTot = 0, tC = 0, tPck = 0, tIn = 0, tCls = 0, tShp = 0, tPick = 0, tPack = 0, tRtw = 0, tWav = 0;
     
-    allValid.forEach(i => { tTot += i.total; tC += i.concluido; tPck += i.packed; tIn += i.huIn; tCls += i.huCl; tShp += i.ship; tWip += (i.pick+i.rtp+i.grp); tRtw += i.rtw; });
+    allValid.forEach(i => { 
+        tTot += i.total; tC += i.concluido; tPck += i.packed; 
+        tIn += i.huIn; tCls += i.huCl; tShp += i.ship; 
+        tPick += i.pick; tPack += (i.rtp + i.grp + i.r); 
+        tRtw += i.rtw; tWav += i.wav; 
+    });
     
-    // Aplicando Filtro de Visão do Dashboard
-    let viewFilter = document.getElementById('dash-view-filter');
+    let viewFilter = document.querySelector('input[name="dashview"]:checked');
     let vF = viewFilter ? viewFilter.value : 'global';
     
     let targetProgresso = 0;
-    let labelTitle = "Operação Global (Terrestre + Aéreo)";
+    let labelTitle = "";
     let labelSubtitle = "Peças no Dia";
+    let subCardsHtml = "";
+
+    let pct = (val, tot) => tot > 0 ? ((val/tot)*100).toFixed(1) + '%' : '0%';
     
-    switch(vF) {
-        case 'shipped':
-            targetProgresso = tShp; labelTitle = "Apenas Shippados (Despachados)"; break;
-        case 'packed':
-            targetProgresso = tPck; labelTitle = "Foco em Packed (Retidos na Rampa)"; labelSubtitle = "Meta vs Total"; break;
-        case 'wip':
-            targetProgresso = tWip; labelTitle = "Foco em Processamento (WIP)"; break;
-        default: // global
-            targetProgresso = tC; break;
+    if(vF === 'global') {
+        targetProgresso = tC; 
+        labelTitle = "Operação Global (Geral)";
+        subCardsHtml = `
+            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Shippadas</span><span class="text-lg font-black text-purple-600">${tShp.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">${pct(tShp, tTot)} do total</span></div>
+            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Fechadas (CLS)</span><span class="text-lg font-black text-indigo-500">${tCls.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">${pct(tCls, tTot)} do total</span></div>
+            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Abertos (IN)</span><span class="text-lg font-black text-blue-500">${tIn.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">${pct(tIn, tTot)} do total</span></div>
+            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Packed (Retido)</span><span class="text-lg font-black text-emerald-500">${tPck.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">${pct(tPck, tTot)} do total</span></div>
+            <div class="flex flex-col bg-slate-50 px-3 py-1 rounded border border-slate-200"><span class="text-[10px] font-bold text-slate-600 uppercase">WIP + Fila + Waving</span><span class="text-lg font-black text-slate-700">${(tPick+tPack+tRtw+tWav).toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">Volume a processar</span></div>
+        `;
+    } else if (vF === 'concluidos') {
+        targetProgresso = tShp + tCls; 
+        labelTitle = "Apenas Concluídos (CLS/SHP)";
+        subCardsHtml = `
+            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Shippadas</span><span class="text-lg font-black text-purple-600">${tShp.toLocaleString()}</span><span class="text-[9px] text-purple-400 font-bold">${pct(tShp, targetProgresso)} dos concluídos</span></div>
+            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Fechadas (CLS)</span><span class="text-lg font-black text-indigo-500">${tCls.toLocaleString()}</span><span class="text-[9px] text-indigo-400 font-bold">${pct(tCls, targetProgresso)} dos concluídos</span></div>
+        `;
+    } else if (vF === 'packed') {
+        targetProgresso = tPck; 
+        labelTitle = "Foco em Packed (Retidos na Rampa)"; 
+        labelSubtitle = "do Total Diário";
+        subCardsHtml = `
+            <div class="flex flex-col bg-emerald-50 px-3 py-1 rounded border border-emerald-200"><span class="text-[10px] font-bold text-emerald-700 uppercase">Total Packed</span><span class="text-lg font-black text-emerald-600">${tPck.toLocaleString()}</span><span class="text-[9px] text-emerald-500 font-bold">${pct(tPck, tTot)} de toda a carga</span></div>
+        `;
+    } else if (vF === 'wip') {
+        let pendentesOperacao = tPick + tPack + tRtw; 
+        targetProgresso = pendentesOperacao; 
+        labelTitle = "Foco em Processamento (WIP + Fila)";
+        labelSubtitle = "na Mão da Operação";
+        subCardsHtml = `
+            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Em Packing (Mesa)</span><span class="text-lg font-black text-amber-500">${tPack.toLocaleString()}</span><span class="text-[9px] text-amber-500 font-bold">${pct(tPack, targetProgresso)} do WIP</span></div>
+            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Em Picking (Separando)</span><span class="text-lg font-black text-orange-500">${tPick.toLocaleString()}</span><span class="text-[9px] text-orange-500 font-bold">${pct(tPick, targetProgresso)} do WIP</span></div>
+            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Fila RTW (Aguardando)</span><span class="text-lg font-black text-rose-500">${tRtw.toLocaleString()}</span><span class="text-[9px] text-rose-500 font-bold">${pct(tRtw, targetProgresso)} do WIP</span></div>
+            <div class="flex flex-col bg-slate-100 px-3 py-1 rounded border border-slate-200"><span class="text-[10px] font-bold text-slate-500 uppercase">Retido WMS (Waving)</span><span class="text-lg font-black text-slate-600">${tWav.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">Fora do WIP</span></div>
+        `;
     }
 
-    setVal('lbl-dash-title', labelTitle);
+    setVal('lbl-dash-title', labelTitle); 
     setVal('lbl-dash-subtitle', labelSubtitle);
     setVal('dash-glb-total', tTot.toLocaleString()); 
     setVal('dash-glb-targetval', targetProgresso.toLocaleString());
-    
-    setVal('dash-glb-packed', tPck.toLocaleString()); setVal('dash-glb-huin', tIn.toLocaleString()); 
-    setVal('dash-glb-hucl', tCls.toLocaleString()); setVal('dash-glb-ship', tShp.toLocaleString());
-    let pendentesGlobal = tTot - (tIn + tCls + tShp + tPck);
-    setVal('dash-glb-pend', pendentesGlobal.toLocaleString());
+    setHtml('dash-dynamic-subcards', subCardsHtml);
     
     let pG = tTot > 0 ? ((targetProgresso / tTot) * 100).toFixed(2) : '0.00'; 
     setVal('dash-glb-pct', pG + '%'); setStyle('dash-glb-bar', 'width', pG + '%');
@@ -329,43 +358,53 @@ function renderDash(lst) {
 
 function renderMicro(lst) {
     let filtered = lst.filter(i => !i.isAereo);
-    let capPick = (SETTINGS_DATA.pickHC || 0) * (SETTINGS_DATA.pickM || 0);
-
     filtered.sort((a, b) => (b.rtw + b.pick + b.rtp + b.grp) - (a.rtw + a.pick + a.rtp + a.grp));
 
     setHtml('micro-body', filtered.map(r => {
-        let retidoWav = r.wav;
-        let liberadoRtw = r.rtw; 
         let processandoWip = r.pick + r.rtg + r.g + r.r;
-        let prontoConcluido = r.packed + r.huIn + r.huCl + r.ship;
-
-        let atraso = (liberadoRtw + processandoWip) > capPick && capPick > 0 
-            ? ((liberadoRtw + processandoWip) - capPick) 
-            : 0;
-
-        let alertaRollover = atraso > 0 
-            ? `<span class="bg-rose-500/10 text-rose-600 font-bold px-2 py-1 rounded border border-rose-200" title="Excede Capacidade: Pode virar backlog">Atraso de ${atraso}</span>` 
-            : `<span class="text-emerald-500"><i class="fa-solid fa-check"></i> 0</span>`;
-
-        if (capPick === 0 && (liberadoRtw + processandoWip) > 0) alertaRollover = `<span class="text-rose-500 font-bold"><i class="fa-solid fa-ban mr-1"></i> HC = 0</span>`;
+        let prontoConcluido = r.huIn + r.huCl + r.ship;
 
         return `
         <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
             <td class="p-3 pl-6 font-bold text-slate-800">${r.nome}</td>
             <td class="p-3 text-center"><span class="bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold">${r.horario}h</span></td>
-            <td class="text-right p-3 text-slate-500 font-bold bg-slate-50 border-l border-slate-200">${retidoWav}</td>
-            <td class="text-right p-3 text-orange-600 font-bold bg-orange-50/50">${liberadoRtw}</td>
-            <td class="text-right p-3 text-emerald-600 font-bold bg-emerald-50/50">${processandoWip}</td>
-            <td class="text-right p-3 text-blue-600 font-bold bg-blue-50/50 border-r border-slate-200">${prontoConcluido}</td>
-            <td class="text-right p-3 border-r border-slate-200">${alertaRollover}</td>
+            <td class="text-right p-3 text-slate-500 font-bold bg-slate-50 border-l border-slate-200">${r.wav}</td>
+            <td class="text-right p-3 text-rose-500 font-bold bg-rose-50/50">${r.rtw}</td>
+            <td class="text-right p-3 text-orange-500 font-bold bg-orange-50/50">${r.pick}</td>
+            <td class="text-right p-3 text-amber-500 font-bold bg-amber-50/50">${r.rtp + r.grp + r.r}</td>
+            <td class="text-right p-3 text-emerald-600 font-bold bg-emerald-50/50 border-x border-slate-200">${r.packed}</td>
+            <td class="text-right p-3 text-blue-600 font-bold bg-blue-50/50">${prontoConcluido}</td>
             <td class="text-right p-3 font-extrabold text-slate-900">${r.total}</td>
-            <td class="p-3 pr-6 text-right font-black text-brand-600">${r.total > 0 ? ((r.concluido/r.total)*100).toFixed(1) : 0}%</td>
         </tr>`;
     }).join(''));
 }
 
+function getAreaVolumes(lst) {
+    let areaVols = {};
+    for(let i = 1; i <= 100; i++) {
+        let z = Math.ceil(i / 10);
+        if(!areaVols[z]) areaVols[z] = { tPacked: 0, tWip: 0, tRtw: 0 };
+        
+        let rr = RAMPA_MAP[i] || [];
+        rr.forEach(ro => { 
+            let d = lst.find(x => x.nome === ro); 
+            if(d) {
+                areaVols[z].tPacked += d.packed;
+                areaVols[z].tWip += (d.pick + d.rtp + d.grp);
+                areaVols[z].tRtw += d.rtw;
+            }
+        });
+    }
+    return areaVols;
+}
+
 function renderMatriz(lst) {
+    let areaVols = getAreaVolumes(lst);
+
     const ren = (id, s, e) => {
+        let filterEl = document.getElementById('heatmap-filter-' + id.split('-')[0]);
+        let mode = filterEl ? filterEl.value : 'volume';
+
         let h = '<div class="col-span-full grid grid-cols-2 sm:grid-cols-5 xl:grid-cols-10 gap-3">';
         for(let i = s; i <= e; i++) {
             let rr = RAMPA_MAP[i] || []; let st = { p: 0, r: 0, g: 0, pi: 0, w: 0, rtw: 0, t: 0 }; let rotasAtivas = []; 
@@ -374,26 +413,47 @@ function renderMatriz(lst) {
                 if(d) { st.p += d.packed; st.r += d.rtp; st.g += d.grp; st.pi += d.pick; st.w += d.wav; st.rtw += d.rtw; st.t += d.total; rotasAtivas.push(d); } 
             });
             
-            let volAtivo = st.p + st.r + st.g + st.pi + st.rtw; 
-            let hBg = 'bg-white', textC = 'text-slate-500';
+            let isAuto = i >= SETTINGS_DATA.autoStart && i <= SETTINGS_DATA.autoEnd;
+            let lqRecurso = isAuto ? (SETTINGS_DATA.indM || 450) : (SETTINGS_DATA.atrM || 450);
             
-            if (volAtivo > 0) { 
-                if(volAtivo >= 1500) { hBg = 'bg-rose-600 text-white'; textC = 'text-white'; } 
-                else if(volAtivo >= 800) { hBg = 'bg-orange-500 text-white'; textC = 'text-white'; } 
-                else if(volAtivo >= 300) { hBg = 'bg-amber-400 text-slate-900'; textC = 'text-amber-900'; } 
-                else { hBg = 'bg-emerald-100 border-emerald-300'; textC = 'text-emerald-700'; } 
+            let zonaArea = Math.ceil(i / 10);
+            let volTotalZona = areaVols[zonaArea].tPacked + areaVols[zonaArea].tWip + areaVols[zonaArea].tRtw;
+
+            let hBg = 'bg-white', textC = 'text-slate-500';
+            let volAtivoPecas = st.p + st.r + st.g + st.pi + st.rtw; 
+
+            if(mode === 'volume') {
+                if (volAtivoPecas > 0) { 
+                    if(volAtivoPecas >= 1000) { hBg = 'bg-rose-600 text-white border-rose-700'; textC = 'text-white'; } 
+                    else if(volAtivoPecas >= 500) { hBg = 'bg-orange-500 text-white border-orange-600'; textC = 'text-white'; } 
+                    else if(volAtivoPecas >= 200) { hBg = 'bg-amber-400 text-slate-900 border-amber-500'; textC = 'text-amber-900'; } 
+                    else { hBg = 'bg-emerald-100 border-emerald-300'; textC = 'text-emerald-700'; } 
+                } else { hBg = 'opacity-40 grayscale bg-white border border-slate-200'; }
+            } 
+            else if (mode === 'risco') {
+                let reqPessoasArea = lqRecurso > 0 ? (volTotalZona / lqRecurso) : 99;
+                if(volAtivoPecas > 0) {
+                    if (reqPessoasArea > 2) { hBg = 'bg-rose-600 text-white border-rose-700 shadow-[0_0_15px_rgba(225,29,72,0.5)]'; textC = 'text-white'; } 
+                    else if (reqPessoasArea > 1) { hBg = 'bg-amber-400 text-slate-900 border-amber-500'; textC = 'text-amber-900'; } 
+                    else { hBg = 'bg-emerald-100 border-emerald-300'; textC = 'text-emerald-700'; } 
+                } else { hBg = 'opacity-40 grayscale bg-white border border-slate-200'; }
+            }
+            else if (mode === 'congelado') {
+                if (st.w > 0) {
+                    if(st.w > 500) { hBg = 'bg-purple-600 text-white border-purple-700'; textC = 'text-white'; }
+                    else { hBg = 'bg-purple-200 text-purple-900 border-purple-400'; textC = 'text-purple-900'; }
+                } else { hBg = 'opacity-40 grayscale bg-white border border-slate-200'; }
             }
 
-            // TOOLTIP COM LINHA DO TEMPO NARRATIVA
-            let tooltipHtml = gerarTooltipNarrativo(`Tobogã ${i}`, rotasAtivas);
+            let tooltipHtml = gerarTooltipNarrativo(i, rotasAtivas, volTotalZona);
 
-            h += `<div onmouseenter="showTooltip(event, this.dataset.tip)" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()" data-tip="${tooltipHtml}" class="rounded-xl flex flex-col justify-between ${st.t === 0 ? 'opacity-40 grayscale bg-white/50 border border-slate-200' : hBg + ' shadow-md hover:-translate-y-1 cursor-help border'} overflow-hidden h-[90px] transition-all">
-                    <div class="px-3 py-2 flex justify-between items-center border-b border-white/20"><span class="font-black ${textC} text-lg">${i}</span><span class="${textC} text-xs font-bold font-mono">${volAtivo > 0 ? volAtivo : ''}</span></div>
+            h += `<div onmouseenter="showTooltip(event, this.dataset.tip)" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()" data-tip="${tooltipHtml}" class="rounded-xl flex flex-col justify-between ${hBg} shadow-md hover:-translate-y-1 cursor-help border overflow-hidden h-[90px] transition-all">
+                    <div class="px-3 py-2 flex justify-between items-center border-b border-black/10"><span class="font-black ${textC} text-lg">${i}</span><span class="${textC} text-xs font-bold font-mono">${mode === 'congelado' ? st.w : volAtivoPecas}</span></div>
                     <div class="px-3 py-2 text-[8px] font-bold ${textC} opacity-80 h-full overflow-hidden leading-tight">${rotasAtivas.length ? rotasAtivas.map(x => x.nome).join(', ') : 'Vazio'}</div>
                   </div>`;
         } h += `</div>`; setHtml(id, h);
     };
-    ren('t3-list-container', 1, 50); ren('t5-list-container', 51, 98);
+    ren('t3', 1, 50); ren('t5', 51, 98);
 }
 
 function renderAereo(lst) {
@@ -425,67 +485,24 @@ function renderAereo(lst) {
 
     let htmlETDs = '';
     Object.keys(grps).sort().forEach(h => {
-        let eT = 0, eIn = 0, eCl = 0, eSh = 0;
-        grps[h].forEach(r => { eT += r.total; eIn += r.huIn; eCl += r.huCl; eSh += r.ship; });
-        let eProcessado = eIn + eCl + eSh;
-        let eCaminho = eT - eProcessado;
-        let ePct = eT > 0 ? ((eProcessado / eT) * 100).toFixed(1) : '0.0';
-
         htmlETDs += `
         <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden mb-6">
-            <div class="bg-slate-100 p-4 border-b flex justify-between items-center">
-                <h4 class="font-black text-slate-700 text-lg flex items-center gap-2"><i class="fa-solid fa-clock text-cyan-600"></i> ETD ${h}H</h4>
-                <div class="flex gap-4 items-center">
-                    <div class="text-xs font-bold text-slate-500">A Caminho (Esteiras): <span class="text-amber-600 font-black text-sm">${eCaminho.toLocaleString()}</span></div>
-                    <div class="bg-white border px-2 py-1 rounded font-bold text-cyan-700 text-xs">${ePct}% Pronto</div>
-                </div>
-            </div>
+            <div class="bg-slate-100 p-4 border-b flex justify-between items-center"><h4 class="font-black text-slate-700 text-lg flex items-center gap-2"><i class="fa-solid fa-clock text-cyan-600"></i> ETD ${h}H</h4></div>
             <table class="w-full text-left text-xs font-mono">
                 <thead class="bg-white text-slate-400 uppercase text-[9px] font-bold border-b"><tr><th class="p-3 pl-6">Rota</th><th class="text-right p-3 text-slate-500">WAV / RTW</th><th class="text-right p-3 text-emerald-500">WIP</th><th class="text-right p-3 text-blue-500">Pronto</th><th class="text-right p-3 text-amber-500 border-l border-slate-100">A Caminho</th><th class="text-right p-3">Total Dia</th></tr></thead>
                 <tbody class="divide-y divide-slate-50">
-                    ${grps[h].sort((a,b)=> b.total - a.total).map(r => {
-                        let tooltipAereoHtml = gerarTooltipNarrativo(`Aéreo: ${r.nome}`, [r]);
-                        return `
-                        <tr class="hover:bg-slate-50 cursor-help" onmouseenter="showTooltip(event, this.dataset.tip)" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()" data-tip="${tooltipAereoHtml}">
+                    ${grps[h].sort((a,b)=> b.total - a.total).map(r => `
+                        <tr class="hover:bg-slate-50">
                             <td class="p-3 pl-6 font-bold text-slate-800">${r.nome}</td>
                             <td class="text-right p-3 text-slate-500">${r.wav} / ${r.rtw}</td>
                             <td class="text-right p-3 text-emerald-500">${r.pick+r.rtp+r.grp}</td>
                             <td class="text-right p-3 text-blue-500">${r.packed+r.huIn+r.huCl+r.ship}</td>
                             <td class="text-right p-3 text-amber-600 font-bold border-l border-slate-100">${r.total - (r.huIn+r.huCl+r.ship)}</td>
                             <td class="text-right p-3 font-black text-slate-800">${r.total}</td>
-                        </tr>`;
-                    }).join('')}
+                        </tr>`).join('')}
                 </tbody>
             </table>
         </div>`;
     });
-
     setHtml('aereo-container', htmlETDs || '<div class="p-8 text-center bg-white rounded-xl border">Sem dados de malha aérea.</div>');
-}
-
-function updateLiveClock() {
-    setVal('live-clock', new Date().toLocaleTimeString('pt-BR'));
-    let vl = document.getElementById('view-live');
-    if(!DATA_CACHE || !AVAILABLE_HOURS.length || (vl && vl.classList.contains('hidden'))) return;
-    
-    let ch = parseInt(new Date().getHours()); let hNum = AVAILABLE_HOURS.map(h => parseInt(h)).sort((a,b)=>a-b);
-    let f = hNum.find(h => h > ch) || hNum[0]; let etd = f.toString().padStart(2, '0');
-    
-    let lbl = document.getElementById('live-etd-lbl');
-    if(lbl && lbl.innerText !== "ETD " + etd + "H") {
-        setVal('live-etd-lbl', "ETD " + etd + "H");
-        let lst = DATA_CACHE.micro.filter(r => r.horario === etd).sort((a, b) => b.total - a.total);
-        
-        setHtml('live-offenders-body', lst.map(r => {
-            let pct = r.total > 0 ? ((r.concluido / r.total) * 100) : 0;
-            return `<tr>
-            <td class="p-3 pl-4 font-bold text-slate-800">${r.nome}</td>
-            <td class="p-3 text-right text-emerald-600 font-bold">${r.packed}</td>
-            <td class="p-3 text-right text-orange-500 font-bold bg-orange-50/50">${r.rtp+r.grp}</td>
-            <td class="p-3 text-right text-rose-500 font-bold bg-rose-50/50">${r.pick}</td>
-            <td class="p-3 text-right text-slate-400 font-bold opacity-50">${r.wav+r.rtw}</td>
-            <td class="p-3 pr-4"><div class="flex items-center gap-2 justify-end"><span class="text-[9px] font-bold w-6 text-right">${pct.toFixed(0)}%</span><div class="w-16 h-1.5 bg-slate-200 rounded-full"><div class="bg-brand-500 h-full rounded-full" style="width:${pct}%"></div></div></div></td>
-            </tr>`;
-        }).join(''));
-    }
 }
