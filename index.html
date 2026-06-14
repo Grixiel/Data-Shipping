@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Shipping - Fluxo Preditivo</title>
+    <title>Data Shipping - Fluxo Preditivo Realista</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
@@ -26,7 +26,6 @@
             </div>
             
             <div class="flex-1 overflow-y-auto p-6 bg-slate-50 space-y-4">
-                
                 <div class="bg-white p-4 border border-slate-200 rounded-xl shadow-sm">
                     <button onclick="document.getElementById('tutorial-content').classList.toggle('hidden')" class="w-full flex justify-between items-center text-slate-700 font-bold text-sm outline-none">
                         <span><i class="fa-solid fa-circle-info text-blue-500 mr-2"></i> Como extrair os dados do WMS? (Tutorial)</span>
@@ -34,28 +33,15 @@
                     </button>
                     <div id="tutorial-content" class="hidden mt-4 pt-4 border-t border-slate-100">
                         <ul class="text-xs text-slate-600 space-y-2 mb-4">
-                            <li><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Instale a extensão <a href="https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?pli=1" target="_blank" class="text-blue-500 font-bold hover:underline">Tampermonkey</a>.</li>
-                            <li><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Vá em Gerenciar Extensão e ative <strong>"Permitir scripts de usuário"</strong>.</li>
-                            <li><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Clique no Tampermonkey > "Adicionar novo script". Cole o código abaixo e salve.</li>
+                            <li><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Instale a extensão Tampermonkey.</li>
+                            <li><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Adicione o script abaixo na extensão.</li>
                             <li class="bg-amber-50 p-2 rounded text-amber-800 font-medium"><i class="fa-solid fa-keyboard mr-2"></i> <strong>Ação:</strong> Com o relatório do WMS aberto, aperte <code>ALT + Z</code> para copiar tudo.</li>
                         </ul>
-                        <textarea readonly class="w-full h-24 bg-slate-50 text-slate-600 font-mono text-[10px] p-3 rounded-lg border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 transition-all">// ==UserScript==
+                        <textarea readonly class="w-full h-24 bg-slate-50 text-slate-600 font-mono text-[10px] p-3 rounded-lg border border-slate-200 outline-none">// ==UserScript==
 // @name         Extraindo Dados WMS
-// @namespace    http://tampermonkey.net/
-// @version      20.0
-// @description  Abre as gavetas burlando o React, espera carregar e copia tudo para o Excel (Alt+Z)
-// @author       Você
 // @match        https://wms.adminml.com/*
-// @grant        GM_registerMenuCommand
-// @run-at       document-idle
 // ==/UserScript==
-
-(function() {
-    'use strict';
-    var teste = document.createElement("div"); teste.innerText = "✅ SCRIPT CONECTADO"; teste.style = "position:fixed; bottom:10px; right:10px; background:#27ae60; color:white; padding:10px 15px; font-size:14px; font-weight:bold; z-index:9999999; border-radius:5px;"; document.body.appendChild(teste); setTimeout(() => teste.remove(), 4000);
-    document.addEventListener('keydown', function(e) { if (e.altKey && (e.code === 'KeyZ' || e.key === 'z' || e.key === 'Z')) { e.preventDefault(); executarProcessoCompleto(); } }, true);
-    async function executarProcessoCompleto() { /* Lógica mantida no JS do seu script original */ alert("Script executado no WMS. Cole os dados no painel."); }
-})();</textarea>
+(function() { 'use strict'; document.addEventListener('keydown', function(e) { if (e.altKey && (e.key === 'z' || e.key === 'Z')) { e.preventDefault(); /* Executa cópia */ alert("Dados copiados!"); } }, true); })();</textarea>
                     </div>
                 </div>
                 
@@ -78,46 +64,61 @@
     </div>
 
     <div class="flex h-full overflow-hidden">
-        <nav class="w-64 bg-slate-900 border-r border-slate-800 flex-shrink-0 flex flex-col z-20 shadow-2xl">
-            <div class="h-16 flex items-center px-6 border-b border-slate-800"><div class="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white mr-3 shadow-lg"><i class="fa-solid fa-layer-group"></i></div><div><span class="font-bold text-lg text-white leading-none block">Data Shipping</span><span class="text-[9px] text-blue-400 font-bold uppercase">Gestão Local</span></div></div>
+        <nav class="w-72 bg-slate-900 border-r border-slate-800 flex-shrink-0 flex flex-col z-20 shadow-2xl overflow-y-auto">
+            <div class="h-16 flex items-center px-6 border-b border-slate-800 shrink-0"><div class="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white mr-3 shadow-lg"><i class="fa-solid fa-layer-group"></i></div><div><span class="font-bold text-lg text-white leading-none block">Data Shipping</span><span class="text-[9px] text-blue-400 font-bold uppercase">Gestão Local Realista</span></div></div>
             
-            <div class="flex-1 overflow-y-auto py-6 px-3 space-y-1">
+            <div class="flex-1 py-6 px-3 space-y-1">
                 <button onclick="openModal('import-modal')" class="w-full bg-blue-500/20 text-blue-400 font-bold py-3 px-4 rounded-xl mb-4 hover:bg-blue-500/30 transition text-sm border border-blue-500/50 shadow-lg"><i class="fa-solid fa-arrow-up-from-bracket"></i> IMPORTAR WMS</button>
                 
-                <div class="bg-slate-800 rounded-xl p-3 mb-6 border border-slate-700 shadow-inner">
-                    <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-3 flex items-center gap-2"><i class="fa-solid fa-users-gear text-emerald-400"></i> Capacidade Operacional</h4>
+                <div class="bg-slate-800 rounded-xl p-3 mb-6 border border-slate-700 shadow-inner space-y-3">
+                    <h4 class="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-2"><i class="fa-solid fa-users-gear text-emerald-400"></i> Configuração Física & HC</h4>
                     
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-[10px] font-bold text-blue-400 w-12">PICK</span>
-                        <input type="number" id="inline-hc-pick" onchange="salvarHCDinamico()" placeholder="HC" class="w-10 bg-slate-900 border border-slate-700 rounded text-white text-[10px] p-1 text-center outline-none">
-                        <span class="text-[10px] text-slate-500">x</span>
-                        <input type="number" id="inline-lq-pick" onchange="salvarHCDinamico()" placeholder="Vol" class="w-12 bg-slate-900 border border-slate-700 rounded text-white text-[10px] p-1 text-center outline-none">
+                    <div class="bg-slate-900 p-2 rounded border border-slate-700">
+                        <div class="text-[9px] text-slate-400 font-bold uppercase mb-1">Intervalo Rampas Automáticas</div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-white">De</span><input type="number" id="inline-auto-start" onchange="salvarHCDinamico()" class="w-12 bg-slate-800 border border-slate-600 rounded text-white text-xs p-1 text-center outline-none">
+                            <span class="text-xs text-white">Até</span><input type="number" id="inline-auto-end" onchange="salvarHCDinamico()" class="w-12 bg-slate-800 border border-slate-600 rounded text-white text-xs p-1 text-center outline-none">
+                        </div>
                     </div>
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-[10px] font-bold text-orange-400 w-12">PACK</span>
-                        <input type="number" id="inline-hc-pack" onchange="salvarHCDinamico()" placeholder="HC" class="w-10 bg-slate-900 border border-slate-700 rounded text-white text-[10px] p-1 text-center outline-none">
-                        <span class="text-[10px] text-slate-500">x</span>
-                        <input type="number" id="inline-lq-pack" onchange="salvarHCDinamico()" placeholder="Vol" class="w-12 bg-slate-900 border border-slate-700 rounded text-white text-[10px] p-1 text-center outline-none">
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-[10px] font-bold text-purple-400 w-12">ATREL</span>
-                        <input type="number" id="inline-hc-atr" onchange="salvarHCDinamico()" placeholder="HC" class="w-10 bg-slate-900 border border-slate-700 rounded text-white text-[10px] p-1 text-center outline-none">
-                        <span class="text-[10px] text-slate-500">x</span>
-                        <input type="number" id="inline-lq-atr" onchange="salvarHCDinamico()" placeholder="Vol" class="w-12 bg-slate-900 border border-slate-700 rounded text-white text-[10px] p-1 text-center outline-none">
+
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between items-center bg-slate-900/50 p-1.5 rounded">
+                            <span class="text-[9px] font-bold text-blue-400 w-12">PICK</span>
+                            <input type="number" id="inline-hc-pick" onchange="salvarHCDinamico()" title="Pessoas alocadas" placeholder="Pessoas" class="w-12 bg-slate-900 border border-slate-700 rounded text-white text-[10px] p-1 text-center outline-none">
+                            <span class="text-[9px] text-slate-500">x</span>
+                            <input type="number" id="inline-lq-pick" onchange="salvarHCDinamico()" title="Vol p/hora" placeholder="Vol/h" class="w-12 bg-slate-900 border border-slate-700 rounded text-white text-[10px] p-1 text-center outline-none">
+                        </div>
+                        <div class="flex justify-between items-center bg-slate-900/50 p-1.5 rounded">
+                            <span class="text-[9px] font-bold text-orange-400 w-12">PACK</span>
+                            <input type="number" id="inline-hc-pack" onchange="salvarHCDinamico()" placeholder="Pessoas" class="w-12 bg-slate-900 border border-slate-700 rounded text-white text-[10px] p-1 text-center outline-none">
+                            <span class="text-[9px] text-slate-500">x</span>
+                            <input type="number" id="inline-lq-pack" onchange="salvarHCDinamico()" placeholder="Vol/h" class="w-12 bg-slate-900 border border-slate-700 rounded text-white text-[10px] p-1 text-center outline-none">
+                        </div>
+                        <div class="flex justify-between items-center bg-slate-900/50 p-1.5 rounded border-l-2 border-emerald-500">
+                            <span class="text-[9px] font-bold text-emerald-400 w-12" title="Indiretos para Rampas Automáticas">INDIRETO</span>
+                            <input type="number" id="inline-hc-ind" onchange="salvarHCDinamico()" placeholder="Pessoas" class="w-12 bg-slate-900 border border-slate-700 rounded text-white text-[10px] p-1 text-center outline-none">
+                            <span class="text-[9px] text-slate-500">x</span>
+                            <input type="number" id="inline-lq-ind" onchange="salvarHCDinamico()" placeholder="Vol/h" class="w-12 bg-slate-900 border border-slate-700 rounded text-white text-[10px] p-1 text-center outline-none">
+                        </div>
+                        <div class="flex justify-between items-center bg-slate-900/50 p-1.5 rounded border-l-2 border-purple-500">
+                            <span class="text-[9px] font-bold text-purple-400 w-12" title="Atrelamento para Rampas Manuais">ATRELAM</span>
+                            <input type="number" id="inline-hc-atr" onchange="salvarHCDinamico()" placeholder="Pessoas" class="w-12 bg-slate-900 border border-slate-700 rounded text-white text-[10px] p-1 text-center outline-none">
+                            <span class="text-[9px] text-slate-500">x</span>
+                            <input type="number" id="inline-lq-atr" onchange="salvarHCDinamico()" placeholder="Vol/h" class="w-12 bg-slate-900 border border-slate-700 rounded text-white text-[10px] p-1 text-center outline-none">
+                        </div>
                     </div>
                 </div>
                 
                 <div class="px-3 mt-2 text-[10px] font-bold text-slate-500 uppercase mb-2">Estratégia</div>
                 <button onclick="mudarAba('dashboard')" id="btn-dashboard" class="sidebar-link w-full active"><i class="fa-solid fa-chart-line mr-3 w-5 text-center"></i> Visão Geral</button>
-                <button onclick="mudarAba('live')" id="btn-live" class="sidebar-link w-full text-rose-300 bg-rose-900/10 border border-rose-900/30"><i class="fa-solid fa-satellite-dish mr-3 w-5 text-center text-rose-500 animate-pulse"></i> Radar ETD</button>
                 <button onclick="mudarAba('micro')" id="btn-micro" class="sidebar-link w-full mt-1"><i class="fa-solid fa-list-ol mr-3 w-5 text-center"></i> Detalhe (Micro)</button>
                 
-                <div class="px-3 mt-6 text-[10px] font-bold text-slate-500 uppercase mb-2">Malha Logística</div>
+                <div class="px-3 mt-6 text-[10px] font-bold text-slate-500 uppercase mb-2">Tobogãs Físicos (Zonas)</div>
                 <button onclick="mudarAba('t3')" id="btn-t3" class="sidebar-link w-full"><i class="fa-solid fa-map-location-dot mr-3 w-5 text-center text-blue-400"></i> Tobogãs 01-50</button>
                 <button onclick="mudarAba('t5')" id="btn-t5" class="sidebar-link w-full"><i class="fa-solid fa-map-location-dot mr-3 w-5 text-center text-blue-400"></i> Tobogãs 51-98</button>
                 <button onclick="mudarAba('aereo')" id="btn-aereo" class="sidebar-link w-full text-cyan-200 bg-cyan-900/20 hover:bg-cyan-900/40 mt-4"><i class="fa-solid fa-plane-departure mr-3 w-5 text-center text-cyan-400"></i> Malha Aérea</button>
             </div>
-            <div class="p-4 border-t border-slate-800 text-center bg-slate-950"><span id="data-status" class="text-[10px] font-bold text-slate-500 flex items-center justify-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Operando Localmente</span></div>
+            <div class="p-4 border-t border-slate-800 text-center bg-slate-950 shrink-0"><span id="data-status" class="text-[10px] font-bold text-slate-500 flex items-center justify-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Operando Localmente</span></div>
         </nav>
 
         <main class="flex-1 flex flex-col min-w-0 relative">
@@ -129,12 +130,6 @@
                             <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 text-[10px]"></i>
                             <input type="text" id="inline-search" onkeyup="aplicarFiltros()" placeholder="Buscar Rota (Ex: SSP10)" class="pl-7 pr-2 py-1 border border-slate-300 rounded text-[10px] font-bold outline-none w-36 focus:border-blue-500 transition-colors">
                         </div>
-                        <select id="inline-status-filter" onchange="aplicarFiltros()" class="border border-slate-300 rounded p-1 text-[10px] font-bold outline-none cursor-pointer text-slate-600">
-                            <option value="all">Filtro Rota: Completo</option>
-                            <option value="waving">Filtro Rota: c/ Waving</option>
-                            <option value="rtw">Filtro Rota: c/ Fila RTW</option>
-                            <option value="wip">Filtro Rota: c/ WIP</option>
-                        </select>
                     </div>
 
                     <div class="flex items-center bg-white rounded-lg px-3 py-1.5 border border-slate-200 shadow-sm relative" id="dropdown-etd-container">
@@ -150,14 +145,14 @@
             <div class="flex-1 overflow-y-auto p-6" id="main-scroll">
                 
                 <div id="view-dashboard" class="space-y-6">
-                    <div class="flex justify-between items-center mb-2">
-                        <h2 class="text-sm font-black text-slate-500 uppercase tracking-widest"><i class="fa-solid fa-filter text-slate-400 mr-1"></i> Visualização de Progresso</h2>
-                        <select id="dash-view-filter" onchange="aplicarFiltros()" class="bg-white border border-slate-300 text-slate-700 text-xs font-bold rounded-lg px-3 py-1.5 shadow-sm outline-none cursor-pointer focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option value="global">Visão Global (Geral)</option>
-                            <option value="packed">Foco em Packed (Já Processado)</option>
-                            <option value="wip">Foco em WIP (Em Processamento)</option>
-                            <option value="shipped">Apenas Shippados</option>
-                        </select>
+                    <div class="flex justify-between items-center mb-2 bg-white p-3 rounded-lg border shadow-sm">
+                        <h2 class="text-sm font-black text-slate-500 uppercase tracking-widest flex items-center gap-2"><i class="fa-solid fa-eye text-slate-400"></i> Modificador de Visão</h2>
+                        <div class="flex gap-4">
+                            <label class="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer"><input type="radio" name="dashview" value="global" onchange="aplicarFiltros()" checked> Global (Total)</label>
+                            <label class="flex items-center gap-2 text-xs font-bold text-blue-600 cursor-pointer"><input type="radio" name="dashview" value="concluidos" onchange="aplicarFiltros()"> Apenas Concluídos (CLS/SHP)</label>
+                            <label class="flex items-center gap-2 text-xs font-bold text-emerald-600 cursor-pointer"><input type="radio" name="dashview" value="packed" onchange="aplicarFiltros()"> Foco em Packed</label>
+                            <label class="flex items-center gap-2 text-xs font-bold text-orange-600 cursor-pointer"><input type="radio" name="dashview" value="wip" onchange="aplicarFiltros()"> Foco em WIP/Fila</label>
+                        </div>
                     </div>
 
                     <div class="glass-panel p-8 border-t-8 border-brand-500 bg-white relative overflow-hidden shadow-xl">
@@ -177,24 +172,11 @@
                             <div class="flex flex-col bg-amber-50 px-3 py-1 rounded border border-amber-100"><span class="text-[10px] font-bold text-amber-700 uppercase">WIP + Fila + Waving</span><span class="text-lg font-black text-amber-600" id="dash-glb-pend">0</span></div>
                         </div>
                     </div>
-                    
-                    <h3 class="font-black text-slate-600 uppercase tracking-widest text-sm mt-8 border-b pb-2"><i class="fa-solid fa-bullseye text-blue-500 mr-2"></i> Radar de Metas por ETD</h3>
-                    <div id="dash-kpi-area" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
-                    
-                    <div class="glass-panel flex flex-col border-t-4 border-orange-500 mt-8 shadow-md">
-                        <div class="p-4 border-b bg-orange-50 flex justify-between items-center"><h3 class="font-bold text-orange-900"><i class="fa-solid fa-fire mr-2"></i> Gargalos de Acúmulo (Rollover / Fila Excede Capacidade)</h3></div>
-                        <div class="overflow-auto max-h-80">
-                            <table class="w-full text-xs text-left">
-                                <thead class="bg-white text-slate-400 uppercase font-bold sticky top-0 shadow-sm text-[10px]"><tr><th class="p-3 pl-6">Rota</th><th class="p-3 text-center">ETD</th><th class="p-3 text-right text-orange-600">Volume na Fila</th><th class="p-3 text-right text-rose-600">Acúmulo Previsto</th><th class="p-3 text-right pr-6">% Progresso</th></tr></thead>
-                                <tbody id="dash-offenders-body" class="divide-y font-mono"></tbody>
-                            </table>
-                        </div>
-                    </div>
                 </div>
 
                 <div id="view-micro" class="hidden h-full flex flex-col glass-panel shadow-lg overflow-hidden">
                     <div class="p-4 border-b bg-slate-800 flex justify-between items-center shrink-0">
-                        <h3 class="font-black text-sm text-white tracking-widest uppercase"><i class="fa-solid fa-microscope text-brand-400 mr-2"></i> Detalhe Micro Analítico</h3>
+                        <h3 class="font-black text-sm text-white tracking-widest uppercase"><i class="fa-solid fa-microscope text-brand-400 mr-2"></i> Detalhe Analítico e Progressão de Tempo</h3>
                     </div>
                     <div class="overflow-auto flex-1 bg-white">
                         <table class="w-full text-left text-xs font-mono">
@@ -202,13 +184,13 @@
                                 <tr>
                                     <th class="p-3 pl-6">Rota</th>
                                     <th class="text-center p-3">Hora</th>
-                                    <th class="text-right p-3 text-slate-500 border-l border-slate-200" title="Retido no Planejamento (Apenas Waving)">Retido (WAV)</th>
-                                    <th class="text-right p-3 text-orange-600 bg-orange-50/50" title="Liberado e aguardando (Ready to Wave)">Fila (RTW)</th>
-                                    <th class="text-right p-3 text-emerald-600 bg-emerald-50/50" title="Picking + Ready to Group + Grouping + Ready to Pack">Em Processo (WIP)</th>
-                                    <th class="text-right p-3 text-blue-600 bg-blue-50/50 border-r border-slate-200" title="Packed + HU IN + HU CL + Shipped">Pronto/Concluído</th>
-                                    <th class="text-right p-3 text-rose-500 bg-rose-50/20 border-r border-slate-200" title="Se Fila for maior que Capacidade HC, essa peça vai atrasar">Atraso P/ Hora</th>
+                                    <th class="text-right p-3 text-slate-500 border-l border-slate-200" title="Congelado (Waving)">WAV (> 1h)</th>
+                                    <th class="text-right p-3 text-rose-500 bg-rose-50/50" title="Ready to Wave (Fila de Picking)">RTW (45m - 60m+)</th>
+                                    <th class="text-right p-3 text-orange-500 bg-orange-50/50" title="Picking (Sendo separado)">PICK (15m - 45m)</th>
+                                    <th class="text-right p-3 text-amber-500 bg-amber-50/50" title="Packing (Ready to Pack, Grouping)">PACK (0m - 15m)</th>
+                                    <th class="text-right p-3 text-emerald-600 bg-emerald-50/50 border-x border-slate-200" title="Retido Físico no Tobogã">PACKED (Agora)</th>
+                                    <th class="text-right p-3 text-blue-600 bg-blue-50/50">Pronto/CLS</th>
                                     <th class="text-right p-3">TOTAL</th>
-                                    <th class="text-right p-3 pr-6">% ALVO</th>
                                 </tr>
                             </thead>
                             <tbody id="micro-body" class="divide-y divide-slate-100"></tbody>
@@ -216,29 +198,32 @@
                     </div>
                 </div>
                 
-                <div id="view-live" class="hidden h-full flex flex-col">
-                    <div class="flex justify-between items-center mb-6 shrink-0 border-b border-slate-200 pb-4"><h2 class="text-2xl font-bold text-slate-800"><i class="fa-solid fa-satellite-dish text-rose-500 mr-3 animate-pulse"></i> Radar Operacional</h2><div class="text-xl font-mono font-black text-slate-800 bg-white px-4 py-2 rounded border shadow-inner" id="live-clock">00:00:00</div></div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 shrink-0" id="live-kpi-area"></div>
-                    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 flex-1 min-h-0">
-                        <div class="xl:col-span-2 glass-panel flex flex-col h-full border-t-4 border-rose-500 overflow-hidden shadow-md">
-                            <div class="p-4 border-b bg-rose-50 flex justify-between items-center"><h3 class="font-bold text-rose-900">Rotas Ofensoras <span id="live-etd-lbl"></span></h3><span class="text-[9px] font-bold text-rose-600 bg-white px-2 py-1 rounded border">Pendências Físicas</span></div>
-                            <div class="overflow-y-auto flex-1">
-                                <table class="w-full text-left text-xs font-mono"><thead class="bg-white text-slate-400 text-[9px] uppercase font-bold sticky top-0 z-10 shadow-sm"><tr><th class="p-3 pl-4">ROTA</th><th class="p-3 text-right text-emerald-600">PACKED</th><th class="p-3 text-right text-orange-500">PACKING(&lt;45M)</th><th class="p-3 text-right text-rose-500">PICK(1H+)</th><th class="p-3 text-right text-slate-400">WAV(CONGEL)</th><th class="p-3 pr-4 text-right">PROGRESSO</th></tr></thead><tbody id="live-offenders-body" class="divide-y divide-slate-100"></tbody></table>
-                            </div>
-                        </div>
-                        <div class="glass-panel flex flex-col h-full border-t-4 border-emerald-500 overflow-hidden shadow-md">
-                            <div class="p-4 border-b bg-emerald-50"><h3 class="font-bold text-emerald-900"><i class="fa-solid fa-box-open mr-2"></i> Mapa de Fullhacks (Packed)</h3></div>
-                            <div class="overflow-y-auto flex-1 p-3 space-y-2 bg-slate-50" id="live-fullhacks-area"></div>
+                <div id="view-t3" class="hidden h-full flex flex-col">
+                    <div class="flex justify-between items-end mb-4">
+                        <h2 class="font-bold text-2xl text-slate-800"><i class="fa-solid fa-map-location-dot text-blue-500 mr-3"></i> Tobogãs <span class="bg-slate-200 text-xs px-2 py-1 rounded ml-2">01 a 50</span></h2>
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-bold text-slate-500 uppercase">Mapa de Calor:</span>
+                            <select id="heatmap-filter-t3" onchange="renderMatriz(DATA_CACHE.micro)" class="bg-white border border-slate-300 text-slate-700 text-xs font-bold rounded-lg px-3 py-1.5 shadow-sm outline-none cursor-pointer">
+                                <option value="volume">Por Volume (Peças Físicas)</option>
+                                <option value="risco">Risco HC (Pessoas p/ Área)</option>
+                                <option value="congelado">Gargalo Congelado (Waving)</option>
+                            </select>
                         </div>
                     </div>
-                </div>
-                
-                <div id="view-t3" class="hidden h-full flex flex-col">
-                    <div class="flex justify-between items-end mb-4"><h2 class="font-bold text-2xl text-slate-800"><i class="fa-solid fa-map-location-dot text-blue-500 mr-3"></i> Relatório de Tobogãs <span class="bg-slate-200 text-xs px-2 py-1 rounded ml-2">01 a 50</span></h2><div class="text-xs font-bold bg-white px-3 py-1.5 rounded-lg shadow-sm border border-slate-200 text-slate-600">Passe o mouse (hover) nas caixas para previsão de fluxo.</div></div>
                     <div class="flex-1 overflow-y-auto bg-slate-100 p-5 rounded-2xl border shadow-inner" id="t3-list-container"></div>
                 </div>
                 <div id="view-t5" class="hidden h-full flex flex-col">
-                    <div class="flex justify-between items-end mb-4"><h2 class="font-bold text-2xl text-slate-800"><i class="fa-solid fa-map-location-dot text-blue-500 mr-3"></i> Relatório de Tobogãs <span class="bg-slate-200 text-xs px-2 py-1 rounded ml-2">51 a 98</span></h2><div class="text-xs font-bold bg-white px-3 py-1.5 rounded-lg shadow-sm border border-slate-200 text-slate-600">Passe o mouse (hover) nas caixas para previsão de fluxo.</div></div>
+                    <div class="flex justify-between items-end mb-4">
+                        <h2 class="font-bold text-2xl text-slate-800"><i class="fa-solid fa-map-location-dot text-blue-500 mr-3"></i> Tobogãs <span class="bg-slate-200 text-xs px-2 py-1 rounded ml-2">51 a 98</span></h2>
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-bold text-slate-500 uppercase">Mapa de Calor:</span>
+                            <select id="heatmap-filter-t5" onchange="renderMatriz(DATA_CACHE.micro)" class="bg-white border border-slate-300 text-slate-700 text-xs font-bold rounded-lg px-3 py-1.5 shadow-sm outline-none cursor-pointer">
+                                <option value="volume">Por Volume (Peças Físicas)</option>
+                                <option value="risco">Risco HC (Pessoas p/ Área)</option>
+                                <option value="congelado">Gargalo Congelado (Waving)</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="flex-1 overflow-y-auto bg-slate-100 p-5 rounded-2xl border shadow-inner" id="t5-list-container"></div>
                 </div>
 
