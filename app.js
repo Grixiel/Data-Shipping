@@ -74,15 +74,7 @@ function salvarHCDinamico() {
     aplicarFiltros(); 
 }
 
-// FORMATADOR DE TEMPO FÍSICO REALISTA
-function formatarTempoFisico(minutos) {
-    if(minutos === Infinity || isNaN(minutos)) return "?";
-    if (minutos < 60) return Math.round(minutos) + " min";
-    let horas = Math.floor(minutos / 60);
-    let restMin = Math.round(minutos % 60);
-    return horas + "h " + restMin + "m";
-}
-
+// FORMATADOR DE TEMPO NARRATIVO E RELATÓRIO DO TOBOGÃ (CORRIGIDO PARA FÍSICO)
 function gerarTooltipNarrativo(chuteNum, arrRotas, totalZonasArea) {
     if(!arrRotas || arrRotas.length === 0) return `<div class="p-2">Sem movimentação</div>`;
     
@@ -93,40 +85,47 @@ function gerarTooltipNarrativo(chuteNum, arrRotas, totalZonasArea) {
     let tWav = 0, tRtw = 0, tPick = 0, tPack = 0, tPacked = 0, tPronto = 0;
     arrRotas.forEach(r => { 
         tWav += r.wav; tRtw += r.rtw; tPick += r.pick; 
-        tPack += (r.rtp + r.grp); tPacked += r.packed; 
+        tPack += (r.rtp + r.grp + r.r); 
+        tPacked += r.packed; 
         tPronto += (r.huIn + r.huCl + r.ship);
     });
 
     let totalFuturo = tPacked + tPack + tPick + tRtw; 
     let reqPessoas = lqRecurso > 0 ? (totalZonasArea / lqRecurso).toFixed(1) : "∞";
 
-    let rotasOfensoras = [...arrRotas].sort((a, b) => (b.rtw + b.pick + b.rtp + b.grp) - (a.rtw + a.pick + a.rtp + a.grp));
+    // Cálculo dinâmico APENAS para limpar o que JÁ ESTÁ retido (Packed) na rampa
+    // Volume / (Líquida por Minuto)
+    let pcm = lqRecurso / 60;
+    let timeAtr = pcm > 0 ? Math.ceil(tPacked / pcm) : Infinity;
 
     let html = `<div class="font-sans text-sm min-w-[320px]">`;
-    html += `<div class="font-black border-b border-slate-700 pb-2 mb-3 text-white flex justify-between items-center"><span>Tobogã ${chuteNum} <span class="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded ml-1">${isAuto ? 'AUTO' : 'MANUAL'}</span></span> <span class="text-slate-400 text-[9px] uppercase font-bold tracking-widest">Previsão Realista</span></div>`;
+    html += `<div class="font-black border-b border-slate-700 pb-2 mb-3 text-white flex justify-between items-center"><span>Tobogã ${chuteNum} <span class="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded ml-1">${isAuto ? 'AUTO' : 'MANUAL'}</span></span> <span class="text-slate-400 text-[9px] uppercase font-bold tracking-widest">Previsão Físico-Temporal</span></div>`;
     
-    html += `<div class="text-slate-300 mb-4 text-xs">Análise de fluxo para <strong class="text-white">${totalFuturo + tWav} pçs</strong> pendentes no total:</div>`;
+    html += `<div class="text-slate-300 mb-4 text-xs">Análise de fluxo para <strong class="text-white">${totalFuturo + tWav} pçs</strong> totais pendentes nesta rampa:</div>`;
 
     if(tPacked > 0) {
-        let msgAler = lqRecurso <= 0 ? `<span class="text-rose-400">HC Zerado!</span>` : `Exige atrelamento imediato.`;
-        html += `<div class="text-slate-300 leading-tight mb-3 text-xs"><span class="text-emerald-400 font-black">&bull; AGORA:</span> <strong>${tPacked} pçs</strong> embaladas retidas no tobogã. ${msgAler}</div>`;
+        let msgAler = lqRecurso <= 0 ? `<span class="text-rose-400">HC de Área Zerado!</span>` : `Levará ~${timeAtr} min para escoar.`;
+        html += `<div class="text-slate-300 leading-tight mb-3 text-xs"><span class="text-emerald-400 font-black">&bull; AGORA:</span> <strong>${tPacked} pçs</strong> embaladas retidas no tobogã. Exigem ${tipoRecurso.toLowerCase()} imediato.<br><span class="text-[10px] text-slate-400 mt-1 block">${msgAler}</span></div>`;
     }
+    
     if(tPack > 0) {
-        html += `<div class="text-slate-300 leading-tight mb-3 text-xs"><span class="text-orange-400 font-black">&bull; EM 0 a 15 MIN:</span> <strong>${tPack} pçs</strong> estão na mesa/esteira de Packing. Começarão a descer continuamente agora.</div>`;
+        html += `<div class="text-slate-300 leading-tight mb-3 text-xs"><span class="text-amber-500 font-black">&bull; EM 0 a 15 MIN:</span> <strong>${tPack} pçs</strong> estão em Packing (Mesa/Esteira). Descerão continuamente neste intervalo.</div>`;
     }
+    
     if(tPick > 0) {
-        html += `<div class="text-slate-300 leading-tight mb-3 text-xs"><span class="text-amber-400 font-black">&bull; EM 15 a 45 MIN:</span> <strong>${tPick} pçs</strong> estão em separação (Picking). Começarão a chegar na mesa de embalagem neste intervalo.</div>`;
+        html += `<div class="text-slate-300 leading-tight mb-3 text-xs"><span class="text-orange-500 font-black">&bull; EM 15 a 45 MIN:</span> <strong>${tPick} pçs</strong> estão em Picking. (Considerando a média de 38 min por tarefa de separação).</div>`;
     }
+    
     if(tRtw > 0 || tWav > 0) {
         let textVolumeFila = tRtw > 0 ? `A onda da Fila (<strong>${tRtw} pçs</strong>)` : `As peças em Waving (<strong>${tWav} pçs</strong>)`;
-        let volExtra = tWav > 0 && tRtw > 0 ? ` + ${tWav} retidas em planejamento` : ``;
-        html += `<div class="text-slate-300 leading-tight text-xs"><span class="text-rose-400 font-black">&bull; DAQUI A 45 a 60+ MIN:</span> ${textVolumeFila}${volExtra} atingirá o Packing no final da hora. A rampa sofrerá nova injeção contínua.</div>`;
+        let volExtra = tWav > 0 && tRtw > 0 ? ` + ${tWav} congeladas` : ``;
+        html += `<div class="text-slate-300 leading-tight text-xs"><span class="text-rose-400 font-black">&bull; DAQUI A 45 a 60+ MIN:</span> ${textVolumeFila}${volExtra} atingirá o processo. Nova injeção de volume para a rampa.</div>`;
     }
 
     html += `
         <div class="mt-4 pt-3 border-t border-slate-700 bg-slate-800/50 p-2 rounded">
-            <div class="text-[10px] text-slate-400 uppercase font-bold mb-1"><i class="fa-solid fa-users text-blue-400"></i> Sugestão para a Área Mestra (10 Tobogãs)</div>
-            <div class="text-xs text-white">O volume atual caindo em toda esta área exige <strong>~${reqPessoas} pessoas</strong> (${tipoRecurso}) para não capotar.</div>
+            <div class="text-[10px] text-slate-400 uppercase font-bold mb-1"><i class="fa-solid fa-users text-blue-400"></i> Sugestão para a Área Mestra (Zona de 10 Tobogãs)</div>
+            <div class="text-xs text-white">A zona inteira exige <strong>~${reqPessoas} pessoas</strong> (${tipoRecurso}) para suportar de forma limpa as ${totalZonasArea} pçs ativas na área.</div>
         </div>
     `;
 
@@ -228,6 +227,14 @@ function aplicarFiltros() {
         lst = lst.filter(x => x.nome.toUpperCase().includes(term));
     }
 
+    let statusFilter = document.getElementById('inline-status-filter');
+    if(statusFilter) {
+        let val = statusFilter.value;
+        if(val === 'waving') lst = lst.filter(x => x.wav > 0);
+        if(val === 'rtw') lst = lst.filter(x => x.rtw > 0);
+        if(val === 'wip') lst = lst.filter(x => (x.pick + x.rtp + x.grp) > 0);
+    }
+
     renderDash(lst); renderAereo(DATA_CACHE.micro); renderMatriz(lst); renderMicro(lst);
 }
 
@@ -254,7 +261,7 @@ function showTooltip(e, html) { let t = document.getElementById('floating-tip');
 function moveTooltip(e) { let t = document.getElementById('floating-tip'); if(!t || t.classList.contains('hidden')) return; let x = e.clientX + 15, y = e.clientY + 15; if (x + t.offsetWidth > window.innerWidth) x = e.clientX - t.offsetWidth - 15; if (y + t.offsetHeight > window.innerHeight) y = window.innerHeight - t.offsetHeight - 15; t.style.left = Math.max(10, x) + 'px'; t.style.top = Math.max(10, y) + 'px'; }
 function hideTooltip() { setClass('floating-tip', 'add', 'hidden'); }
 
-// --- RENDERIZADORES DE TELA (COM SUB-CARDS DINÂMICOS) ---
+// --- RENDERIZADORES DE TELA ---
 
 function renderDash(lst) {
     let allValid = lst.filter(i => i.horario !== 'ATRASO');
@@ -285,7 +292,7 @@ function renderDash(lst) {
             <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Fechadas (CLS)</span><span class="text-lg font-black text-indigo-500">${tCls.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">${pct(tCls, tTot)} do total</span></div>
             <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Abertos (IN)</span><span class="text-lg font-black text-blue-500">${tIn.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">${pct(tIn, tTot)} do total</span></div>
             <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Packed (Retido)</span><span class="text-lg font-black text-emerald-500">${tPck.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">${pct(tPck, tTot)} do total</span></div>
-            <div class="flex flex-col bg-slate-50 px-3 py-1 rounded border border-slate-200"><span class="text-[10px] font-bold text-slate-600 uppercase">WIP + Fila + Waving</span><span class="text-lg font-black text-slate-700">${(tPick+tPack+tRtw+tWav).toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">Volume a processar</span></div>
+            <div class="flex flex-col bg-amber-50 px-3 py-1 rounded border border-amber-200"><span class="text-[10px] font-bold text-amber-700 uppercase">WIP + Fila + Waving</span><span class="text-lg font-black text-amber-700">${(tPick+tPack+tRtw+tWav).toLocaleString()}</span><span class="text-[9px] text-amber-600 font-bold">Volume pendente</span></div>
         `;
     } else if (vF === 'concluidos') {
         targetProgresso = tShp + tCls; 
@@ -304,7 +311,7 @@ function renderDash(lst) {
     } else if (vF === 'wip') {
         let pendentesOperacao = tPick + tPack + tRtw; 
         targetProgresso = pendentesOperacao; 
-        labelTitle = "Foco em Processamento (WIP + Fila)";
+        labelTitle = "Foco em Processamento Físico (WIP + Fila)";
         labelSubtitle = "na Mão da Operação";
         subCardsHtml = `
             <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Em Packing (Mesa)</span><span class="text-lg font-black text-amber-500">${tPack.toLocaleString()}</span><span class="text-[9px] text-amber-500 font-bold">${pct(tPack, targetProgresso)} do WIP</span></div>
@@ -390,7 +397,7 @@ function getAreaVolumes(lst) {
             let d = lst.find(x => x.nome === ro); 
             if(d) {
                 areaVols[z].tPacked += d.packed;
-                areaVols[z].tWip += (d.pick + d.rtp + d.grp);
+                areaVols[z].tWip += (d.pick + d.rtp + d.grp + d.r);
                 areaVols[z].tRtw += d.rtw;
             }
         });
