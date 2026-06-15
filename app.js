@@ -12,7 +12,7 @@ let RAMPA_MAP = {}; let ROUTE_LIST = []; let AVAILABLE_HOURS = []; let SELECTED_
 setInterval(buscarDadosDaNuvem, 60000);
 
 function buscarDadosDaNuvem() {
-    fetch(URL_GOOGLE_APPS_SCRIPT)
+    fetch(https://script.google.com/a/macros/mercadolivre.com/s/AKfycbxfJ_oWoDfEKmBL5rrlXRmNCJzr8Pb2YHD5S8jVIQjBVGZpSsnswECJHmbI0llBesq5/exec)
     .then(res => res.json())
     .then(data => {
         if (data && data.texto && data.texto.length > 10) {
