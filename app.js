@@ -8,6 +8,31 @@ let DATA_CACHE = null;
 let SETTINGS_DATA = { autoStart: 1, autoEnd: 29, pickHC: 0, pickM: 0, packHC: 0, packM: 0, indHC: 0, indM: 450, atrHC: 0, atrM: 450 };
 let RAMPA_MAP = {}; let ROUTE_LIST = []; let AVAILABLE_HOURS = []; let SELECTED_HOURS = [];
 
+// O painel puxa os dados do Google a cada 60 segundos
+setInterval(buscarDadosDaNuvem, 60000);
+
+function buscarDadosDaNuvem() {
+    fetch(URL_GOOGLE_APPS_SCRIPT)
+    .then(res => res.json())
+    .then(data => {
+        if (data && data.texto && data.texto.length > 10) {
+            // Joga os dados lidos do Google invisivelmente pro sistema processar
+            let elPaste = document.getElementById('input-paste');
+            if (elPaste) elPaste.value = data.texto;
+            
+            // Chama a função que já existe para processar
+            processarTextoCola();
+            
+            setStatusUi(`Nuvem Sincronizada: ${data.tempo}`, 'bg-emerald-500');
+        }
+    })
+    .catch(err => {
+        console.error("Erro ao buscar dados:", err);
+        setStatusUi('Aguardando Nuvem...', 'bg-amber-500');
+    });
+}
+
+
 // --- UTILITÁRIOS ---
 function setVal(id, v) { let el = document.getElementById(id); if(el) el.innerText = v; }
 function setHtml(id, h) { let el = document.getElementById(id); if(el) el.innerHTML = h; }
