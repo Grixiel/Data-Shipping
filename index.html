@@ -145,7 +145,6 @@
             <div class="flex-1 overflow-y-auto p-6" id="main-scroll">
                 
                 <div id="view-dashboard" class="space-y-6">
-                    <!-- Filtros e Modificadores de Visão Global -->
                     <div class="flex justify-between items-center mb-2 bg-white p-3 rounded-lg border shadow-sm">
                         <h2 class="text-sm font-black text-slate-500 uppercase tracking-widest flex items-center gap-2"><i class="fa-solid fa-eye text-slate-400"></i> Modificador de Visão</h2>
                         <div class="flex gap-4">
@@ -166,10 +165,8 @@
                         </div>
                         <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden mb-6 relative z-10"><div class="bg-brand-500 h-full shadow-[0_0_10px_rgba(14,165,233,0.5)] transition-all duration-500" id="dash-glb-bar" style="width:0%"></div></div>
                         
-                        <!-- ESTE CONTAINER É PREENCHIDO DINAMICAMENTE -->
                         <div id="dash-dynamic-subcards" class="grid grid-cols-2 md:grid-cols-5 gap-4 border-t border-slate-100 pt-4 relative z-10">
-                            <!-- Inserido via app.js para desmembrar as porcentagens -->
-                        </div>
+                            </div>
                     </div>
                     
                     <h3 class="font-black text-slate-600 uppercase tracking-widest text-sm mt-8 border-b pb-2"><i class="fa-solid fa-bullseye text-blue-500 mr-2"></i> Radar de Metas por ETD</h3>
@@ -215,7 +212,7 @@
                         <h2 class="font-bold text-2xl text-slate-800"><i class="fa-solid fa-map-location-dot text-blue-500 mr-3"></i> Tobogãs <span class="bg-slate-200 text-xs px-2 py-1 rounded ml-2">01 a 50</span></h2>
                         <div class="flex items-center gap-3">
                             <span class="text-xs font-bold text-slate-500 uppercase">Mapa de Calor:</span>
-                            <select id="heatmap-filter-t3" onchange="renderMatriz(DATA_CACHE.micro)" class="bg-white border border-slate-300 text-slate-700 text-xs font-bold rounded-lg px-3 py-1.5 shadow-sm outline-none cursor-pointer">
+                            <select id="heatmap-filter-t3" onchange="aplicarFiltros()" class="bg-white border border-slate-300 text-slate-700 text-xs font-bold rounded-lg px-3 py-1.5 shadow-sm outline-none cursor-pointer">
                                 <option value="volume">Por Volume (Peças Físicas)</option>
                                 <option value="risco">Risco HC (Pessoas p/ Área)</option>
                                 <option value="congelado">Gargalo Congelado (Waving)</option>
@@ -229,7 +226,7 @@
                         <h2 class="font-bold text-2xl text-slate-800"><i class="fa-solid fa-map-location-dot text-blue-500 mr-3"></i> Tobogãs <span class="bg-slate-200 text-xs px-2 py-1 rounded ml-2">51 a 98</span></h2>
                         <div class="flex items-center gap-3">
                             <span class="text-xs font-bold text-slate-500 uppercase">Mapa de Calor:</span>
-                            <select id="heatmap-filter-t5" onchange="renderMatriz(DATA_CACHE.micro)" class="bg-white border border-slate-300 text-slate-700 text-xs font-bold rounded-lg px-3 py-1.5 shadow-sm outline-none cursor-pointer">
+                            <select id="heatmap-filter-t5" onchange="aplicarFiltros()" class="bg-white border border-slate-300 text-slate-700 text-xs font-bold rounded-lg px-3 py-1.5 shadow-sm outline-none cursor-pointer">
                                 <option value="volume">Por Volume (Peças Físicas)</option>
                                 <option value="risco">Risco HC (Pessoas p/ Área)</option>
                                 <option value="congelado">Gargalo Congelado (Waving)</option>
