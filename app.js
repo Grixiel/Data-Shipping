@@ -2,49 +2,63 @@
 const URL_GOOGLE_APPS_SCRIPT = "https://script.google.com/a/macros/mercadolivre.com/s/AKfycbxfJ_oWoDfEKmBL5rrlXRmNCJzr8Pb2YHD5S8jVIQjBVGZpSsnswECJHmbI0llBesq5/exec"; 
 // ==========================================
 
+// --- CONFIGURAÇÃO (LOCAL E MAPAS) ---
 const CSV_PLANILHA_TOBOGAS = "https://docs.google.com/spreadsheets/d/1wRtBiDY1U9gOeRE_15mg8iKKVQE2wBnRX9Jb69fMUvE/pub?output=csv"; 
 const CURRENT_R_STR = "1:JETSL1,2:JETSL1,3:SSP8,4:SRJ13,5:SRJ8,6:SSP10,7:SBA4,8:SSP11,9:SSP5,10:SSP39,11:SSP4,12:SMG15,13:SSP23,14:SMG12,15:SSP9,16:SSP20,17:SMG2,18:SMG8,19:SMG9,20:SSP38,21:SPR8,22:SSC2,23:SSC2,24:SDF1,25:SDF1,26:SSP13,27:SRJ5,28:SSP14,29:SSP14,30:SMG14|SSP18|SSP9_S,31:SMG14|SSP18|SSP9_S,32:JETHUB1|SMG5|SSP34|SSP38_S,33:JETHUB1|SMG5|SSP34|SSP38_S,34:SES1|SRJ10_CHP|SSP36|SSP37_S|SSP4_CHP,35:SES1|SRJ10_CHP|SSP36|SSP37_S|SSP4_CHP,36:SRS10|SSC3|SSP1_S|SSP5A_S,37:SRS10|SSC3|SSP1_S|SSP5A_S,38:SGO2|SMG1|SRJ3_CHP|SSP28,39:SGO2|SMG1|SRJ3_CHP|SSP28,40:SMS2|SRJ1_CHP|SSP3_S|SSP40_CHP|SSP48,41:SMS2|SRJ1_CHP|SSP3_S|SSP40_CHP|SSP48,42:SAL1_CHP|SSP30_S,43:SAL1_CHP|SSP30_S,44:SES3|SPR4|SRS8|SSP5_S,45:SES3|SPR4|SRS8|SSP5_S,46:SES3_X|SPR2|SRD1|SSP26,47:SES3_X|SPR2|SRD1|SSP26,48:JETGO1|SAL1|SSC7|SSP12|SSP6,49:JETGO1|SAL1|SSC7|SSP12|SSP6,50:MSP1_E|MSP21_E|MSP5_E|MSP7_E,51:JADHUB|JETBA2|JETBA3|LOGHUB|SSP46|XSP9_1|XSP9_2|XSP9_6,52:MSP1_E|MSP21_E|MSP5_E|MSP7_E|SRJ2,53:SPR1|SSP18_S|SSP3,54:SPR1|SSP18_S|SSP3,55:SMG13|SRS1_CHP|SRS4|SSP7,56:SMG13|SRS1_CHP|SRS4|SSP7,57:IMISL1|SRJ12|SRJ6_CHP|SRJ7|SSP1,58:IMISL1|SRJ12|SRJ6_CHP|SRJ7|SSP1,59:SMG3|SRJ10|SSC4|SSP17,60:SMG3|SRJ10|SSC4|SSP17,61:SMG11|SPI1|SRJ9|SSP1_CHP|SSP40,62:SMG11|SPI1|SRJ9|SSP1_CHP|SSP40,63:SBA7|SPR5|SSC5|SSP40_S|SSP7_S,64:SBA7|SPR5|SSC5|SSP40_S|SSP7_S,65:SBA3|SMG10|SPR7|SSP24|SSP39_S,66:SBA3|SMG10|SPR7|SSP24|SSP39_S,67:SRJ1|SRS5|SSP16|SSP45_CHP|SSP5F_S,68:SRS5|SSP16|SSP45_CHP|SSP49|SSP5F_S,69:SMG13_X|SMG1_CHP|SMG4|SMR1|SSP6_S,70:SMG13_X|SMG1_CHP|SMG4|SMR1|SSP6_S,71:SCE1|SMS1|SPR1_CHP|SSP25_S|SSP37,72:SCE1|SMS1|SPR1_CHP|SSP25_S|SSP37,73:SMG8_CHP|SRD2|SSC1|SSP25|XSP9_6_CHP,74:SMG8_CHP|SRD2|SSC1|SSP25|XSP9_6_CHP,75:SBA6|SMG7|SSP22_CHP|SSP29_S,76:SBA6|SMG7|SSP22_CHP|SSP29_S,77:SBA2|SPA1_X|SRS3|SSC8|SSP31,78:SBA2|SPA1_X|SRS3|SSC8|SSP31,79:SES2|SGO1|SRJ4|SSP45|SSP45_S,80:SES2|SGO1|SRJ4|SSP45|SSP45_S,81:SMR2|SRS2|SSP27_S|SSP29|XSP9_1_CHP,82:SMR2|SRS2|SSP27_S|SSP29|XSP9_1_CHP,83:SPR3|SRJ6|SRS7|SSP12_CHP,84:SPR3|SRJ6|SRS7|SSP12_CHP,85:SMN1|SSC9|SSP15|SSP18_CHP|SSP48_S,86:SMN1|SSC9|SSP15|SSP18_CHP|SSP48_S,87:SRS1|SSP17_CHP|SSP27|SSP49_S|STO1,88:SRS1|SSP17_CHP|SSP27|SSP49_S|STO1,89:SBA1|SMG6|SSP21_CHP|SSP49,90:SBA1|SSP21_CHP|SSP49,91:JETRD1|SRJ3|SSP23_S|SSP30|SSP7_CHP,92:JETRD1|SRJ3|SSP23_S|SSP30|SSP7_CHP,93:SSP21_S|SSP22|STO2,94:SSP21_S|SSP22|STO2,95:SDF2|SPA1|SPR6_CHP|SRS9,96:SDF2|SPA1|SPR6_CHP|SRS9,97:SGO1_X|SPE1|SPR6|SSP15_CHP|SSP21,98:SGO1_X|SPE1|SPR6|SSP15_CHP|SSP21,99:SAL1_A|SAL1_B|SAM1_A|SAM1_C|SBA1_A|SBA2_A|SBA6_A|SCE1_A|SDF1_A|SDF2_A|SES1_A|SES1_B|SFN1_C|SGO1X_A|SGO1_A|SGO1_B|SJP1X_A|SJP1_A|SMN1_A|SMR1_A|SMR1_B|SMR2_A|SPA1X_A|SPA1_A|SPA1_B|SPE1_A|SPI1_A|SRN1_A|SRS1_A|SRS8_A|SRS9_A|SSE1_A|SAM1_B|SCE1_B|SJP1_B|SMN1_B|SPI1_B|SRN1_B|SRS1_B|SSE1_B|STO1_B|SAL1_C|SBA1_C|SCE1_C|SJP1_C|SMR1_C|SPA1_C|SRN1_C|SSE1_C,100:SAL1_A|SAL1_B|SAM1_A|SAM1_C|SBA1_A|SBA2_A|SBA6_A|SCE1_A|SDF1_A|SDF2_A|SES1_A|SES1_B|SFN1_C|SGO1X_A|SGO1_A|SGO1_B|SJP1X_A|SJP1_A|SMN1_A|SMR1_A|SMR1_B|SMR2_A|SPA1X_A|SPA1_A|SPA1_B|SPE1_A|SPI1_A|SRN1_A|SRS1_A|SRS8_A|SRS9_A|SSE1_A|SAM1_B|SCE1_B|SJP1_B|SMN1_B|SPI1_B|SRN1_B|SRS1_B|SSE1_B|STO1_B|SAL1_C|SBA1_C|SCE1_C|SJP1_C|SMR1_C|SPA1_C|SRN1_C|SSE1_C";
 
+// --- VARIÁVEIS GLOBAIS ---
 let DATA_CACHE = null; 
 let SETTINGS_DATA = { autoStart: 1, autoEnd: 29, pickHC: 0, pickM: 0, packHC: 0, packM: 0, indHC: 0, indM: 450, atrHC: 0, atrM: 450 };
 let RAMPA_MAP = {}; let ROUTE_LIST = []; let AVAILABLE_HOURS = []; let SELECTED_HOURS = [];
 
+// --- UTILITÁRIOS ---
 function setVal(id, v) { let el = document.getElementById(id); if(el) el.innerText = v; }
 function setHtml(id, h) { let el = document.getElementById(id); if(el) el.innerHTML = h; }
 function setStyle(id, p, v) { let el = document.getElementById(id); if(el) el.style[p] = v; }
 function setClass(id, action, cls) { let el = document.getElementById(id); if(el) el.classList[action](cls); }
-function setStatusUi(msg, color) { setHtml('data-status', `<span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${color}"></span> <span class="text-slate-400 font-bold uppercase text-[9px]">${msg}</span></span>`); }
+function setStatusUi(msg, color) { setHtml('data-status', `<span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${color}"></span> <span class="text-slate-500 font-bold uppercase text-[9px]">${msg}</span></span>`); }
 
+// --- INICIALIZAÇÃO ---
 window.onload = () => { 
     carregarMapaImediato(); 
     carregarMapaTobogas(); 
     carregarDadosLocais(); 
+    
+    // Atualiza o relógio radar
+    setInterval(updateLiveClock, 1000); 
+
+    // O painel puxa os dados do Google a cada 60 segundos
+    if(URL_GOOGLE_APPS_SCRIPT && URL_GOOGLE_APPS_SCRIPT !== "COLE_SUA_URL_DO_GOOGLE_AQUI") {
+        setInterval(buscarDadosDaNuvem, 60000);
+        setTimeout(buscarDadosDaNuvem, 2000); // Força uma busca inicial
+    }
 };
 
-// Automação: Puxar do Google a cada 60s
-setInterval(buscarDadosDaNuvem, 60000);
-setTimeout(buscarDadosDaNuvem, 2000);
-
+// --- FUNÇÃO DE BUSCA DO GOOGLE (A PONTE) ---
 function buscarDadosDaNuvem() {
-    setStatusUi('Aguardar Google...', 'bg-amber-500 animate-pulse');
+    setStatusUi('Aguardando Nuvem...', 'bg-amber-500 animate-pulse');
 
     fetch(URL_GOOGLE_APPS_SCRIPT)
-    .then(res => { if (!res.ok) throw new Error("Erro na rede"); return res.json(); })
+    .then(res => {
+        if (!res.ok) throw new Error("Erro na resposta da rede");
+        return res.json();
+    })
     .then(data => {
         if (data && data.texto && data.texto.trim().length > 10) {
             let elPaste = document.getElementById('input-paste');
             if (elPaste) elPaste.value = data.texto;
             
-            processarTextoCola(true); // true = Processamento Automático
+            processarTextoCola(true); // true = veio da nuvem, não mostrar loaders ou fechar modal
+            
             let dataHora = data.tempo ? data.tempo : new Date().toLocaleTimeString('pt-BR');
-            setStatusUi(`Nuvem: ${dataHora}`, 'bg-emerald-500');
+            setStatusUi(`Nuvem Sincronizada: ${dataHora}`, 'bg-emerald-500');
         } else {
-             setStatusUi('Nuvem Vazia', 'bg-rose-500');
+             setStatusUi('Planilha Vazia', 'bg-rose-500');
         }
     })
     .catch(err => {
-        console.error("Erro Nuvem:", err);
-        setStatusUi('Falha Nuvem', 'bg-rose-500');
+        console.error("Erro ao buscar dados do Google:", err);
+        setStatusUi('Falha ao Ligar à Nuvem', 'bg-rose-500');
     });
 }
 
@@ -105,6 +119,7 @@ function salvarHCDinamico() {
     aplicarFiltros(); 
 }
 
+// --- RELATÓRIO DO TOBOGÃ ---
 function gerarTooltipNarrativo(chuteNum, arrRotas, totalZonasArea) {
     if(!arrRotas || arrRotas.length === 0) return encodeURIComponent(`<div class="p-2 text-slate-300 font-bold">Sem movimentação</div>`);
     
@@ -163,11 +178,16 @@ function gerarTooltipNarrativo(chuteNum, arrRotas, totalZonasArea) {
     return encodeURIComponent(html);
 }
 
+// --- PROCESSADOR DE TEXTO (AGORA RECEBE INDICADOR DE NUVEM) ---
 function processarTextoCola(veioDaNuvem = false) {
-    let elPaste = document.getElementById('input-paste'); let txt = elPaste ? elPaste.value : ''; if(!txt) return; 
+    let elPaste = document.getElementById('input-paste'); 
+    let txt = elPaste ? elPaste.value : ''; 
+    if(!txt) return; 
     
-    if(!veioDaNuvem) {
-        closeModal('import-modal'); setClass('global-loader', 'remove', 'hidden'); setVal('loader-title', 'Analisando WMS...');
+    if (!veioDaNuvem) {
+        closeModal('import-modal'); 
+        setClass('global-loader', 'remove', 'hidden'); 
+        setVal('loader-title', 'Analisando WMS...');
     }
 
     setTimeout(() => {
@@ -237,7 +257,7 @@ function processarTextoCola(veioDaNuvem = false) {
 
             let arr = Object.values(mM).sort((a, b) => b.total - a.total);
             if(arr.length === 0 && !veioDaNuvem) { alert("Nenhum dado encontrado."); fecharLoader(); return; }
-            if(arr.length === 0 && veioDaNuvem) return;
+            if(arr.length === 0) return; // Da nuvem, só ignora
 
             let mergeEl = document.getElementById('chk-merge'); let isMerge = mergeEl ? mergeEl.checked : false; let finalArr = arr, finalKpis = k;
             if (isMerge && DATA_CACHE && DATA_CACHE.micro) {
@@ -255,10 +275,7 @@ function processarTextoCola(veioDaNuvem = false) {
             }
         } catch(e) { 
             console.error(e); 
-            if(!veioDaNuvem) {
-                alert("Erro ao ler dados: " + e.message); 
-                fecharLoader(); 
-            }
+            if(!veioDaNuvem) { alert("Erro ao ler dados: " + e.message); fecharLoader(); }
         }
     }, 500);
 }
@@ -266,12 +283,20 @@ function processarTextoCola(veioDaNuvem = false) {
 function aplicarFiltros() {
     let lst = DATA_CACHE ? DATA_CACHE.micro : [];
     
-    if(SELECTED_HOURS && SELECTED_HOURS.length > 0) lst = lst.filter(x => SELECTED_HOURS.includes(x.horario) || x.horario === 'ATRASO');
+    if(SELECTED_HOURS.length > 0) lst = lst.filter(x => SELECTED_HOURS.includes(x.horario) || x.horario === 'ATRASO');
     
     let busca = document.getElementById('inline-search');
     if(busca && busca.value.trim() !== '') {
         let term = busca.value.toUpperCase().trim();
         lst = lst.filter(x => x.nome.toUpperCase().includes(term));
+    }
+
+    let statusFilter = document.getElementById('inline-status-filter');
+    if(statusFilter) {
+        let val = statusFilter.value;
+        if(val === 'waving') lst = lst.filter(x => x.wav > 0);
+        if(val === 'rtw') lst = lst.filter(x => x.rtw > 0);
+        if(val === 'wip') lst = lst.filter(x => (x.pick + x.rtp + x.grp) > 0);
     }
 
     renderDash(lst); renderAereo(lst); renderMatriz(lst); renderMicro(lst);
@@ -303,7 +328,6 @@ function hideTooltip() { setClass('floating-tip', 'add', 'hidden'); }
 // --- RENDERIZADORES DE TELA ---
 
 function renderDash(lst) {
-    if(!lst || lst.length === 0) return;
     let allValid = lst.filter(i => i.horario !== 'ATRASO');
     let tTot = 0, tC = 0, tPck = 0, tIn = 0, tCls = 0, tShp = 0, tPick = 0, tPack = 0, tRtw = 0, tWav = 0;
     
@@ -332,7 +356,7 @@ function renderDash(lst) {
             <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Fechadas (CLS)</span><span class="text-lg font-black text-indigo-500">${tCls.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">${pct(tCls, tTot)} do total</span></div>
             <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Abertos (IN)</span><span class="text-lg font-black text-blue-500">${tIn.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">${pct(tIn, tTot)} do total</span></div>
             <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Packed (Retido)</span><span class="text-lg font-black text-emerald-500">${tPck.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">${pct(tPck, tTot)} do total</span></div>
-            <div class="flex flex-col bg-amber-50 px-3 py-1 rounded border border-amber-200"><span class="text-[10px] font-bold text-amber-700 uppercase">WIP + Fila + Waving</span><span class="text-lg font-black text-amber-700">${(tPick+tPack+tRtw+tWav).toLocaleString()}</span><span class="text-[9px] text-amber-600 font-bold">Volume pendente</span></div>
+            <div class="flex flex-col bg-slate-50 px-3 py-1 rounded border border-slate-200"><span class="text-[10px] font-bold text-slate-600 uppercase">WIP + Fila + Waving</span><span class="text-lg font-black text-slate-700">${(tPick+tPack+tRtw+tWav).toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">Volume a processar</span></div>
         `;
     } else if (vF === 'concluidos') {
         targetProgresso = tShp + tCls; 
@@ -351,7 +375,7 @@ function renderDash(lst) {
     } else if (vF === 'wip') {
         let pendentesOperacao = tPick + tPack + tRtw; 
         targetProgresso = pendentesOperacao; 
-        labelTitle = "Foco em Processamento Físico (WIP + Fila)";
+        labelTitle = "Foco em Processamento (WIP + Fila)";
         labelSubtitle = "na Mão da Operação";
         subCardsHtml = `
             <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Em Packing (Mesa)</span><span class="text-lg font-black text-amber-500">${tPack.toLocaleString()}</span><span class="text-[9px] text-amber-500 font-bold">${pct(tPack, targetProgresso)} do WIP</span></div>
@@ -404,7 +428,6 @@ function renderDash(lst) {
 }
 
 function renderMicro(lst) {
-    if(!lst) return;
     let filtered = lst.filter(i => !i.isAereo);
     filtered.sort((a, b) => (b.rtw + b.pick + b.rtp + b.grp) - (a.rtw + a.pick + a.rtp + a.grp));
 
@@ -424,7 +447,7 @@ function renderMicro(lst) {
             <td class="text-right p-3 text-blue-600 font-bold bg-blue-50/50">${prontoConcluido}</td>
             <td class="text-right p-3 font-extrabold text-slate-900">${r.total}</td>
         </tr>`;
-    }).join('') : `<tr><td colspan="9" class="p-8 text-center text-slate-400 font-bold">Sem dados no momento. Importe o WMS.</td></tr>`);
+    }).join('') : `<tr><td colspan="9" class="p-8 text-center text-slate-400 font-bold">Sem dados no momento.</td></tr>`);
 }
 
 function getAreaVolumes(lst) {
@@ -447,7 +470,6 @@ function getAreaVolumes(lst) {
 }
 
 function renderMatriz(lst) {
-    if(!lst) return;
     let areaVols = getAreaVolumes(lst);
 
     const ren = (id, s, e) => {
@@ -502,11 +524,10 @@ function renderMatriz(lst) {
                   </div>`;
         } h += `</div>`; setHtml(id, h);
     };
-    ren('t3-list-container', 1, 50); ren('t5-list-container', 51, 98);
+    ren('t3', 1, 50); ren('t5', 51, 98);
 }
 
 function renderAereo(lst) {
-    if(!lst) return;
     let aer = lst.filter(i => i.isAereo); let aT = 0, aC = 0, aIn = 0, aCl = 0, aSh = 0;
     let grps = {};
     
@@ -558,4 +579,31 @@ function renderAereo(lst) {
         </div>`;
     });
     setHtml('aereo-container', htmlETDs || '<div class="p-8 text-center bg-white rounded-xl border">Sem dados de malha aérea.</div>');
+}
+
+function updateLiveClock() {
+    setVal('live-clock', new Date().toLocaleTimeString('pt-BR'));
+    let vl = document.getElementById('view-live');
+    if(!DATA_CACHE || !AVAILABLE_HOURS.length || (vl && vl.classList.contains('hidden'))) return;
+    
+    let ch = parseInt(new Date().getHours()); let hNum = AVAILABLE_HOURS.map(h => parseInt(h)).sort((a,b)=>a-b);
+    let f = hNum.find(h => h > ch) || hNum[0]; let etd = f.toString().padStart(2, '0');
+    
+    let lbl = document.getElementById('live-etd-lbl');
+    if(lbl && lbl.innerText !== "ETD " + etd + "H") {
+        setVal('live-etd-lbl', "ETD " + etd + "H");
+        let lst = DATA_CACHE.micro.filter(r => r.horario === etd).sort((a, b) => b.total - a.total);
+        
+        setHtml('live-offenders-body', lst.map(r => {
+            let pct = r.total > 0 ? ((r.concluido / r.total) * 100) : 0;
+            return `<tr>
+            <td class="p-3 pl-4 font-bold text-slate-800">${r.nome}</td>
+            <td class="p-3 text-right text-emerald-600 font-bold">${r.packed}</td>
+            <td class="p-3 text-right text-orange-500 font-bold bg-orange-50/50">${r.rtp+r.grp}</td>
+            <td class="p-3 text-right text-rose-500 font-bold bg-rose-50/50">${r.pick}</td>
+            <td class="p-3 text-right text-slate-400 font-bold opacity-50">${r.wav+r.rtw}</td>
+            <td class="p-3 pr-4"><div class="flex items-center gap-2 justify-end"><span class="text-[9px] font-bold w-6 text-right">${pct.toFixed(0)}%</span><div class="w-16 h-1.5 bg-slate-200 rounded-full"><div class="bg-brand-500 h-full rounded-full" style="width:${pct}%"></div></div></div></td>
+            </tr>`;
+        }).join(''));
+    }
 }
