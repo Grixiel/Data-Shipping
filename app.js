@@ -55,7 +55,6 @@ function carregarDadosLocais() {
 
         AVAILABLE_HOURS = Object.keys(DATA_CACHE.kpis || {}).filter(k => k !== "99" && k !== "S/H" && k !== "ATRASO").sort(); SELECTED_HOURS = []; renderEtdCheckboxes(); aplicarFiltros();
     } else {
-        // Renderiza tudo vazio (cinza) para não ficar com a tela em branco
         aplicarFiltros();
     }
 }
@@ -77,8 +76,10 @@ function salvarHCDinamico() {
     aplicarFiltros(); 
 }
 
+// FORMATADOR DE TEMPO NARRATIVO E RELATÓRIO DO TOBOGÃ (CORRIGIDO PARA FÍSICO)
 function gerarTooltipNarrativo(chuteNum, arrRotas, totalZonasArea) {
-    if(!arrRotas || arrRotas.length === 0) return `<div class="p-2">Sem movimentação</div>`;
+    // CORREÇÃO: Usando encodeURIComponent na saída vazia para não quebrar o HTML!
+    if(!arrRotas || arrRotas.length === 0) return encodeURIComponent(`<div class="p-2 text-slate-300 font-bold">Sem movimentação</div>`);
     
     let isAuto = chuteNum >= SETTINGS_DATA.autoStart && chuteNum <= SETTINGS_DATA.autoEnd;
     let tipoRecurso = isAuto ? "Indiretos" : "Atrelamento";
@@ -93,9 +94,8 @@ function gerarTooltipNarrativo(chuteNum, arrRotas, totalZonasArea) {
     });
 
     let totalFuturo = tPacked + tPack + tPick + tRtw; 
-    let reqPessoas = lqRecurso > 0 ? (totalZonasArea / lqRecurso).toFixed(1) : "∞";
+    let reqPessoas = (lqRecurso > 0 && totalZonasArea !== undefined) ? (totalZonasArea / lqRecurso).toFixed(1) : "∞";
 
-    // O tempo matemático agora se aplica APENAS ao que já chegou na rampa e precisa ser escoado!
     let pcm = lqRecurso / 60;
     let timeAtr = pcm > 0 ? Math.ceil(tPacked / pcm) : Infinity;
 
@@ -123,12 +123,14 @@ function gerarTooltipNarrativo(chuteNum, arrRotas, totalZonasArea) {
         html += `<div class="text-slate-300 leading-tight text-xs"><span class="text-rose-400 font-black">&bull; DAQUI A 45 a 60+ MIN:</span> ${textVolumeFila}${volExtra} atingirá o processo. Nova injeção de volume para a rampa.</div>`;
     }
 
-    html += `
-        <div class="mt-4 pt-3 border-t border-slate-700 bg-slate-800/50 p-2 rounded">
-            <div class="text-[10px] text-slate-400 uppercase font-bold mb-1"><i class="fa-solid fa-users text-blue-400"></i> Sugestão para a Área Mestra (Zona de 10 Tobogãs)</div>
-            <div class="text-xs text-white">A zona inteira exige <strong>~${reqPessoas} pessoas</strong> (${tipoRecurso}) para suportar de forma limpa as ${totalZonasArea} pçs ativas na área.</div>
-        </div>
-    `;
+    if(totalZonasArea !== undefined && totalZonasArea > 0) {
+        html += `
+            <div class="mt-4 pt-3 border-t border-slate-700 bg-slate-800/50 p-2 rounded">
+                <div class="text-[10px] text-slate-400 uppercase font-bold mb-1"><i class="fa-solid fa-users text-blue-400"></i> Sugestão para a Área Mestra (Zona de 10 Tobogãs)</div>
+                <div class="text-xs text-white">A zona inteira exige <strong>~${reqPessoas} pessoas</strong> (${tipoRecurso}) para suportar de forma limpa as ${totalZonasArea} pçs ativas na área.</div>
+            </div>
+        `;
+    }
 
     html += `</div>`;
     return encodeURIComponent(html);
@@ -253,7 +255,7 @@ function showTooltip(e, html) { let t = document.getElementById('floating-tip');
 function moveTooltip(e) { let t = document.getElementById('floating-tip'); if(!t || t.classList.contains('hidden')) return; let x = e.clientX + 15, y = e.clientY + 15; if (x + t.offsetWidth > window.innerWidth) x = e.clientX - t.offsetWidth - 15; if (y + t.offsetHeight > window.innerHeight) y = window.innerHeight - t.offsetHeight - 15; t.style.left = Math.max(10, x) + 'px'; t.style.top = Math.max(10, y) + 'px'; }
 function hideTooltip() { setClass('floating-tip', 'add', 'hidden'); }
 
-// --- RENDERIZADORES DE TELA (COM SUB-CARDS DINÂMICOS E CAIXAS VAZIAS) ---
+// --- RENDERIZADORES DE TELA ---
 
 function renderDash(lst) {
     let allValid = lst.filter(i => i.horario !== 'ATRASO');
@@ -490,15 +492,18 @@ function renderAereo(lst) {
             <table class="w-full text-left text-xs font-mono">
                 <thead class="bg-white text-slate-400 uppercase text-[9px] font-bold border-b"><tr><th class="p-3 pl-6">Rota</th><th class="text-right p-3 text-slate-500">WAV / RTW</th><th class="text-right p-3 text-emerald-500">WIP</th><th class="text-right p-3 text-blue-500">Pronto</th><th class="text-right p-3 text-amber-500 border-l border-slate-100">A Caminho</th><th class="text-right p-3">Total Dia</th></tr></thead>
                 <tbody class="divide-y divide-slate-50">
-                    ${grps[h].sort((a,b)=> b.total - a.total).map(r => `
-                        <tr class="hover:bg-slate-50">
+                    ${grps[h].sort((a,b)=> b.total - a.total).map(r => {
+                        let tooltipAereoHtml = gerarTooltipNarrativo(`Aéreo: ${r.nome}`, [r]);
+                        return `
+                        <tr class="hover:bg-slate-50 cursor-help" onmouseenter="showTooltip(event, this.dataset.tip)" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()" data-tip="${tooltipAereoHtml}">
                             <td class="p-3 pl-6 font-bold text-slate-800">${r.nome}</td>
                             <td class="text-right p-3 text-slate-500">${r.wav} / ${r.rtw}</td>
                             <td class="text-right p-3 text-emerald-500">${r.pick+r.rtp+r.grp}</td>
                             <td class="text-right p-3 text-blue-500">${r.packed+r.huIn+r.huCl+r.ship}</td>
                             <td class="text-right p-3 text-amber-600 font-bold border-l border-slate-100">${r.total - (r.huIn+r.huCl+r.ship)}</td>
                             <td class="text-right p-3 font-black text-slate-800">${r.total}</td>
-                        </tr>`).join('')}
+                        </tr>`;
+                    }).join('')}
                 </tbody>
             </table>
         </div>`;
