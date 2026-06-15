@@ -54,6 +54,9 @@ function carregarDadosLocais() {
         syncUI('inline-hc-atr', SETTINGS_DATA.atrHC); syncUI('inline-lq-atr', SETTINGS_DATA.atrM);
 
         AVAILABLE_HOURS = Object.keys(DATA_CACHE.kpis || {}).filter(k => k !== "99" && k !== "S/H" && k !== "ATRASO").sort(); SELECTED_HOURS = []; renderEtdCheckboxes(); aplicarFiltros();
+    } else {
+        // Renderiza tudo vazio (cinza) para não ficar com a tela em branco
+        aplicarFiltros();
     }
 }
 
@@ -74,7 +77,6 @@ function salvarHCDinamico() {
     aplicarFiltros(); 
 }
 
-// FORMATADOR DE TEMPO NARRATIVO E RELATÓRIO DO TOBOGÃ (CORRIGIDO PARA FÍSICO)
 function gerarTooltipNarrativo(chuteNum, arrRotas, totalZonasArea) {
     if(!arrRotas || arrRotas.length === 0) return `<div class="p-2">Sem movimentação</div>`;
     
@@ -93,8 +95,7 @@ function gerarTooltipNarrativo(chuteNum, arrRotas, totalZonasArea) {
     let totalFuturo = tPacked + tPack + tPick + tRtw; 
     let reqPessoas = lqRecurso > 0 ? (totalZonasArea / lqRecurso).toFixed(1) : "∞";
 
-    // Cálculo dinâmico APENAS para limpar o que JÁ ESTÁ retido (Packed) na rampa
-    // Volume / (Líquida por Minuto)
+    // O tempo matemático agora se aplica APENAS ao que já chegou na rampa e precisa ser escoado!
     let pcm = lqRecurso / 60;
     let timeAtr = pcm > 0 ? Math.ceil(tPacked / pcm) : Infinity;
 
@@ -216,8 +217,7 @@ function processarTextoCola() {
 }
 
 function aplicarFiltros() {
-    if(!DATA_CACHE) return;
-    let lst = DATA_CACHE.micro;
+    let lst = DATA_CACHE ? DATA_CACHE.micro : [];
     
     if(SELECTED_HOURS.length > 0) lst = lst.filter(x => SELECTED_HOURS.includes(x.horario) || x.horario === 'ATRASO');
     
@@ -227,15 +227,7 @@ function aplicarFiltros() {
         lst = lst.filter(x => x.nome.toUpperCase().includes(term));
     }
 
-    let statusFilter = document.getElementById('inline-status-filter');
-    if(statusFilter) {
-        let val = statusFilter.value;
-        if(val === 'waving') lst = lst.filter(x => x.wav > 0);
-        if(val === 'rtw') lst = lst.filter(x => x.rtw > 0);
-        if(val === 'wip') lst = lst.filter(x => (x.pick + x.rtp + x.grp) > 0);
-    }
-
-    renderDash(lst); renderAereo(DATA_CACHE.micro); renderMatriz(lst); renderMicro(lst);
+    renderDash(lst); renderAereo(lst); renderMatriz(lst); renderMicro(lst);
 }
 
 function mudarAba(aba) { 
@@ -261,7 +253,7 @@ function showTooltip(e, html) { let t = document.getElementById('floating-tip');
 function moveTooltip(e) { let t = document.getElementById('floating-tip'); if(!t || t.classList.contains('hidden')) return; let x = e.clientX + 15, y = e.clientY + 15; if (x + t.offsetWidth > window.innerWidth) x = e.clientX - t.offsetWidth - 15; if (y + t.offsetHeight > window.innerHeight) y = window.innerHeight - t.offsetHeight - 15; t.style.left = Math.max(10, x) + 'px'; t.style.top = Math.max(10, y) + 'px'; }
 function hideTooltip() { setClass('floating-tip', 'add', 'hidden'); }
 
-// --- RENDERIZADORES DE TELA ---
+// --- RENDERIZADORES DE TELA (COM SUB-CARDS DINÂMICOS E CAIXAS VAZIAS) ---
 
 function renderDash(lst) {
     let allValid = lst.filter(i => i.horario !== 'ATRASO');
@@ -292,7 +284,7 @@ function renderDash(lst) {
             <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Fechadas (CLS)</span><span class="text-lg font-black text-indigo-500">${tCls.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">${pct(tCls, tTot)} do total</span></div>
             <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Abertos (IN)</span><span class="text-lg font-black text-blue-500">${tIn.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">${pct(tIn, tTot)} do total</span></div>
             <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Packed (Retido)</span><span class="text-lg font-black text-emerald-500">${tPck.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">${pct(tPck, tTot)} do total</span></div>
-            <div class="flex flex-col bg-amber-50 px-3 py-1 rounded border border-amber-200"><span class="text-[10px] font-bold text-amber-700 uppercase">WIP + Fila + Waving</span><span class="text-lg font-black text-amber-700">${(tPick+tPack+tRtw+tWav).toLocaleString()}</span><span class="text-[9px] text-amber-600 font-bold">Volume pendente</span></div>
+            <div class="flex flex-col bg-slate-50 px-3 py-1 rounded border border-slate-200"><span class="text-[10px] font-bold text-slate-600 uppercase">WIP + Fila + Waving</span><span class="text-lg font-black text-slate-700">${(tPick+tPack+tRtw+tWav).toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">Volume a processar</span></div>
         `;
     } else if (vF === 'concluidos') {
         targetProgresso = tShp + tCls; 
@@ -311,7 +303,7 @@ function renderDash(lst) {
     } else if (vF === 'wip') {
         let pendentesOperacao = tPick + tPack + tRtw; 
         targetProgresso = pendentesOperacao; 
-        labelTitle = "Foco em Processamento Físico (WIP + Fila)";
+        labelTitle = "Foco em Processamento (WIP + Fila)";
         labelSubtitle = "na Mão da Operação";
         subCardsHtml = `
             <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Em Packing (Mesa)</span><span class="text-lg font-black text-amber-500">${tPack.toLocaleString()}</span><span class="text-[9px] text-amber-500 font-bold">${pct(tPack, targetProgresso)} do WIP</span></div>
@@ -367,7 +359,7 @@ function renderMicro(lst) {
     let filtered = lst.filter(i => !i.isAereo);
     filtered.sort((a, b) => (b.rtw + b.pick + b.rtp + b.grp) - (a.rtw + a.pick + a.rtp + a.grp));
 
-    setHtml('micro-body', filtered.map(r => {
+    setHtml('micro-body', filtered.length ? filtered.map(r => {
         let processandoWip = r.pick + r.rtg + r.g + r.r;
         let prontoConcluido = r.huIn + r.huCl + r.ship;
 
@@ -383,7 +375,7 @@ function renderMicro(lst) {
             <td class="text-right p-3 text-blue-600 font-bold bg-blue-50/50">${prontoConcluido}</td>
             <td class="text-right p-3 font-extrabold text-slate-900">${r.total}</td>
         </tr>`;
-    }).join(''));
+    }).join('') : `<tr><td colspan="9" class="p-8 text-center text-slate-400 font-bold">Sem dados no momento. Importe o WMS.</td></tr>`);
 }
 
 function getAreaVolumes(lst) {
@@ -460,7 +452,7 @@ function renderMatriz(lst) {
                   </div>`;
         } h += `</div>`; setHtml(id, h);
     };
-    ren('t3', 1, 50); ren('t5', 51, 98);
+    ren('t3-list-container', 1, 50); ren('t5-list-container', 51, 98);
 }
 
 function renderAereo(lst) {
