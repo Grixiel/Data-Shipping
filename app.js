@@ -1,5 +1,5 @@
 // === COLOQUE A URL DA SUA PLANILHA AQUI ===
-const URL_GOOGLE_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbxfJ_oWoDfEKmBL5rrlXRmNCJzr8Pb2YHD5S8jVIQjBVGZpSsnswECJHmbI0llBesq5/exec";; 
+const URL_GOOGLE_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbz6rExW6bwPBsWFTirLwjnIMNtq2lT5k9w_MkEkp2H14cXJhlif0gcTvHM6T--iwfPG/exec";; 
 // ==========================================
 
 // --- CONFIGURAÇÃO (LOCAL E MAPAS) ---
