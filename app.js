@@ -35,33 +35,42 @@ window.onload = () => {
 };
 
 // --- FUNÇÃO DE BUSCA DO GOOGLE (A PONTE) ---
+// --- FUNÇÃO DE BUSCA DO GOOGLE (A PONTE CORRIGIDA) ---
 function buscarDadosDaNuvem() {
     setStatusUi('Aguardando Nuvem...', 'bg-amber-500 animate-pulse');
 
-    fetch(URL_GOOGLE_APPS_SCRIPT, { mode: 'cors' })
-    .then(res => {
-        if (!res.ok) throw new Error("Erro na resposta da rede: " + res.status);
-        return res.json();
-    })
-    .then(data => {
-        if (data && data.texto && data.texto.trim().length > 10) {
-            let elPaste = document.getElementById('input-paste');
-            if (elPaste) elPaste.value = data.texto;
+    // Adiciona um carimbo de tempo na URL para FORÇAR o Google a não usar cache (memória antiga)
+    let urlSemCache = URL_GOOGLE_APPS_SCRIPT + "?t=" + new Date().getTime();
+
+    // Puxa os dados com configuração que segue redirecionamentos do Google
+    fetch(urlSemCache, { method: 'GET', redirect: 'follow' })
+    .then(res => res.text()) // Lemos como texto primeiro para não quebrar se o Google der erro
+    .then(text => {
+        try {
+            // Tenta converter o texto recebido para JSON
+            let data = JSON.parse(text);
             
-            processarTextoCola(true); // true = veio da nuvem
-            
-            let dataHora = data.tempo ? data.tempo : new Date().toLocaleTimeString('pt-BR');
-            setStatusUi(`Nuvem Sincronizada: ${dataHora}`, 'bg-emerald-500');
-        } else {
-             setStatusUi('Planilha Vazia', 'bg-rose-500');
+            if (data && data.texto && data.texto.trim().length > 10) {
+                let elPaste = document.getElementById('input-paste');
+                if (elPaste) elPaste.value = data.texto;
+                
+                processarTextoCola(true); // true = veio da nuvem, processa sem tela de loading
+                
+                let dataHora = data.tempo ? data.tempo : new Date().toLocaleTimeString('pt-BR');
+                setStatusUi(`Nuvem Sincronizada: ${dataHora}`, 'bg-emerald-500');
+            } else {
+                 setStatusUi('Planilha parece vazia', 'bg-rose-500');
+            }
+        } catch (err) {
+            console.error("O Google não enviou os dados corretamente. Resposta recebida:", text);
+            setStatusUi('Erro de Permissão no Google', 'bg-rose-500');
         }
     })
     .catch(err => {
         console.error("Erro ao buscar dados do Google:", err);
-        setStatusUi('Falha ao Ligar à Nuvem', 'bg-rose-500');
+        setStatusUi('Falha na Rede / Link incorreto', 'bg-rose-500');
     });
 }
-
 function carregarMapaImediato() {
     ROUTE_LIST = []; for(let i=1; i<=100; i++) RAMPA_MAP[i] = [];
     CURRENT_R_STR.split(',').forEach(g => { let [t, r] = g.split(':'); if(r) { r.split('|').forEach(x => { ROUTE_LIST.push({ t: parseInt(t), r: x }); RAMPA_MAP[parseInt(t)].push(x); }); } });
