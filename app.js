@@ -24,57 +24,52 @@ window.onload = () => {
     carregarMapaTobogas(); 
     carregarDadosLocais(); 
     
-    // Atualiza o relógio radar
     setInterval(updateLiveClock, 1000); 
 
-    // O painel puxa os dados do Google a cada 60 segundos
     if(URL_GOOGLE_APPS_SCRIPT && URL_GOOGLE_APPS_SCRIPT !== "COLE_SUA_URL_DO_GOOGLE_AQUI") {
         setInterval(buscarDadosDaNuvem, 60000);
-        setTimeout(buscarDadosDaNuvem, 2000); // Força uma busca inicial
+        setTimeout(buscarDadosDaNuvem, 2000); 
     }
 };
 
-// --- FUNÇÃO DE BUSCA DO GOOGLE (A PONTE) ---
-// --- FUNÇÃO DE BUSCA DO GOOGLE (A PONTE CORRIGIDA) ---
-// --- FUNÇÃO DE BUSCA DO GOOGLE (A PONTE - SOLUÇÃO FINAL) ---
-// --- FUNÇÃO DE BUSCA DO GOOGLE (SOLUÇÃO DEFINITIVA ANTI-CORS: JSONP) ---
+// --- FUNÇÃO DE BUSCA DO GOOGLE (A PONTE JSONP ANTI-CORS) ---
 function buscarDadosDaNuvem() {
     setStatusUi('Aguardando Nuvem...', 'bg-amber-500 animate-pulse');
 
-    // 1. Criamos um elemento de script invisível
     let script = document.createElement('script');
-    
-    // 2. Apontamos para o Google pedindo que ele responda ativando a função "receberDadosDoGoogle"
+    // Adiciona "callback=receberDadosDoGoogle" para forçar o JSONP e bypassar o CORS
     script.src = URL_GOOGLE_APPS_SCRIPT + "?callback=receberDadosDoGoogle&t=" + new Date().getTime();
     
-    // Se a internet cair e não conseguir carregar o script
     script.onerror = function() {
-        setStatusUi('Falha de Rede', 'bg-rose-500');
+        setStatusUi('Erro: CORS ou Nova Versão pendente no Google', 'bg-rose-500');
     };
 
-    // 3. Injetamos o script na página (isso bypassa o CORS do Chrome)
     document.body.appendChild(script);
 
-    // 4. Limpamos a tag após 5 segundos para não sujar o HTML
     setTimeout(() => { 
         if (script.parentNode) script.parentNode.removeChild(script); 
     }, 5000);
 }
 
-// O Google Apps Script vai executar ESTA função automaticamente quando responder!
+// O Google Apps Script vai executar ESTA função automaticamente!
 window.receberDadosDoGoogle = function(data) {
     if (data && data.texto && data.texto.trim().length > 10) {
         let elPaste = document.getElementById('input-paste');
         if (elPaste) elPaste.value = data.texto;
         
-        processarTextoCola(true); // O 'true' indica que veio da nuvem
+        processarTextoCola(true); 
         
         let dataHora = data.tempo ? data.tempo : new Date().toLocaleTimeString('pt-BR');
         setStatusUi(`Nuvem Sincronizada: ${dataHora}`, 'bg-emerald-500');
     } else {
-         setStatusUi('Planilha Vazia', 'bg-rose-500');
+         setStatusUi('Planilha Google Vazia', 'bg-rose-500');
     }
 };
+
+function carregarMapaImediato() {
+    ROUTE_LIST = []; for(let i=1; i<=100; i++) RAMPA_MAP[i] = [];
+    CURRENT_R_STR.split(',').forEach(g => { let [t, r] = g.split(':'); if(r) { r.split('|').forEach(x => { ROUTE_LIST.push({ t: parseInt(t), r: x }); RAMPA_MAP[parseInt(t)].push(x); }); } });
+}
 
 function carregarMapaTobogas() {
     fetch(CSV_PLANILHA_TOBOGAS).then(res => res.text()).then(csv => {
@@ -105,7 +100,6 @@ function carregarDadosLocais() {
         syncUI('inline-hc-ind', SETTINGS_DATA.indHC); syncUI('inline-lq-ind', SETTINGS_DATA.indM);
         syncUI('inline-hc-atr', SETTINGS_DATA.atrHC); syncUI('inline-lq-atr', SETTINGS_DATA.atrM);
 
-        // A CORREÇÃO MÁGICA ESTÁ AQUI: Protege contra o DATA_CACHE nulo!
         if (DATA_CACHE && DATA_CACHE.kpis) {
             AVAILABLE_HOURS = Object.keys(DATA_CACHE.kpis).filter(k => k !== "99" && k !== "S/H" && k !== "ATRASO").sort(); 
         } else {
@@ -195,7 +189,7 @@ function gerarTooltipNarrativo(chuteNum, arrRotas, totalZonasArea) {
     return encodeURIComponent(html);
 }
 
-// --- PROCESSADOR DE TEXTO (AGORA RECEBE INDICADOR DE NUVEM) ---
+// --- PROCESSADOR DE TEXTO (CÁLCULO MATEMÁTICO) ---
 function processarTextoCola(veioDaNuvem = false) {
     let elPaste = document.getElementById('input-paste'); 
     let txt = elPaste ? elPaste.value : ''; 
@@ -273,8 +267,11 @@ function processarTextoCola(veioDaNuvem = false) {
             }
 
             let arr = Object.values(mM).sort((a, b) => b.total - a.total);
-            if(arr.length === 0 && !veioDaNuvem) { alert("Nenhum dado encontrado."); fecharLoader(); return; }
-            if(arr.length === 0) return; // Da nuvem, só ignora
+            if(arr.length === 0) { 
+                if(!veioDaNuvem) { alert("Nenhum dado encontrado."); fecharLoader(); }
+                else { setStatusUi('Erro ao ler texto da Nuvem', 'bg-rose-500'); }
+                return; 
+            }
 
             let mergeEl = document.getElementById('chk-merge'); let isMerge = mergeEl ? mergeEl.checked : false; let finalArr = arr, finalKpis = k;
             if (isMerge && DATA_CACHE && DATA_CACHE.micro) {
@@ -293,12 +290,12 @@ function processarTextoCola(veioDaNuvem = false) {
         } catch(e) { 
             console.error(e); 
             if(!veioDaNuvem) { alert("Erro ao ler dados: " + e.message); fecharLoader(); }
+            else { setStatusUi('Erro na leitura da Nuvem', 'bg-rose-500'); }
         }
     }, 500);
 }
 
 function aplicarFiltros() {
-    // PROTEÇÃO EXTRA: Garante que lst seja uma array, mesmo com cache corrompido
     let lst = (DATA_CACHE && DATA_CACHE.micro) ? DATA_CACHE.micro : [];
     
     if(SELECTED_HOURS.length > 0) lst = lst.filter(x => SELECTED_HOURS.includes(x.horario) || x.horario === 'ATRASO');
@@ -340,288 +337,4 @@ function toggleAllEtds() { SELECTED_HOURS = []; renderEtdCheckboxes(); aplicarFi
 function toggleSingleEtd(e) { if(e.checked) SELECTED_HOURS.push(e.value); else SELECTED_HOURS = SELECTED_HOURS.filter(x => x !== e.value); if(SELECTED_HOURS.length >= AVAILABLE_HOURS.length) SELECTED_HOURS = []; renderEtdCheckboxes(); aplicarFiltros(); }
 
 function showTooltip(e, html) { let t = document.getElementById('floating-tip'); if(!html || !t) return; t.innerHTML = decodeURIComponent(html); t.classList.remove('hidden'); moveTooltip(e); }
-function moveTooltip(e) { let t = document.getElementById('floating-tip'); if(!t || t.classList.contains('hidden')) return; let x = e.clientX + 15, y = e.clientY + 15; if (x + t.offsetWidth > window.innerWidth) x = e.clientX - t.offsetWidth - 15; if (y + t.offsetHeight > window.innerHeight) y = window.innerHeight - t.offsetHeight - 15; t.style.left = Math.max(10, x) + 'px'; t.style.top = Math.max(10, y) + 'px'; }
-function hideTooltip() { setClass('floating-tip', 'add', 'hidden'); }
-
-// --- RENDERIZADORES DE TELA ---
-
-function renderDash(lst) {
-    let allValid = lst.filter(i => i.horario !== 'ATRASO');
-    let tTot = 0, tC = 0, tPck = 0, tIn = 0, tCls = 0, tShp = 0, tPick = 0, tPack = 0, tRtw = 0, tWav = 0;
-    
-    allValid.forEach(i => { 
-        tTot += i.total; tC += i.concluido; tPck += i.packed; 
-        tIn += i.huIn; tCls += i.huCl; tShp += i.ship; 
-        tPick += i.pick; tPack += (i.rtp + i.grp + i.r); 
-        tRtw += i.rtw; tWav += i.wav; 
-    });
-    
-    let viewFilter = document.querySelector('input[name="dashview"]:checked');
-    let vF = viewFilter ? viewFilter.value : 'global';
-    
-    let targetProgresso = 0;
-    let labelTitle = "";
-    let labelSubtitle = "Peças no Dia";
-    let subCardsHtml = "";
-
-    let pct = (val, tot) => tot > 0 ? ((val/tot)*100).toFixed(1) + '%' : '0%';
-    
-    if(vF === 'global') {
-        targetProgresso = tC; 
-        labelTitle = "Operação Global (Geral)";
-        subCardsHtml = `
-            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Shippadas</span><span class="text-lg font-black text-purple-600">${tShp.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">${pct(tShp, tTot)} do total</span></div>
-            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Fechadas (CLS)</span><span class="text-lg font-black text-indigo-500">${tCls.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">${pct(tCls, tTot)} do total</span></div>
-            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Abertos (IN)</span><span class="text-lg font-black text-blue-500">${tIn.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">${pct(tIn, tTot)} do total</span></div>
-            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Packed (Retido)</span><span class="text-lg font-black text-emerald-500">${tPck.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">${pct(tPck, tTot)} do total</span></div>
-            <div class="flex flex-col bg-slate-50 px-3 py-1 rounded border border-slate-200"><span class="text-[10px] font-bold text-slate-600 uppercase">WIP + Fila + Waving</span><span class="text-lg font-black text-slate-700">${(tPick+tPack+tRtw+tWav).toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">Volume a processar</span></div>
-        `;
-    } else if (vF === 'concluidos') {
-        targetProgresso = tShp + tCls; 
-        labelTitle = "Apenas Concluídos (CLS/SHP)";
-        subCardsHtml = `
-            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Shippadas</span><span class="text-lg font-black text-purple-600">${tShp.toLocaleString()}</span><span class="text-[9px] text-purple-400 font-bold">${pct(tShp, targetProgresso)} dos concluídos</span></div>
-            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Fechadas (CLS)</span><span class="text-lg font-black text-indigo-500">${tCls.toLocaleString()}</span><span class="text-[9px] text-indigo-400 font-bold">${pct(tCls, targetProgresso)} dos concluídos</span></div>
-        `;
-    } else if (vF === 'packed') {
-        targetProgresso = tPck; 
-        labelTitle = "Foco em Packed (Retidos na Rampa)"; 
-        labelSubtitle = "do Total Diário";
-        subCardsHtml = `
-            <div class="flex flex-col bg-emerald-50 px-3 py-1 rounded border border-emerald-200"><span class="text-[10px] font-bold text-emerald-700 uppercase">Total Packed</span><span class="text-lg font-black text-emerald-600">${tPck.toLocaleString()}</span><span class="text-[9px] text-emerald-500 font-bold">${pct(tPck, tTot)} de toda a carga</span></div>
-        `;
-    } else if (vF === 'wip') {
-        let pendentesOperacao = tPick + tPack + tRtw; 
-        targetProgresso = pendentesOperacao; 
-        labelTitle = "Foco em Processamento Físico (WIP + Fila)";
-        labelSubtitle = "na Mão da Operação";
-        subCardsHtml = `
-            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Em Packing (Mesa)</span><span class="text-lg font-black text-amber-500">${tPack.toLocaleString()}</span><span class="text-[9px] text-amber-500 font-bold">${pct(tPack, targetProgresso)} do WIP</span></div>
-            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Em Picking (Separando)</span><span class="text-lg font-black text-orange-500">${tPick.toLocaleString()}</span><span class="text-[9px] text-orange-500 font-bold">${pct(tPick, targetProgresso)} do WIP</span></div>
-            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Fila RTW (Aguardando)</span><span class="text-lg font-black text-rose-500">${tRtw.toLocaleString()}</span><span class="text-[9px] text-rose-500 font-bold">${pct(tRtw, targetProgresso)} do WIP</span></div>
-            <div class="flex flex-col bg-slate-100 px-3 py-1 rounded border border-slate-200"><span class="text-[10px] font-bold text-slate-500 uppercase">Retido WMS (Waving)</span><span class="text-lg font-black text-slate-600">${tWav.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">Fora do WIP</span></div>
-        `;
-    }
-
-    setVal('lbl-dash-title', labelTitle); 
-    setVal('lbl-dash-subtitle', labelSubtitle);
-    setVal('dash-glb-total', tTot.toLocaleString()); 
-    setVal('dash-glb-targetval', targetProgresso.toLocaleString());
-    setHtml('dash-dynamic-subcards', subCardsHtml);
-    
-    let pG = tTot > 0 ? ((targetProgresso / tTot) * 100).toFixed(2) : '0.00'; 
-    setVal('dash-glb-pct', pG + '%'); setStyle('dash-glb-bar', 'width', pG + '%');
-
-    let grps = {};
-    allValid.forEach(i => { if(!grps[i.horario]) grps[i.horario] = { t: 0, c: 0 }; grps[i.horario].t += i.total; grps[i.horario].c += i.concluido; });
-    
-    let hKpi = ''; let fmtK = (v) => v >= 10000 ? (v / 1000).toFixed(1).replace('.0', '') + 'k' : v.toLocaleString();
-    Object.keys(grps).sort().forEach(k => {
-        let g = grps[k]; let pt = g.t > 0 ? ((g.c / g.t) * 100).toFixed(2) : '0.00';
-        let m98 = Math.ceil(g.t * 0.98); let m985 = Math.ceil(g.t * 0.985); let m99 = Math.ceil(g.t * 0.99); let m995 = Math.ceil(g.t * 0.995);
-        let tag = (tgt) => (target => { let f = target - g.c; return f <= 0 ? '<span class="text-emerald-500"><i class="fa-solid fa-check"></i></span>' : `<span class="text-rose-500 font-mono font-bold">Falta ${f.toLocaleString()}</span>`; })(tgt);
-
-        hKpi += `<div class="glass-panel p-4 flex flex-col border-t-4 border-blue-500 shadow-md">
-                <div class="flex justify-between items-center mb-2"><div class="text-xs font-black text-slate-700 bg-slate-100 px-2 py-1 rounded border">ETD ${k}H</div><div class="text-lg font-black text-blue-600">${pt}%</div></div>
-                <div class="w-full bg-slate-100 h-2 rounded-full mb-4"><div class="bg-blue-500 h-full" style="width:${pt}%"></div></div>
-                <div class="text-[10px] font-bold text-slate-500 space-y-1.5 bg-slate-50 p-2 rounded border border-slate-100">
-                    <div class="flex justify-between items-center"><span>Meta 98.0%: <span class="font-mono text-slate-800">${fmtK(m98)}</span></span>${tag(m98)}</div>
-                    <div class="flex justify-between items-center"><span>Meta 98.5%: <span class="font-mono text-slate-800">${fmtK(m985)}</span></span>${tag(m985)}</div>
-                    <div class="flex justify-between items-center"><span>Meta 99.0%: <span class="font-mono text-slate-800">${fmtK(m99)}</span></span>${tag(m99)}</div>
-                    <div class="flex justify-between items-center"><span>Meta 99.5%: <span class="font-mono text-slate-800">${fmtK(m995)}</span></span>${tag(m995)}</div>
-                </div></div>`;
-    });
-    setHtml('dash-kpi-area', hKpi);
-
-    let capTotalPick = (SETTINGS_DATA.pickHC || 0) * (SETTINGS_DATA.pickM || 0);
-    let off = allValid.filter(i => (i.rtw + i.pick + i.rtp + i.grp) > 0).sort((a, b) => (b.rtw + b.pick) - (a.rtw + a.pick)).slice(0, 10);
-    
-    setHtml('dash-offenders-body', off.length ? off.map(r => {
-        let filaDestaRota = r.rtw + r.pick + r.rtp + r.grp;
-        let acumulo = filaDestaRota > capTotalPick ? (filaDestaRota - capTotalPick) : 0;
-        let acAlert = acumulo > 0 ? `<span class="bg-rose-500 text-white px-2 py-1 rounded shadow-sm">${acumulo} viram rollover</span>` : `<span class="text-emerald-500 font-bold"><i class="fa-solid fa-check"></i> Limpa na hora</span>`;
-
-        return `<tr><td class="p-3 pl-6 font-bold text-slate-800">${r.nome}</td><td class="p-3 text-center"><span class="bg-slate-100 px-2 py-1 rounded text-[10px] font-bold">${r.horario}h</span></td><td class="p-3 text-right text-orange-600 font-bold">${filaDestaRota}</td><td class="p-3 text-right font-bold text-rose-600">${acAlert}</td><td class="p-3 pr-6 text-right">${r.total > 0 ? ((r.concluido/r.total)*100).toFixed(1) : 0}%</td></tr>`
-    }).join('') : '<tr><td colspan="5" class="p-8 text-center text-emerald-600 font-bold">Nenhum gargalo aglomerado (Fila).</td></tr>');
-}
-
-function renderMicro(lst) {
-    let filtered = lst.filter(i => !i.isAereo);
-    filtered.sort((a, b) => (b.rtw + b.pick + b.rtp + b.grp) - (a.rtw + a.pick + a.rtp + a.grp));
-
-    setHtml('micro-body', filtered.length ? filtered.map(r => {
-        let processandoWip = r.pick + r.rtg + r.g + r.r;
-        let prontoConcluido = r.huIn + r.huCl + r.ship;
-
-        return `
-        <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
-            <td class="p-3 pl-6 font-bold text-slate-800">${r.nome}</td>
-            <td class="p-3 text-center"><span class="bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold">${r.horario}h</span></td>
-            <td class="text-right p-3 text-slate-500 font-bold bg-slate-50 border-l border-slate-200">${r.wav}</td>
-            <td class="text-right p-3 text-rose-500 font-bold bg-rose-50/50">${r.rtw}</td>
-            <td class="text-right p-3 text-orange-500 font-bold bg-orange-50/50">${r.pick}</td>
-            <td class="text-right p-3 text-amber-500 font-bold bg-amber-50/50">${r.rtp + r.grp + r.r}</td>
-            <td class="text-right p-3 text-emerald-600 font-bold bg-emerald-50/50 border-x border-slate-200">${r.packed}</td>
-            <td class="text-right p-3 text-blue-600 font-bold bg-blue-50/50">${prontoConcluido}</td>
-            <td class="text-right p-3 font-extrabold text-slate-900">${r.total}</td>
-        </tr>`;
-    }).join('') : `<tr><td colspan="9" class="p-8 text-center text-slate-400 font-bold">Sem dados no momento.</td></tr>`);
-}
-
-function getAreaVolumes(lst) {
-    let areaVols = {};
-    for(let i = 1; i <= 100; i++) {
-        let z = Math.ceil(i / 10);
-        if(!areaVols[z]) areaVols[z] = { tPacked: 0, tWip: 0, tRtw: 0 };
-        
-        let rr = RAMPA_MAP[i] || [];
-        rr.forEach(ro => { 
-            let d = lst.find(x => x.nome === ro); 
-            if(d) {
-                areaVols[z].tPacked += d.packed;
-                areaVols[z].tWip += (d.pick + d.rtp + d.grp + d.r);
-                areaVols[z].tRtw += d.rtw;
-            }
-        });
-    }
-    return areaVols;
-}
-
-function renderMatriz(lst) {
-    let areaVols = getAreaVolumes(lst);
-
-    const ren = (id, s, e) => {
-        let filterEl = document.getElementById('heatmap-filter-' + id.split('-')[0]);
-        let mode = filterEl ? filterEl.value : 'volume';
-
-        let h = '<div class="col-span-full grid grid-cols-2 sm:grid-cols-5 xl:grid-cols-10 gap-3">';
-        for(let i = s; i <= e; i++) {
-            let rr = RAMPA_MAP[i] || []; let st = { p: 0, r: 0, g: 0, pi: 0, w: 0, rtw: 0, t: 0 }; let rotasAtivas = []; 
-            rr.forEach(ro => { 
-                let d = lst.find(x => x.nome === ro); 
-                if(d) { st.p += d.packed; st.r += d.rtp; st.g += d.grp; st.pi += d.pick; st.w += d.wav; st.rtw += d.rtw; st.t += d.total; rotasAtivas.push(d); } 
-            });
-            
-            let isAuto = i >= SETTINGS_DATA.autoStart && i <= SETTINGS_DATA.autoEnd;
-            let lqRecurso = isAuto ? (SETTINGS_DATA.indM || 450) : (SETTINGS_DATA.atrM || 450);
-            
-            let zonaArea = Math.ceil(i / 10);
-            let volTotalZona = areaVols[zonaArea].tPacked + areaVols[zonaArea].tWip + areaVols[zonaArea].tRtw;
-
-            let hBg = 'bg-white', textC = 'text-slate-500';
-            let volAtivoPecas = st.p + st.r + st.g + st.pi + st.rtw; 
-
-            if(mode === 'volume') {
-                if (volAtivoPecas > 0) { 
-                    if(volAtivoPecas >= 1000) { hBg = 'bg-rose-600 text-white border-rose-700'; textC = 'text-white'; } 
-                    else if(volAtivoPecas >= 500) { hBg = 'bg-orange-500 text-white border-orange-600'; textC = 'text-white'; } 
-                    else if(volAtivoPecas >= 200) { hBg = 'bg-amber-400 text-slate-900 border-amber-500'; textC = 'text-amber-900'; } 
-                    else { hBg = 'bg-emerald-100 border-emerald-300'; textC = 'text-emerald-700'; } 
-                } else { hBg = 'opacity-40 grayscale bg-white border border-slate-200'; }
-            } 
-            else if (mode === 'risco') {
-                let reqPessoasArea = lqRecurso > 0 ? (volTotalZona / lqRecurso) : 99;
-                if(volAtivoPecas > 0) {
-                    if (reqPessoasArea > 2) { hBg = 'bg-rose-600 text-white border-rose-700 shadow-[0_0_15px_rgba(225,29,72,0.5)]'; textC = 'text-white'; } 
-                    else if (reqPessoasArea > 1) { hBg = 'bg-amber-400 text-slate-900 border-amber-500'; textC = 'text-amber-900'; } 
-                    else { hBg = 'bg-emerald-100 border-emerald-300'; textC = 'text-emerald-700'; } 
-                } else { hBg = 'opacity-40 grayscale bg-white border border-slate-200'; }
-            }
-            else if (mode === 'congelado') {
-                if (st.w > 0) {
-                    if(st.w > 500) { hBg = 'bg-purple-600 text-white border-purple-700'; textC = 'text-white'; }
-                    else { hBg = 'bg-purple-200 text-purple-900 border-purple-400'; textC = 'text-purple-900'; }
-                } else { hBg = 'opacity-40 grayscale bg-white border border-slate-200'; }
-            }
-
-            let tooltipHtml = gerarTooltipNarrativo(i, rotasAtivas, volTotalZona);
-
-            h += `<div onmouseenter="showTooltip(event, this.dataset.tip)" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()" data-tip="${tooltipHtml}" class="rounded-xl flex flex-col justify-between ${hBg} shadow-md hover:-translate-y-1 cursor-help border overflow-hidden h-[90px] transition-all">
-                    <div class="px-3 py-2 flex justify-between items-center border-b border-black/10"><span class="font-black ${textC} text-lg">${i}</span><span class="${textC} text-xs font-bold font-mono">${mode === 'congelado' ? st.w : volAtivoPecas}</span></div>
-                    <div class="px-3 py-2 text-[8px] font-bold ${textC} opacity-80 h-full overflow-hidden leading-tight">${rotasAtivas.length ? rotasAtivas.map(x => x.nome).join(', ') : 'Vazio'}</div>
-                  </div>`;
-        } h += `</div>`; setHtml(id, h);
-    };
-    ren('t3-list-container', 1, 50); ren('t5-list-container', 51, 98);
-}
-
-function renderAereo(lst) {
-    let aer = lst.filter(i => i.isAereo); let aT = 0, aC = 0, aIn = 0, aCl = 0, aSh = 0;
-    let grps = {};
-    
-    aer.forEach(i => { 
-        aT += i.total; aC += i.concluido; aIn += i.huIn; aCl += i.huCl; aSh += i.ship;
-        if(!grps[i.horario]) grps[i.horario] = []; grps[i.horario].push(i);
-    });
-    
-    let processadoAereo = aIn + aCl + aSh;
-    let vindoAereo = aT - processadoAereo; 
-    let pct = aT > 0 ? ((processadoAereo / aT) * 100).toFixed(1) : '0.0';
-    
-    setHtml('aereo-dynamic-summary', `
-        <div class="bg-gradient-to-r from-cyan-900 to-blue-900 p-6 rounded-2xl text-white shadow-xl flex justify-between items-center relative overflow-hidden border border-cyan-700">
-            <i class="fa-solid fa-plane absolute -right-4 text-9xl opacity-10"></i>
-            <div>
-                <h3 class="text-cyan-300 font-bold uppercase tracking-widest text-xs mb-1">Relatório Geral - Malha Aérea</h3>
-                <div class="text-5xl font-black font-mono tracking-tighter">${pct}% <span class="text-sm font-bold text-cyan-400 tracking-normal">Pronto (Docado)</span></div>
-            </div>
-            <div class="flex gap-6 text-right relative z-10">
-                <div class="flex flex-col"><span class="text-[10px] text-cyan-400 uppercase font-bold">Peças no Dia</span><span class="text-2xl font-black font-mono">${aT.toLocaleString()}</span></div>
-                <div class="flex flex-col"><span class="text-[10px] text-emerald-400 uppercase font-bold">Pronto (Docado)</span><span class="text-2xl font-black font-mono text-emerald-400">${processadoAereo.toLocaleString()}</span></div>
-                <div class="flex flex-col bg-cyan-950 px-3 py-1 rounded border border-cyan-800"><span class="text-[10px] text-amber-400 uppercase font-bold">A Caminho (Esteiras)</span><span class="text-2xl font-black font-mono text-amber-400">${vindoAereo.toLocaleString()}</span></div>
-            </div>
-        </div>`);
-
-    let htmlETDs = '';
-    Object.keys(grps).sort().forEach(h => {
-        htmlETDs += `
-        <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden mb-6">
-            <div class="bg-slate-100 p-4 border-b flex justify-between items-center"><h4 class="font-black text-slate-700 text-lg flex items-center gap-2"><i class="fa-solid fa-clock text-cyan-600"></i> ETD ${h}H</h4></div>
-            <table class="w-full text-left text-xs font-mono">
-                <thead class="bg-white text-slate-400 uppercase text-[9px] font-bold border-b"><tr><th class="p-3 pl-6">Rota</th><th class="text-right p-3 text-slate-500">WAV / RTW</th><th class="text-right p-3 text-emerald-500">WIP</th><th class="text-right p-3 text-blue-500">Pronto</th><th class="text-right p-3 text-amber-500 border-l border-slate-100">A Caminho</th><th class="text-right p-3">Total Dia</th></tr></thead>
-                <tbody class="divide-y divide-slate-50">
-                    ${grps[h].sort((a,b)=> b.total - a.total).map(r => {
-                        let tooltipAereoHtml = gerarTooltipNarrativo(`Aéreo: ${r.nome}`, [r]);
-                        return `
-                        <tr class="hover:bg-slate-50 cursor-help" onmouseenter="showTooltip(event, this.dataset.tip)" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()" data-tip="${tooltipAereoHtml}">
-                            <td class="p-3 pl-6 font-bold text-slate-800">${r.nome}</td>
-                            <td class="text-right p-3 text-slate-500">${r.wav} / ${r.rtw}</td>
-                            <td class="text-right p-3 text-emerald-500">${r.pick+r.rtp+r.grp}</td>
-                            <td class="text-right p-3 text-blue-500">${r.packed+r.huIn+r.huCl+r.ship}</td>
-                            <td class="text-right p-3 text-amber-600 font-bold border-l border-slate-100">${r.total - (r.huIn+r.huCl+r.ship)}</td>
-                            <td class="text-right p-3 font-black text-slate-800">${r.total}</td>
-                        </tr>`;
-                    }).join('')}
-                </tbody>
-            </table>
-        </div>`;
-    });
-    setHtml('aereo-container', htmlETDs || '<div class="p-8 text-center bg-white rounded-xl border">Sem dados de malha aérea.</div>');
-}
-
-function updateLiveClock() {
-    let vl = document.getElementById('view-live');
-    if(!DATA_CACHE || !DATA_CACHE.micro || !AVAILABLE_HOURS.length || (vl && vl.classList.contains('hidden'))) return;
-    setVal('live-clock', new Date().toLocaleTimeString('pt-BR'));
-    
-    let ch = parseInt(new Date().getHours()); let hNum = AVAILABLE_HOURS.map(h => parseInt(h)).sort((a,b)=>a-b);
-    let f = hNum.find(h => h > ch) || hNum[0]; let etd = f.toString().padStart(2, '0');
-    
-    let lbl = document.getElementById('live-etd-lbl');
-    if(lbl && lbl.innerText !== "ETD " + etd + "H") {
-        setVal('live-etd-lbl', "ETD " + etd + "H");
-        let lst = DATA_CACHE.micro.filter(r => r.horario === etd).sort((a, b) => b.total - a.total);
-        
-        setHtml('live-offenders-body', lst.map(r => {
-            let pct = r.total > 0 ? ((r.concluido / r.total) * 100) : 0;
-            return `<tr>
-            <td class="p-3 pl-4 font-bold text-slate-800">${r.nome}</td>
-            <td class="p-3 text-right text-emerald-600 font-bold">${r.packed}</td>
-            <td class="p-3 text-right text-orange-500 font-bold bg-orange-50/50">${r.rtp+r.grp}</td>
-            <td class="p-3 text-right text-rose-500 font-bold bg-rose-50/50">${r.pick}</td>
-            <td class="p-3 text-right text-slate-400 font-bold opacity-50">${r.wav+r.rtw}</td>
-            <td class="p-3 pr-4"><div class="flex items-center gap-2 justify-end"><span class="text-[9px] font-bold w-6 text-right">${pct.toFixed(0)}%</span><div class="w-16 h-1.5 bg-slate-200 rounded-full"><div class="bg-brand-500 h-full rounded-full" style="width:${pct}%"></div></div></div></td>
-            </tr>`;
-        }).join(''));
-    }
-}
+function moveTooltip(e) { let t = document.getElementById('floating-tip'); if(!t || t.classList.contains('hidden')) return; let x = e.clientX + 15, y = e.clientY + 15; if
