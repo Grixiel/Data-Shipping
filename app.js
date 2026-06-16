@@ -37,52 +37,44 @@ window.onload = () => {
 // --- FUNÇÃO DE BUSCA DO GOOGLE (A PONTE) ---
 // --- FUNÇÃO DE BUSCA DO GOOGLE (A PONTE CORRIGIDA) ---
 // --- FUNÇÃO DE BUSCA DO GOOGLE (A PONTE - SOLUÇÃO FINAL) ---
+// --- FUNÇÃO DE BUSCA DO GOOGLE (SOLUÇÃO DEFINITIVA ANTI-CORS: JSONP) ---
 function buscarDadosDaNuvem() {
     setStatusUi('Aguardando Nuvem...', 'bg-amber-500 animate-pulse');
 
-    // Adiciona um parâmetro único para evitar cache
-    let url = URL_GOOGLE_APPS_SCRIPT + "?t=" + new Date().getTime();
+    // 1. Criamos um elemento de script invisível
+    let script = document.createElement('script');
+    
+    // 2. Apontamos para o Google pedindo que ele responda ativando a função "receberDadosDoGoogle"
+    script.src = URL_GOOGLE_APPS_SCRIPT + "?callback=receberDadosDoGoogle&t=" + new Date().getTime();
+    
+    // Se a internet cair e não conseguir carregar o script
+    script.onerror = function() {
+        setStatusUi('Falha de Rede', 'bg-rose-500');
+    };
 
-    // A abordagem mais robusta para evitar problemas de CORS num Web App do Google 
-    // é não forçar headers ou modos estritos.
-    fetch(url)
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`Erro HTTP: ${response.status}`);
-        }
-        return response.text(); // Lê sempre como texto primeiro
-    })
-    .then(text => {
-        try {
-            // Tenta o parse para ver se o Google nos mandou o JSON esperado
-            let data = JSON.parse(text);
-            
-            if (data && data.texto && data.texto.trim().length > 10) {
-                let elPaste = document.getElementById('input-paste');
-                if (elPaste) elPaste.value = data.texto;
-                
-                processarTextoCola(true); // O 'true' indica que veio da nuvem
-                
-                let dataHora = data.tempo ? data.tempo : new Date().toLocaleTimeString('pt-BR');
-                setStatusUi(`Nuvem Sincronizada: ${dataHora}`, 'bg-emerald-500');
-            } else {
-                 setStatusUi('Planilha Vazia', 'bg-rose-500');
-            }
-        } catch (err) {
-            console.error("Erro no parse dos dados do Google. Conteúdo recebido:", text);
-            // Se falhar o parse, provavelmente o Google está a devolver HTML de erro ou login
-            setStatusUi('Erro de Permissão (Verificar Deploy)', 'bg-rose-500');
-        }
-    })
-    .catch(error => {
-        console.error("Falha no fetch:", error);
-        setStatusUi('Erro de Comunicação / CORS', 'bg-rose-500');
-    });
+    // 3. Injetamos o script na página (isso bypassa o CORS do Chrome)
+    document.body.appendChild(script);
+
+    // 4. Limpamos a tag após 5 segundos para não sujar o HTML
+    setTimeout(() => { 
+        if (script.parentNode) script.parentNode.removeChild(script); 
+    }, 5000);
 }
-function carregarMapaImediato() {
-    ROUTE_LIST = []; for(let i=1; i<=100; i++) RAMPA_MAP[i] = [];
-    CURRENT_R_STR.split(',').forEach(g => { let [t, r] = g.split(':'); if(r) { r.split('|').forEach(x => { ROUTE_LIST.push({ t: parseInt(t), r: x }); RAMPA_MAP[parseInt(t)].push(x); }); } });
-}
+
+// O Google Apps Script vai executar ESTA função automaticamente quando responder!
+window.receberDadosDoGoogle = function(data) {
+    if (data && data.texto && data.texto.trim().length > 10) {
+        let elPaste = document.getElementById('input-paste');
+        if (elPaste) elPaste.value = data.texto;
+        
+        processarTextoCola(true); // O 'true' indica que veio da nuvem
+        
+        let dataHora = data.tempo ? data.tempo : new Date().toLocaleTimeString('pt-BR');
+        setStatusUi(`Nuvem Sincronizada: ${dataHora}`, 'bg-emerald-500');
+    } else {
+         setStatusUi('Planilha Vazia', 'bg-rose-500');
+    }
+};
 
 function carregarMapaTobogas() {
     fetch(CSV_PLANILHA_TOBOGAS).then(res => res.text()).then(csv => {
