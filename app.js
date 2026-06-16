@@ -1,6 +1,7 @@
 // === COLOQUE A URL DA SUA PLANILHA AQUI DENTRO DAS ASPAS ===
 const URL_GOOGLE_APPS_SCRIPT = https://script.google.com/a/macros/mercadolivre.com/s/AKfycbz6rExW6bwPBsWFTirLwjnIMNtq2lT5k9w_MkEkp2H14cXJhlif0gcTvHM6T--iwfPG/exec"; 
 // ============================================================
+// ============================================================
 
 // --- SISTEMA ANTI-CRASH (LIBERTA A TELA EM CASO DE ERRO FATAL) ---
 window.onerror = function(msg, url, line) {
