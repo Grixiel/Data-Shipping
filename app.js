@@ -36,39 +36,47 @@ window.onload = () => {
 
 // --- FUNÇÃO DE BUSCA DO GOOGLE (A PONTE) ---
 // --- FUNÇÃO DE BUSCA DO GOOGLE (A PONTE CORRIGIDA) ---
+// --- FUNÇÃO DE BUSCA DO GOOGLE (A PONTE - SOLUÇÃO FINAL) ---
 function buscarDadosDaNuvem() {
     setStatusUi('Aguardando Nuvem...', 'bg-amber-500 animate-pulse');
 
-    // Adiciona um carimbo de tempo na URL para FORÇAR o Google a não usar cache (memória antiga)
-    let urlSemCache = URL_GOOGLE_APPS_SCRIPT + "?t=" + new Date().getTime();
+    // Adiciona um parâmetro único para evitar cache
+    let url = URL_GOOGLE_APPS_SCRIPT + "?t=" + new Date().getTime();
 
-    // Puxa os dados com configuração que segue redirecionamentos do Google
-    fetch(urlSemCache, { method: 'GET', redirect: 'follow' })
-    .then(res => res.text()) // Lemos como texto primeiro para não quebrar se o Google der erro
+    // A abordagem mais robusta para evitar problemas de CORS num Web App do Google 
+    // é não forçar headers ou modos estritos.
+    fetch(url)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Erro HTTP: ${response.status}`);
+        }
+        return response.text(); // Lê sempre como texto primeiro
+    })
     .then(text => {
         try {
-            // Tenta converter o texto recebido para JSON
+            // Tenta o parse para ver se o Google nos mandou o JSON esperado
             let data = JSON.parse(text);
             
             if (data && data.texto && data.texto.trim().length > 10) {
                 let elPaste = document.getElementById('input-paste');
                 if (elPaste) elPaste.value = data.texto;
                 
-                processarTextoCola(true); // true = veio da nuvem, processa sem tela de loading
+                processarTextoCola(true); // O 'true' indica que veio da nuvem
                 
                 let dataHora = data.tempo ? data.tempo : new Date().toLocaleTimeString('pt-BR');
                 setStatusUi(`Nuvem Sincronizada: ${dataHora}`, 'bg-emerald-500');
             } else {
-                 setStatusUi('Planilha parece vazia', 'bg-rose-500');
+                 setStatusUi('Planilha Vazia', 'bg-rose-500');
             }
         } catch (err) {
-            console.error("O Google não enviou os dados corretamente. Resposta recebida:", text);
-            setStatusUi('Erro de Permissão no Google', 'bg-rose-500');
+            console.error("Erro no parse dos dados do Google. Conteúdo recebido:", text);
+            // Se falhar o parse, provavelmente o Google está a devolver HTML de erro ou login
+            setStatusUi('Erro de Permissão (Verificar Deploy)', 'bg-rose-500');
         }
     })
-    .catch(err => {
-        console.error("Erro ao buscar dados do Google:", err);
-        setStatusUi('Falha na Rede / Link incorreto', 'bg-rose-500');
+    .catch(error => {
+        console.error("Falha no fetch:", error);
+        setStatusUi('Erro de Comunicação / CORS', 'bg-rose-500');
     });
 }
 function carregarMapaImediato() {
