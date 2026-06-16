@@ -1,5 +1,5 @@
 // === COLOQUE A URL DA SUA PLANILHA AQUI ===
-const URL_GOOGLE_APPS_SCRIPT = "https://script.google.com/a/macros/mercadolivre.com/s/AKfycbxfJ_oWoDfEKmBL5rrlXRmNCJzr8Pb2YHD5S8jVIQjBVGZpSsnswECJHmbI0llBesq5/exec"; 
+const URL_GOOGLE_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbxfJ_oWoDfEKmBL5rrlXRmNCJzr8Pb2YHD5S8jVIQjBVGZpSsnswECJHmbI0llBesq5/exec";; 
 // ==========================================
 
 // --- CONFIGURAÇÃO (LOCAL E MAPAS) ---
