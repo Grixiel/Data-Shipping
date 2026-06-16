@@ -1,5 +1,5 @@
 // === COLOQUE A URL DA SUA PLANILHA AQUI ===
-const URL_GOOGLE_APPS_SCRIPT = "https://script.google.com/a/macros/mercadolivre.com/s/AKfycbxfJ_oWoDfEKmBL5rrlXRmNCJzr8Pb2YHD5S8jVIQjBVGZpSsnswECJHmbI0llBesq5/exec"; 
+const URL_GOOGLE_APPS_SCRIPT = "COLE_SUA_URL_DO_GOOGLE_AQUI"; 
 // ==========================================
 
 // --- CONFIGURAÇÃO (LOCAL E MAPAS) ---
@@ -38,7 +38,6 @@ window.onload = () => {
 function buscarDadosDaNuvem() {
     setStatusUi('Aguardando Nuvem...', 'bg-amber-500 animate-pulse');
 
-    // Usando fetch com mode: 'cors' para evitar bloqueios de redirecionamento do Google
     fetch(URL_GOOGLE_APPS_SCRIPT, { mode: 'cors' })
     .then(res => {
         if (!res.ok) throw new Error("Erro na resposta da rede: " + res.status);
@@ -49,7 +48,7 @@ function buscarDadosDaNuvem() {
             let elPaste = document.getElementById('input-paste');
             if (elPaste) elPaste.value = data.texto;
             
-            processarTextoCola(true); 
+            processarTextoCola(true); // true = veio da nuvem
             
             let dataHora = data.tempo ? data.tempo : new Date().toLocaleTimeString('pt-BR');
             setStatusUi(`Nuvem Sincronizada: ${dataHora}`, 'bg-emerald-500');
@@ -61,4 +60,559 @@ function buscarDadosDaNuvem() {
         console.error("Erro ao buscar dados do Google:", err);
         setStatusUi('Falha ao Ligar à Nuvem', 'bg-rose-500');
     });
+}
+
+function carregarMapaImediato() {
+    ROUTE_LIST = []; for(let i=1; i<=100; i++) RAMPA_MAP[i] = [];
+    CURRENT_R_STR.split(',').forEach(g => { let [t, r] = g.split(':'); if(r) { r.split('|').forEach(x => { ROUTE_LIST.push({ t: parseInt(t), r: x }); RAMPA_MAP[parseInt(t)].push(x); }); } });
+}
+
+function carregarMapaTobogas() {
+    fetch(CSV_PLANILHA_TOBOGAS).then(res => res.text()).then(csv => {
+        let lines = csv.split('\n'); ROUTE_LIST = []; for(let i=1; i<=100; i++) RAMPA_MAP[i] = [];
+        for(let i=1; i<lines.length; i++) {
+            let cols = lines[i].split(',');
+            if(cols.length >= 2) {
+                let rota = cols[0].trim().toUpperCase(); let regra = cols[1].trim().toUpperCase(); let nums = []; let regraLimpa = regra.replace('AUTO', '').trim();
+                if(regraLimpa.includes('-')) { let [inicio, fim] = regraLimpa.split('-'); for(let r = parseInt(inicio); r <= parseInt(fim); r++) nums.push(r);
+                } else if (!isNaN(parseInt(regraLimpa))) { nums.push(parseInt(regraLimpa)); }
+                nums.forEach(n => { if(RAMPA_MAP[n] && !RAMPA_MAP[n].includes(rota)) { RAMPA_MAP[n].push(rota); ROUTE_LIST.push({ t: n, r: rota }); } });
+            }
+        } if(DATA_CACHE) aplicarFiltros();
+    }).catch(e => console.error("Usando rotas estáticas."));
+}
+
+function carregarDadosLocais() {
+    let saved = localStorage.getItem("WMS_DATA_SHIPPING_V2");
+    if(saved) {
+        let parsed = JSON.parse(saved);
+        DATA_CACHE = parsed.d;
+        if(parsed.s) { SETTINGS_DATA = { ...SETTINGS_DATA, ...parsed.s }; }
+        
+        let syncUI = (id, val) => { let el = document.getElementById(id); if(el) el.value = val || ''; };
+        syncUI('inline-auto-start', SETTINGS_DATA.autoStart); syncUI('inline-auto-end', SETTINGS_DATA.autoEnd);
+        syncUI('inline-hc-pick', SETTINGS_DATA.pickHC); syncUI('inline-lq-pick', SETTINGS_DATA.pickM);
+        syncUI('inline-hc-pack', SETTINGS_DATA.packHC); syncUI('inline-lq-pack', SETTINGS_DATA.packM);
+        syncUI('inline-hc-ind', SETTINGS_DATA.indHC); syncUI('inline-lq-ind', SETTINGS_DATA.indM);
+        syncUI('inline-hc-atr', SETTINGS_DATA.atrHC); syncUI('inline-lq-atr', SETTINGS_DATA.atrM);
+
+        // A CORREÇÃO MÁGICA ESTÁ AQUI: Protege contra o DATA_CACHE nulo!
+        if (DATA_CACHE && DATA_CACHE.kpis) {
+            AVAILABLE_HOURS = Object.keys(DATA_CACHE.kpis).filter(k => k !== "99" && k !== "S/H" && k !== "ATRASO").sort(); 
+        } else {
+            AVAILABLE_HOURS = [];
+        }
+        SELECTED_HOURS = []; 
+        renderEtdCheckboxes(); 
+        aplicarFiltros();
+    } else {
+        aplicarFiltros();
+    }
+}
+
+function salvarDadosLocais() {
+    let payload = JSON.stringify({ d: DATA_CACHE, s: SETTINGS_DATA });
+    localStorage.setItem("WMS_DATA_SHIPPING_V2", payload);
+}
+
+function salvarHCDinamico() {
+    let g = (id) => { let el = document.getElementById(id); let val = el ? parseFloat(el.value) : 0; return isNaN(val) || val < 0 ? 0 : val; };
+    SETTINGS_DATA.autoStart = g('inline-auto-start') || 1; SETTINGS_DATA.autoEnd = g('inline-auto-end') || 29;
+    SETTINGS_DATA.pickHC = g('inline-hc-pick'); SETTINGS_DATA.pickM = g('inline-lq-pick');
+    SETTINGS_DATA.packHC = g('inline-hc-pack'); SETTINGS_DATA.packM = g('inline-lq-pack');
+    SETTINGS_DATA.indHC = g('inline-hc-ind'); SETTINGS_DATA.indM = g('inline-lq-ind');
+    SETTINGS_DATA.atrHC = g('inline-hc-atr'); SETTINGS_DATA.atrM = g('inline-lq-atr');
+    
+    salvarDadosLocais();
+    aplicarFiltros(); 
+}
+
+// --- RELATÓRIO DO TOBOGÃ ---
+function gerarTooltipNarrativo(chuteNum, arrRotas, totalZonasArea) {
+    if(!arrRotas || arrRotas.length === 0) return encodeURIComponent(`<div class="p-2 text-slate-300 font-bold">Sem movimentação</div>`);
+    
+    let isAuto = chuteNum >= SETTINGS_DATA.autoStart && chuteNum <= SETTINGS_DATA.autoEnd;
+    let tipoRecurso = isAuto ? "Indiretos" : "Atrelamento";
+    let lqRecurso = isAuto ? (SETTINGS_DATA.indM || 450) : (SETTINGS_DATA.atrM || 450);
+
+    let tWav = 0, tRtw = 0, tPick = 0, tPack = 0, tPacked = 0, tPronto = 0;
+    arrRotas.forEach(r => { 
+        tWav += r.wav; tRtw += r.rtw; tPick += r.pick; 
+        tPack += (r.rtp + r.grp + r.r); 
+        tPacked += r.packed; 
+        tPronto += (r.huIn + r.huCl + r.ship);
+    });
+
+    let totalFuturo = tPacked + tPack + tPick + tRtw; 
+    let reqPessoas = (lqRecurso > 0 && totalZonasArea !== undefined) ? (totalZonasArea / lqRecurso).toFixed(1) : "∞";
+
+    let pcm = lqRecurso / 60;
+    let timeAtr = pcm > 0 ? Math.ceil(tPacked / pcm) : Infinity;
+
+    let html = `<div class="font-sans text-sm min-w-[320px]">`;
+    html += `<div class="font-black border-b border-slate-700 pb-2 mb-3 text-white flex justify-between items-center"><span>Tobogã ${chuteNum} <span class="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded ml-1">${isAuto ? 'AUTO' : 'MANUAL'}</span></span> <span class="text-slate-400 text-[9px] uppercase font-bold tracking-widest">Previsão Físico-Temporal</span></div>`;
+    
+    html += `<div class="text-slate-300 mb-4 text-xs">Análise de fluxo para <strong class="text-white">${totalFuturo + tWav} pçs</strong> totais pendentes nesta rampa:</div>`;
+
+    if(tPacked > 0) {
+        let msgAler = lqRecurso <= 0 ? `<span class="text-rose-400">HC de Área Zerado!</span>` : `Levará ~${timeAtr} min para escoar.`;
+        html += `<div class="text-slate-300 leading-tight mb-3 text-xs"><span class="text-emerald-400 font-black">&bull; AGORA:</span> <strong>${tPacked} pçs</strong> embaladas retidas no tobogã. Exigem ${tipoRecurso.toLowerCase()} imediato.<br><span class="text-[10px] text-slate-400 mt-1 block">${msgAler}</span></div>`;
+    }
+    
+    if(tPack > 0) {
+        html += `<div class="text-slate-300 leading-tight mb-3 text-xs"><span class="text-amber-500 font-black">&bull; EM 0 a 15 MIN:</span> <strong>${tPack} pçs</strong> estão em Packing (Mesa/Esteira). Descerão continuamente neste intervalo.</div>`;
+    }
+    
+    if(tPick > 0) {
+        html += `<div class="text-slate-300 leading-tight mb-3 text-xs"><span class="text-orange-500 font-black">&bull; EM 15 a 45 MIN:</span> <strong>${tPick} pçs</strong> estão em Picking. (Considerando a média de 38 min por tarefa de separação).</div>`;
+    }
+    
+    if(tRtw > 0 || tWav > 0) {
+        let textVolumeFila = tRtw > 0 ? `A onda da Fila (<strong>${tRtw} pçs</strong>)` : `As peças em Waving (<strong>${tWav} pçs</strong>)`;
+        let volExtra = tWav > 0 && tRtw > 0 ? ` + ${tWav} congeladas` : ``;
+        html += `<div class="text-slate-300 leading-tight text-xs"><span class="text-rose-400 font-black">&bull; DAQUI A 45 a 60+ MIN:</span> ${textVolumeFila}${volExtra} atingirá o processo. Nova injeção de volume para a rampa.</div>`;
+    }
+
+    if(totalZonasArea !== undefined && totalZonasArea > 0) {
+        html += `
+            <div class="mt-4 pt-3 border-t border-slate-700 bg-slate-800/50 p-2 rounded">
+                <div class="text-[10px] text-slate-400 uppercase font-bold mb-1"><i class="fa-solid fa-users text-blue-400"></i> Sugestão para a Área Mestra (Zona de 10 Tobogãs)</div>
+                <div class="text-xs text-white">A zona inteira exige <strong>~${reqPessoas} pessoas</strong> (${tipoRecurso}) para suportar de forma limpa as ${totalZonasArea} pçs ativas na área.</div>
+            </div>
+        `;
+    }
+
+    html += `</div>`;
+    return encodeURIComponent(html);
+}
+
+// --- PROCESSADOR DE TEXTO (AGORA RECEBE INDICADOR DE NUVEM) ---
+function processarTextoCola(veioDaNuvem = false) {
+    let elPaste = document.getElementById('input-paste'); 
+    let txt = elPaste ? elPaste.value : ''; 
+    if(!txt) return; 
+    
+    if (!veioDaNuvem) {
+        closeModal('import-modal'); 
+        setClass('global-loader', 'remove', 'hidden'); 
+        setVal('loader-title', 'Analisando WMS...');
+    }
+
+    setTimeout(() => {
+        try {
+            let vR = ROUTE_LIST.map(i => i.r).sort((a, b) => b.length - a.length), lines = txt.split(/\r?\n/), hAct = "S/H", mM = {}, k = {};
+            let colMap = [];
+            for (let i = 0; i < Math.min(20, lines.length); i++) {
+                let u = lines[i].toUpperCase();
+                if (u.includes("READY TO WAVE") || u.includes("BACKLOG")) colMap.push('rtw');
+                if (u.includes("WAVING") || u.includes("POR ASIGNAR")) colMap.push('wav');
+                if (u.includes("PICKING")) colMap.push('pi');
+                if (u.includes("READY TO GROUP")) colMap.push('rtg');
+                if (u.includes("GROUPING")) colMap.push('g');
+                if (u.includes("READY TO PACK")) colMap.push('r');
+                if (u.includes("PACKED")) colMap.push('p');
+                if (u.includes("HU IN")) colMap.push('huIn');
+                if (u.includes("HU CLOSED")) colMap.push('huCl');
+                if (u.includes("SHIPPED")) colMap.push('ship');
+                if (colMap.length > 5) break; 
+            }
+            if (colMap.length === 0) colMap = ['rtw', 'wav', 'pi', 'rtg', 'g', 'r', 'p', 'huIn', 'huCl', 'ship'];
+            let N = colMap.length;
+
+            for(let i = 0; i < lines.length; i++) {
+                let l = lines[i].trim(); if(l.length < 4) continue;
+                let hm = l.match(/(?:^|\b)(\d{2}):00\s*(?:HR|H)?\b/i) || l.match(/\b(\d{2})00\s*HR/i) || l.match(/Analisar\s+atraso/i);
+                if(hm && !l.toUpperCase().includes("TEMPO")) { hAct = l.match(/atraso/i) ? "ATRASO" : hm[1] || hm[0]; continue; }
+                let u = l.toUpperCase(); if (u.match(/TOTAL|SUBTOTAL|PERFORMANCE|PROCESSADOS|FECHADOS|CARREGADOS|EXPEDIDOS|ENVIADOS|RECEBIDOS|HUS ABERTAS|RESUMO/i)) continue;
+
+                let c = vR.find(x => new RegExp(`(?:^|\\s)${x}(?:\\s|$)`).test(u));
+                if(!c) { let dynMatch = u.match(/(?:^|\s)([A-Z]{3,4}\d{1,2}(?:_[A-Z0-9]+)?|JET[A-Z]{2,3}\d+|[A-Z]+HUB\d*)(?=\s|$)/); if (dynMatch && !["TOTAL","SUBTOTAL","SLA","TEMPO","PERFORMANCE"].includes(dynMatch[1])) c = dynMatch[1]; }
+                if(!c) continue;
+
+                let str = l;
+                for(let j = i + 1; j < i + 20 && j < lines.length; j++) {
+                    let n = lines[j].trim(); let uN = n.toUpperCase(); if(n === "") continue;
+                    if(uN.match(/(?:^|\b)(\d{2}):00\s*(?:HR|H)?\b/i) || uN.match(/\b(\d{2})00\s*HR/i) || uN.match(/ATRASO/i)) break;
+                    if(uN.match(/TOTAL|SUBTOTAL|PROCESSADOS|FECHADOS|CARREGADOS|EXPEDIDOS|ENVIADOS|RECEBIDOS|HUS ABERTAS|RESUMO/i)) break; 
+                    if(vR.find(x => new RegExp(`(?:^|\\s)${x}(?:\\s|$)`).test(uN))) break;
+                    str += " " + n;
+                }
+                let tokens = str.split(/[\s\t]+/).filter(x => x !== ""), slaIdx = tokens.findIndex(t => t.includes('%')), numsB = [], numsA = [];
+                tokens.forEach((tk, idx) => {
+                    if (/^-?\d{2}:\d{2}(hr|h)?$/i.test(tk) || ROUTE_LIST.some(r => r.r === tk.toUpperCase())) return;
+                    let clean = tk.replace(/[\.,]/g, '');
+                    if (/^-?\d+$/.test(clean) || tk === '-' || tk === '–') { if(slaIdx !== -1 && idx > slaIdx) numsA.push(clean); else if (idx < slaIdx || slaIdx === -1) numsB.push(clean); }
+                });
+
+                let vTot = 0, vProc = 0, mArr = [];
+                if (slaIdx !== -1) { vTot = parseNum(numsB[numsB.length - 2] || "0"); vProc = parseNum(numsB[numsB.length - 1] || numsB[0] || "0"); mArr = numsA.map(parseNum);
+                } else { let valN = numsB.slice(), mStart = Math.max(0, valN.length - N); mArr = valN.slice(mStart).map(parseNum); while (mArr.length < N) mArr.unshift(0); let bef = valN.slice(0, mStart); vTot = parseNum(bef[bef.length - 2] || "0"); vProc = parseNum(bef[bef.length - 1] || bef[0] || "0"); }
+
+                let m = { rtw: 0, wav: 0, pi: 0, rtg: 0, g: 0, r: 0, p: 0, huIn: 0, huCl: 0, ship: 0 };
+                for(let kl = 0; kl < N; kl++) { if (kl < mArr.length) m[colMap[kl]] = mArr[kl]; }
+                let tot = (vTot < vProc && vTot > 0) ? vTot + vProc : ((vTot === 0 && vProc > 0) ? vProc : vTot);
+                let cReal = m.huIn + m.huCl + m.ship; if (cReal === 0 && vProc > 0) cReal = vProc;
+                let sMet = m.p + m.r + m.rtg + m.g + m.pi + m.wav + m.rtw + cReal; if (tot === 0 || tot < sMet) tot = sMet;
+                if (tot === 0) continue; 
+
+                if(tot >= 0) {
+                    if(hAct === "S/H") hAct = "99"; let kId = c + "-" + hAct;
+                    if(!mM[kId]) { mM[kId] = { nome: c, horario: hAct, concluido: 0, packed: 0, rtp: 0, grp: 0, pick: 0, wav: 0, rtw: 0, total: 0, huIn: 0, huCl: 0, ship: 0, isAereo: isAereo(c) }; }
+                    mM[kId].concluido += cReal; mM[kId].packed += m.p; mM[kId].rtp += m.r; mM[kId].grp += (m.rtg + m.g); mM[kId].pick += m.pi; mM[kId].wav += m.wav; mM[kId].rtw += m.rtw; mM[kId].huIn += m.huIn; mM[kId].huCl += m.huCl; mM[kId].ship += m.ship; mM[kId].total += tot;
+                    if(!k[hAct]) k[hAct] = { total: 0 }; k[hAct].total += tot;
+                }
+            }
+
+            let arr = Object.values(mM).sort((a, b) => b.total - a.total);
+            if(arr.length === 0 && !veioDaNuvem) { alert("Nenhum dado encontrado."); fecharLoader(); return; }
+            if(arr.length === 0) return; // Da nuvem, só ignora
+
+            let mergeEl = document.getElementById('chk-merge'); let isMerge = mergeEl ? mergeEl.checked : false; let finalArr = arr, finalKpis = k;
+            if (isMerge && DATA_CACHE && DATA_CACHE.micro) {
+                let mergedMap = {}; DATA_CACHE.micro.forEach(r => { mergedMap[r.nome + "-" + r.horario] = r; }); arr.forEach(r => { mergedMap[r.nome + "-" + r.horario] = r; });
+                finalArr = Object.values(mergedMap).sort((a, b) => b.total - a.total); finalKpis = {}; finalArr.forEach(r => { if(!finalKpis[r.horario]) finalKpis[r.horario] = { total: 0 }; finalKpis[r.horario].total += r.total; });
+            }
+            DATA_CACHE = { micro: finalArr, kpis: finalKpis }; AVAILABLE_HOURS = Object.keys(finalKpis).filter(x => x !== "99" && x !== "S/H" && x !== "ATRASO").sort(); SELECTED_HOURS = []; renderEtdCheckboxes();
+            
+            salvarDadosLocais(); 
+            aplicarFiltros(); 
+
+            if(!veioDaNuvem) {
+                fecharLoader(); 
+                mudarAba('dashboard');
+            }
+        } catch(e) { 
+            console.error(e); 
+            if(!veioDaNuvem) { alert("Erro ao ler dados: " + e.message); fecharLoader(); }
+        }
+    }, 500);
+}
+
+function aplicarFiltros() {
+    // PROTEÇÃO EXTRA: Garante que lst seja uma array, mesmo com cache corrompido
+    let lst = (DATA_CACHE && DATA_CACHE.micro) ? DATA_CACHE.micro : [];
+    
+    if(SELECTED_HOURS.length > 0) lst = lst.filter(x => SELECTED_HOURS.includes(x.horario) || x.horario === 'ATRASO');
+    
+    let busca = document.getElementById('inline-search');
+    if(busca && busca.value.trim() !== '') {
+        let term = busca.value.toUpperCase().trim();
+        lst = lst.filter(x => x.nome.toUpperCase().includes(term));
+    }
+
+    let statusFilter = document.getElementById('inline-status-filter');
+    if(statusFilter) {
+        let val = statusFilter.value;
+        if(val === 'waving') lst = lst.filter(x => x.wav > 0);
+        if(val === 'rtw') lst = lst.filter(x => x.rtw > 0);
+        if(val === 'wip') lst = lst.filter(x => (x.pick + x.rtp + x.grp) > 0);
+    }
+
+    renderDash(lst); renderAereo(lst); renderMatriz(lst); renderMicro(lst);
+}
+
+function mudarAba(aba) { 
+    document.querySelectorAll('[id^="view-"]').forEach(e => e.classList.add('hidden')); setClass('view-' + aba, 'remove', 'hidden'); 
+    document.querySelectorAll('.sidebar-link').forEach(e => e.classList.remove('active')); setClass('btn-' + aba, 'add', 'active'); 
+}
+
+function openModal(id) { setClass(id, 'remove', 'hidden'); }
+function closeModal(id) { setClass(id, 'add', 'hidden'); }
+function fecharLoader() { setClass('global-loader', 'add', 'hidden'); }
+function parseNum(s) { if(!s || s === '-' || s === '–') return 0; let c = s.replace(/[^\d]/g, ''); return c === '' ? 0 : parseInt(c, 10); }
+function isAereo(c) { return RAMPA_MAP[99]?.includes(c) || RAMPA_MAP[100]?.includes(c) || /_A$|_B$|_C$/.test(c); }
+
+function renderEtdCheckboxes() {
+    let h = `<label class="flex gap-2 p-2 text-xs font-bold hover:bg-slate-50 cursor-pointer"><input type="checkbox" onchange="toggleAllEtds()" ${SELECTED_HOURS.length === 0 ? 'checked' : ''} class="w-4 h-4 rounded"> TODOS</label><hr>`;
+    AVAILABLE_HOURS.forEach(hr => { h += `<label class="flex gap-2 p-2 text-xs hover:bg-slate-50 cursor-pointer"><input type="checkbox" value="${hr}" onchange="toggleSingleEtd(this)" ${SELECTED_HOURS.includes(hr) ? 'checked' : ''} class="w-4 h-4 rounded"> ${hr}H</label>`; });
+    setHtml('etd-dropdown-panel', h); setVal('etd-btn-text', SELECTED_HOURS.length === 0 ? "TODOS" : SELECTED_HOURS.length + " SELEC");
+}
+function toggleAllEtds() { SELECTED_HOURS = []; renderEtdCheckboxes(); aplicarFiltros(); }
+function toggleSingleEtd(e) { if(e.checked) SELECTED_HOURS.push(e.value); else SELECTED_HOURS = SELECTED_HOURS.filter(x => x !== e.value); if(SELECTED_HOURS.length >= AVAILABLE_HOURS.length) SELECTED_HOURS = []; renderEtdCheckboxes(); aplicarFiltros(); }
+
+function showTooltip(e, html) { let t = document.getElementById('floating-tip'); if(!html || !t) return; t.innerHTML = decodeURIComponent(html); t.classList.remove('hidden'); moveTooltip(e); }
+function moveTooltip(e) { let t = document.getElementById('floating-tip'); if(!t || t.classList.contains('hidden')) return; let x = e.clientX + 15, y = e.clientY + 15; if (x + t.offsetWidth > window.innerWidth) x = e.clientX - t.offsetWidth - 15; if (y + t.offsetHeight > window.innerHeight) y = window.innerHeight - t.offsetHeight - 15; t.style.left = Math.max(10, x) + 'px'; t.style.top = Math.max(10, y) + 'px'; }
+function hideTooltip() { setClass('floating-tip', 'add', 'hidden'); }
+
+// --- RENDERIZADORES DE TELA ---
+
+function renderDash(lst) {
+    let allValid = lst.filter(i => i.horario !== 'ATRASO');
+    let tTot = 0, tC = 0, tPck = 0, tIn = 0, tCls = 0, tShp = 0, tPick = 0, tPack = 0, tRtw = 0, tWav = 0;
+    
+    allValid.forEach(i => { 
+        tTot += i.total; tC += i.concluido; tPck += i.packed; 
+        tIn += i.huIn; tCls += i.huCl; tShp += i.ship; 
+        tPick += i.pick; tPack += (i.rtp + i.grp + i.r); 
+        tRtw += i.rtw; tWav += i.wav; 
+    });
+    
+    let viewFilter = document.querySelector('input[name="dashview"]:checked');
+    let vF = viewFilter ? viewFilter.value : 'global';
+    
+    let targetProgresso = 0;
+    let labelTitle = "";
+    let labelSubtitle = "Peças no Dia";
+    let subCardsHtml = "";
+
+    let pct = (val, tot) => tot > 0 ? ((val/tot)*100).toFixed(1) + '%' : '0%';
+    
+    if(vF === 'global') {
+        targetProgresso = tC; 
+        labelTitle = "Operação Global (Geral)";
+        subCardsHtml = `
+            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Shippadas</span><span class="text-lg font-black text-purple-600">${tShp.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">${pct(tShp, tTot)} do total</span></div>
+            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Fechadas (CLS)</span><span class="text-lg font-black text-indigo-500">${tCls.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">${pct(tCls, tTot)} do total</span></div>
+            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Abertos (IN)</span><span class="text-lg font-black text-blue-500">${tIn.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">${pct(tIn, tTot)} do total</span></div>
+            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Packed (Retido)</span><span class="text-lg font-black text-emerald-500">${tPck.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">${pct(tPck, tTot)} do total</span></div>
+            <div class="flex flex-col bg-slate-50 px-3 py-1 rounded border border-slate-200"><span class="text-[10px] font-bold text-slate-600 uppercase">WIP + Fila + Waving</span><span class="text-lg font-black text-slate-700">${(tPick+tPack+tRtw+tWav).toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">Volume a processar</span></div>
+        `;
+    } else if (vF === 'concluidos') {
+        targetProgresso = tShp + tCls; 
+        labelTitle = "Apenas Concluídos (CLS/SHP)";
+        subCardsHtml = `
+            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Shippadas</span><span class="text-lg font-black text-purple-600">${tShp.toLocaleString()}</span><span class="text-[9px] text-purple-400 font-bold">${pct(tShp, targetProgresso)} dos concluídos</span></div>
+            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Fechadas (CLS)</span><span class="text-lg font-black text-indigo-500">${tCls.toLocaleString()}</span><span class="text-[9px] text-indigo-400 font-bold">${pct(tCls, targetProgresso)} dos concluídos</span></div>
+        `;
+    } else if (vF === 'packed') {
+        targetProgresso = tPck; 
+        labelTitle = "Foco em Packed (Retidos na Rampa)"; 
+        labelSubtitle = "do Total Diário";
+        subCardsHtml = `
+            <div class="flex flex-col bg-emerald-50 px-3 py-1 rounded border border-emerald-200"><span class="text-[10px] font-bold text-emerald-700 uppercase">Total Packed</span><span class="text-lg font-black text-emerald-600">${tPck.toLocaleString()}</span><span class="text-[9px] text-emerald-500 font-bold">${pct(tPck, tTot)} de toda a carga</span></div>
+        `;
+    } else if (vF === 'wip') {
+        let pendentesOperacao = tPick + tPack + tRtw; 
+        targetProgresso = pendentesOperacao; 
+        labelTitle = "Foco em Processamento Físico (WIP + Fila)";
+        labelSubtitle = "na Mão da Operação";
+        subCardsHtml = `
+            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Em Packing (Mesa)</span><span class="text-lg font-black text-amber-500">${tPack.toLocaleString()}</span><span class="text-[9px] text-amber-500 font-bold">${pct(tPack, targetProgresso)} do WIP</span></div>
+            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Em Picking (Separando)</span><span class="text-lg font-black text-orange-500">${tPick.toLocaleString()}</span><span class="text-[9px] text-orange-500 font-bold">${pct(tPick, targetProgresso)} do WIP</span></div>
+            <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase">Fila RTW (Aguardando)</span><span class="text-lg font-black text-rose-500">${tRtw.toLocaleString()}</span><span class="text-[9px] text-rose-500 font-bold">${pct(tRtw, targetProgresso)} do WIP</span></div>
+            <div class="flex flex-col bg-slate-100 px-3 py-1 rounded border border-slate-200"><span class="text-[10px] font-bold text-slate-500 uppercase">Retido WMS (Waving)</span><span class="text-lg font-black text-slate-600">${tWav.toLocaleString()}</span><span class="text-[9px] text-slate-400 font-bold">Fora do WIP</span></div>
+        `;
+    }
+
+    setVal('lbl-dash-title', labelTitle); 
+    setVal('lbl-dash-subtitle', labelSubtitle);
+    setVal('dash-glb-total', tTot.toLocaleString()); 
+    setVal('dash-glb-targetval', targetProgresso.toLocaleString());
+    setHtml('dash-dynamic-subcards', subCardsHtml);
+    
+    let pG = tTot > 0 ? ((targetProgresso / tTot) * 100).toFixed(2) : '0.00'; 
+    setVal('dash-glb-pct', pG + '%'); setStyle('dash-glb-bar', 'width', pG + '%');
+
+    let grps = {};
+    allValid.forEach(i => { if(!grps[i.horario]) grps[i.horario] = { t: 0, c: 0 }; grps[i.horario].t += i.total; grps[i.horario].c += i.concluido; });
+    
+    let hKpi = ''; let fmtK = (v) => v >= 10000 ? (v / 1000).toFixed(1).replace('.0', '') + 'k' : v.toLocaleString();
+    Object.keys(grps).sort().forEach(k => {
+        let g = grps[k]; let pt = g.t > 0 ? ((g.c / g.t) * 100).toFixed(2) : '0.00';
+        let m98 = Math.ceil(g.t * 0.98); let m985 = Math.ceil(g.t * 0.985); let m99 = Math.ceil(g.t * 0.99); let m995 = Math.ceil(g.t * 0.995);
+        let tag = (tgt) => (target => { let f = target - g.c; return f <= 0 ? '<span class="text-emerald-500"><i class="fa-solid fa-check"></i></span>' : `<span class="text-rose-500 font-mono font-bold">Falta ${f.toLocaleString()}</span>`; })(tgt);
+
+        hKpi += `<div class="glass-panel p-4 flex flex-col border-t-4 border-blue-500 shadow-md">
+                <div class="flex justify-between items-center mb-2"><div class="text-xs font-black text-slate-700 bg-slate-100 px-2 py-1 rounded border">ETD ${k}H</div><div class="text-lg font-black text-blue-600">${pt}%</div></div>
+                <div class="w-full bg-slate-100 h-2 rounded-full mb-4"><div class="bg-blue-500 h-full" style="width:${pt}%"></div></div>
+                <div class="text-[10px] font-bold text-slate-500 space-y-1.5 bg-slate-50 p-2 rounded border border-slate-100">
+                    <div class="flex justify-between items-center"><span>Meta 98.0%: <span class="font-mono text-slate-800">${fmtK(m98)}</span></span>${tag(m98)}</div>
+                    <div class="flex justify-between items-center"><span>Meta 98.5%: <span class="font-mono text-slate-800">${fmtK(m985)}</span></span>${tag(m985)}</div>
+                    <div class="flex justify-between items-center"><span>Meta 99.0%: <span class="font-mono text-slate-800">${fmtK(m99)}</span></span>${tag(m99)}</div>
+                    <div class="flex justify-between items-center"><span>Meta 99.5%: <span class="font-mono text-slate-800">${fmtK(m995)}</span></span>${tag(m995)}</div>
+                </div></div>`;
+    });
+    setHtml('dash-kpi-area', hKpi);
+
+    let capTotalPick = (SETTINGS_DATA.pickHC || 0) * (SETTINGS_DATA.pickM || 0);
+    let off = allValid.filter(i => (i.rtw + i.pick + i.rtp + i.grp) > 0).sort((a, b) => (b.rtw + b.pick) - (a.rtw + a.pick)).slice(0, 10);
+    
+    setHtml('dash-offenders-body', off.length ? off.map(r => {
+        let filaDestaRota = r.rtw + r.pick + r.rtp + r.grp;
+        let acumulo = filaDestaRota > capTotalPick ? (filaDestaRota - capTotalPick) : 0;
+        let acAlert = acumulo > 0 ? `<span class="bg-rose-500 text-white px-2 py-1 rounded shadow-sm">${acumulo} viram rollover</span>` : `<span class="text-emerald-500 font-bold"><i class="fa-solid fa-check"></i> Limpa na hora</span>`;
+
+        return `<tr><td class="p-3 pl-6 font-bold text-slate-800">${r.nome}</td><td class="p-3 text-center"><span class="bg-slate-100 px-2 py-1 rounded text-[10px] font-bold">${r.horario}h</span></td><td class="p-3 text-right text-orange-600 font-bold">${filaDestaRota}</td><td class="p-3 text-right font-bold text-rose-600">${acAlert}</td><td class="p-3 pr-6 text-right">${r.total > 0 ? ((r.concluido/r.total)*100).toFixed(1) : 0}%</td></tr>`
+    }).join('') : '<tr><td colspan="5" class="p-8 text-center text-emerald-600 font-bold">Nenhum gargalo aglomerado (Fila).</td></tr>');
+}
+
+function renderMicro(lst) {
+    let filtered = lst.filter(i => !i.isAereo);
+    filtered.sort((a, b) => (b.rtw + b.pick + b.rtp + b.grp) - (a.rtw + a.pick + a.rtp + a.grp));
+
+    setHtml('micro-body', filtered.length ? filtered.map(r => {
+        let processandoWip = r.pick + r.rtg + r.g + r.r;
+        let prontoConcluido = r.huIn + r.huCl + r.ship;
+
+        return `
+        <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
+            <td class="p-3 pl-6 font-bold text-slate-800">${r.nome}</td>
+            <td class="p-3 text-center"><span class="bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold">${r.horario}h</span></td>
+            <td class="text-right p-3 text-slate-500 font-bold bg-slate-50 border-l border-slate-200">${r.wav}</td>
+            <td class="text-right p-3 text-rose-500 font-bold bg-rose-50/50">${r.rtw}</td>
+            <td class="text-right p-3 text-orange-500 font-bold bg-orange-50/50">${r.pick}</td>
+            <td class="text-right p-3 text-amber-500 font-bold bg-amber-50/50">${r.rtp + r.grp + r.r}</td>
+            <td class="text-right p-3 text-emerald-600 font-bold bg-emerald-50/50 border-x border-slate-200">${r.packed}</td>
+            <td class="text-right p-3 text-blue-600 font-bold bg-blue-50/50">${prontoConcluido}</td>
+            <td class="text-right p-3 font-extrabold text-slate-900">${r.total}</td>
+        </tr>`;
+    }).join('') : `<tr><td colspan="9" class="p-8 text-center text-slate-400 font-bold">Sem dados no momento.</td></tr>`);
+}
+
+function getAreaVolumes(lst) {
+    let areaVols = {};
+    for(let i = 1; i <= 100; i++) {
+        let z = Math.ceil(i / 10);
+        if(!areaVols[z]) areaVols[z] = { tPacked: 0, tWip: 0, tRtw: 0 };
+        
+        let rr = RAMPA_MAP[i] || [];
+        rr.forEach(ro => { 
+            let d = lst.find(x => x.nome === ro); 
+            if(d) {
+                areaVols[z].tPacked += d.packed;
+                areaVols[z].tWip += (d.pick + d.rtp + d.grp + d.r);
+                areaVols[z].tRtw += d.rtw;
+            }
+        });
+    }
+    return areaVols;
+}
+
+function renderMatriz(lst) {
+    let areaVols = getAreaVolumes(lst);
+
+    const ren = (id, s, e) => {
+        let filterEl = document.getElementById('heatmap-filter-' + id.split('-')[0]);
+        let mode = filterEl ? filterEl.value : 'volume';
+
+        let h = '<div class="col-span-full grid grid-cols-2 sm:grid-cols-5 xl:grid-cols-10 gap-3">';
+        for(let i = s; i <= e; i++) {
+            let rr = RAMPA_MAP[i] || []; let st = { p: 0, r: 0, g: 0, pi: 0, w: 0, rtw: 0, t: 0 }; let rotasAtivas = []; 
+            rr.forEach(ro => { 
+                let d = lst.find(x => x.nome === ro); 
+                if(d) { st.p += d.packed; st.r += d.rtp; st.g += d.grp; st.pi += d.pick; st.w += d.wav; st.rtw += d.rtw; st.t += d.total; rotasAtivas.push(d); } 
+            });
+            
+            let isAuto = i >= SETTINGS_DATA.autoStart && i <= SETTINGS_DATA.autoEnd;
+            let lqRecurso = isAuto ? (SETTINGS_DATA.indM || 450) : (SETTINGS_DATA.atrM || 450);
+            
+            let zonaArea = Math.ceil(i / 10);
+            let volTotalZona = areaVols[zonaArea].tPacked + areaVols[zonaArea].tWip + areaVols[zonaArea].tRtw;
+
+            let hBg = 'bg-white', textC = 'text-slate-500';
+            let volAtivoPecas = st.p + st.r + st.g + st.pi + st.rtw; 
+
+            if(mode === 'volume') {
+                if (volAtivoPecas > 0) { 
+                    if(volAtivoPecas >= 1000) { hBg = 'bg-rose-600 text-white border-rose-700'; textC = 'text-white'; } 
+                    else if(volAtivoPecas >= 500) { hBg = 'bg-orange-500 text-white border-orange-600'; textC = 'text-white'; } 
+                    else if(volAtivoPecas >= 200) { hBg = 'bg-amber-400 text-slate-900 border-amber-500'; textC = 'text-amber-900'; } 
+                    else { hBg = 'bg-emerald-100 border-emerald-300'; textC = 'text-emerald-700'; } 
+                } else { hBg = 'opacity-40 grayscale bg-white border border-slate-200'; }
+            } 
+            else if (mode === 'risco') {
+                let reqPessoasArea = lqRecurso > 0 ? (volTotalZona / lqRecurso) : 99;
+                if(volAtivoPecas > 0) {
+                    if (reqPessoasArea > 2) { hBg = 'bg-rose-600 text-white border-rose-700 shadow-[0_0_15px_rgba(225,29,72,0.5)]'; textC = 'text-white'; } 
+                    else if (reqPessoasArea > 1) { hBg = 'bg-amber-400 text-slate-900 border-amber-500'; textC = 'text-amber-900'; } 
+                    else { hBg = 'bg-emerald-100 border-emerald-300'; textC = 'text-emerald-700'; } 
+                } else { hBg = 'opacity-40 grayscale bg-white border border-slate-200'; }
+            }
+            else if (mode === 'congelado') {
+                if (st.w > 0) {
+                    if(st.w > 500) { hBg = 'bg-purple-600 text-white border-purple-700'; textC = 'text-white'; }
+                    else { hBg = 'bg-purple-200 text-purple-900 border-purple-400'; textC = 'text-purple-900'; }
+                } else { hBg = 'opacity-40 grayscale bg-white border border-slate-200'; }
+            }
+
+            let tooltipHtml = gerarTooltipNarrativo(i, rotasAtivas, volTotalZona);
+
+            h += `<div onmouseenter="showTooltip(event, this.dataset.tip)" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()" data-tip="${tooltipHtml}" class="rounded-xl flex flex-col justify-between ${hBg} shadow-md hover:-translate-y-1 cursor-help border overflow-hidden h-[90px] transition-all">
+                    <div class="px-3 py-2 flex justify-between items-center border-b border-black/10"><span class="font-black ${textC} text-lg">${i}</span><span class="${textC} text-xs font-bold font-mono">${mode === 'congelado' ? st.w : volAtivoPecas}</span></div>
+                    <div class="px-3 py-2 text-[8px] font-bold ${textC} opacity-80 h-full overflow-hidden leading-tight">${rotasAtivas.length ? rotasAtivas.map(x => x.nome).join(', ') : 'Vazio'}</div>
+                  </div>`;
+        } h += `</div>`; setHtml(id, h);
+    };
+    ren('t3-list-container', 1, 50); ren('t5-list-container', 51, 98);
+}
+
+function renderAereo(lst) {
+    let aer = lst.filter(i => i.isAereo); let aT = 0, aC = 0, aIn = 0, aCl = 0, aSh = 0;
+    let grps = {};
+    
+    aer.forEach(i => { 
+        aT += i.total; aC += i.concluido; aIn += i.huIn; aCl += i.huCl; aSh += i.ship;
+        if(!grps[i.horario]) grps[i.horario] = []; grps[i.horario].push(i);
+    });
+    
+    let processadoAereo = aIn + aCl + aSh;
+    let vindoAereo = aT - processadoAereo; 
+    let pct = aT > 0 ? ((processadoAereo / aT) * 100).toFixed(1) : '0.0';
+    
+    setHtml('aereo-dynamic-summary', `
+        <div class="bg-gradient-to-r from-cyan-900 to-blue-900 p-6 rounded-2xl text-white shadow-xl flex justify-between items-center relative overflow-hidden border border-cyan-700">
+            <i class="fa-solid fa-plane absolute -right-4 text-9xl opacity-10"></i>
+            <div>
+                <h3 class="text-cyan-300 font-bold uppercase tracking-widest text-xs mb-1">Relatório Geral - Malha Aérea</h3>
+                <div class="text-5xl font-black font-mono tracking-tighter">${pct}% <span class="text-sm font-bold text-cyan-400 tracking-normal">Pronto (Docado)</span></div>
+            </div>
+            <div class="flex gap-6 text-right relative z-10">
+                <div class="flex flex-col"><span class="text-[10px] text-cyan-400 uppercase font-bold">Peças no Dia</span><span class="text-2xl font-black font-mono">${aT.toLocaleString()}</span></div>
+                <div class="flex flex-col"><span class="text-[10px] text-emerald-400 uppercase font-bold">Pronto (Docado)</span><span class="text-2xl font-black font-mono text-emerald-400">${processadoAereo.toLocaleString()}</span></div>
+                <div class="flex flex-col bg-cyan-950 px-3 py-1 rounded border border-cyan-800"><span class="text-[10px] text-amber-400 uppercase font-bold">A Caminho (Esteiras)</span><span class="text-2xl font-black font-mono text-amber-400">${vindoAereo.toLocaleString()}</span></div>
+            </div>
+        </div>`);
+
+    let htmlETDs = '';
+    Object.keys(grps).sort().forEach(h => {
+        htmlETDs += `
+        <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden mb-6">
+            <div class="bg-slate-100 p-4 border-b flex justify-between items-center"><h4 class="font-black text-slate-700 text-lg flex items-center gap-2"><i class="fa-solid fa-clock text-cyan-600"></i> ETD ${h}H</h4></div>
+            <table class="w-full text-left text-xs font-mono">
+                <thead class="bg-white text-slate-400 uppercase text-[9px] font-bold border-b"><tr><th class="p-3 pl-6">Rota</th><th class="text-right p-3 text-slate-500">WAV / RTW</th><th class="text-right p-3 text-emerald-500">WIP</th><th class="text-right p-3 text-blue-500">Pronto</th><th class="text-right p-3 text-amber-500 border-l border-slate-100">A Caminho</th><th class="text-right p-3">Total Dia</th></tr></thead>
+                <tbody class="divide-y divide-slate-50">
+                    ${grps[h].sort((a,b)=> b.total - a.total).map(r => {
+                        let tooltipAereoHtml = gerarTooltipNarrativo(`Aéreo: ${r.nome}`, [r]);
+                        return `
+                        <tr class="hover:bg-slate-50 cursor-help" onmouseenter="showTooltip(event, this.dataset.tip)" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()" data-tip="${tooltipAereoHtml}">
+                            <td class="p-3 pl-6 font-bold text-slate-800">${r.nome}</td>
+                            <td class="text-right p-3 text-slate-500">${r.wav} / ${r.rtw}</td>
+                            <td class="text-right p-3 text-emerald-500">${r.pick+r.rtp+r.grp}</td>
+                            <td class="text-right p-3 text-blue-500">${r.packed+r.huIn+r.huCl+r.ship}</td>
+                            <td class="text-right p-3 text-amber-600 font-bold border-l border-slate-100">${r.total - (r.huIn+r.huCl+r.ship)}</td>
+                            <td class="text-right p-3 font-black text-slate-800">${r.total}</td>
+                        </tr>`;
+                    }).join('')}
+                </tbody>
+            </table>
+        </div>`;
+    });
+    setHtml('aereo-container', htmlETDs || '<div class="p-8 text-center bg-white rounded-xl border">Sem dados de malha aérea.</div>');
+}
+
+function updateLiveClock() {
+    let vl = document.getElementById('view-live');
+    if(!DATA_CACHE || !DATA_CACHE.micro || !AVAILABLE_HOURS.length || (vl && vl.classList.contains('hidden'))) return;
+    setVal('live-clock', new Date().toLocaleTimeString('pt-BR'));
+    
+    let ch = parseInt(new Date().getHours()); let hNum = AVAILABLE_HOURS.map(h => parseInt(h)).sort((a,b)=>a-b);
+    let f = hNum.find(h => h > ch) || hNum[0]; let etd = f.toString().padStart(2, '0');
+    
+    let lbl = document.getElementById('live-etd-lbl');
+    if(lbl && lbl.innerText !== "ETD " + etd + "H") {
+        setVal('live-etd-lbl', "ETD " + etd + "H");
+        let lst = DATA_CACHE.micro.filter(r => r.horario === etd).sort((a, b) => b.total - a.total);
+        
+        setHtml('live-offenders-body', lst.map(r => {
+            let pct = r.total > 0 ? ((r.concluido / r.total) * 100) : 0;
+            return `<tr>
+            <td class="p-3 pl-4 font-bold text-slate-800">${r.nome}</td>
+            <td class="p-3 text-right text-emerald-600 font-bold">${r.packed}</td>
+            <td class="p-3 text-right text-orange-500 font-bold bg-orange-50/50">${r.rtp+r.grp}</td>
+            <td class="p-3 text-right text-rose-500 font-bold bg-rose-50/50">${r.pick}</td>
+            <td class="p-3 text-right text-slate-400 font-bold opacity-50">${r.wav+r.rtw}</td>
+            <td class="p-3 pr-4"><div class="flex items-center gap-2 justify-end"><span class="text-[9px] font-bold w-6 text-right">${pct.toFixed(0)}%</span><div class="w-16 h-1.5 bg-slate-200 rounded-full"><div class="bg-brand-500 h-full rounded-full" style="width:${pct}%"></div></div></div></td>
+            </tr>`;
+        }).join(''));
+    }
 }
